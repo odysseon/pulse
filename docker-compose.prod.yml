@@ -1,48 +1,39 @@
-# docker-compose.prod.yml — production overrides
-# Extend the base compose file:
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-#
-# Key differences from dev:
-#   - Builds the production stage (no source, no devDeps)
-#   - No source volume mounts
-#   - App port not exposed to host — all traffic through nginx
-#   - Resource limits prevent one container starving others
-#   - always restart policy
-#   - Postgres port not exposed to host
-
+#  Production Overrides
 services:
-
-  postgres:
+  # ── Database Override ──────────────────────────────────────────────────────
+  db:
     restart: always
-    ports: !reset []   # Remove the host port binding from dev compose
+    ports: !reset [] # Ensure database is not accessible from the public internet
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 512m
         reservations:
           memory: 256m
 
-  app:
+  # ── Application Override ───────────────────────────────────────────────────
+  backend:
     build:
       context: .
-      target: production   # Use the minimal production stage
+      target: production # Uses the slim image with no devDependencies
     restart: always
-    command: []            # Use the ENTRYPOINT from the Dockerfile (runs migrations)
-    volumes: !reset []     # Remove source mounts — image contains compiled dist/
-    ports: !reset []       # Remove direct port exposure — nginx is the only entry point
+    command: [] # Uses ENTRYPOINT: runs migrations then starts the app
+    volumes: !reset [] # Production code is baked into the image[cite: 1]
+    ports: !reset [] # App is isolated; traffic must flow through the proxy
     deploy:
       resources:
         limits:
-          cpus: "2.0"
+          cpus: '2.0'
           memory: 512m
         reservations:
           memory: 128m
 
-  nginx:
+  # ── Proxy Override ─────────────────────────────────────────────────────────
+  proxy:
     restart: always
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 64m
