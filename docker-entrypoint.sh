@@ -1,12 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "[entrypoint] Connecting to database at db:5432..."
-
 # Run database operations based on environment
 if [ "$NODE_ENV" = "development" ]; then
-  # Construct the DATABASE_URL internally to ensure it's always correct
-  export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
 
   echo "[entrypoint] Development mode - pushing schema..."
   pnpm exec prisma db push --accept-data-loss
