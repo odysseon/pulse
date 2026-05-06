@@ -1,25 +1,23 @@
-# docker-compose.yml — local development stack
-# Brings up: postgres + the app (with hot reload) + nginx in front.
-# Use docker-compose.prod.yml for production overrides.
-
 services:
-
-  # ── PostgreSQL ──────────────────────────────────────────────────────────────
-  postgres:
+  # ── Database ────────────────────────────────────────────────────────────────
+  db:
     image: postgres:16-alpine
-    container_name: campuspulse_postgres
+    container_name: pulse_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       ${POSTGRES_DB:-campuspulse}
-      POSTGRES_USER:     ${POSTGRES_USER:-campuspulse}
+      POSTGRES_DB: ${POSTGRES_DB:-app_db}
+      POSTGRES_USER: ${POSTGRES_USER:-app_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      # Expose to host for local tooling (TablePlus, psql, etc.)
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-campuspulse} -d ${POSTGRES_DB:-campuspulse}"]
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-app_user} -d ${POSTGRES_DB:-app_db}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,31 +25,30 @@ services:
     networks:
       - internal
 
-  # ── Application ─────────────────────────────────────────────────────────────
-  app:
+  # ── Application (Matches 'backend' in Nginx) ───────────────────────────────
+  backend:
     build:
       context: .
-      target: builder      # Use the build stage — source is mounted for hot reload
-    container_name: campuspulse_app
+      target: builder
+    container_name: pulse_backend
     restart: unless-stopped
-    command: pnpm dev       # Override entrypoint for hot reload in dev
+    command: sh -c "pnpm exec prisma db push --accept-data-loss && pnpm dev"
     env_file: .env
     environment:
-      NODE_ENV:     development
-      DATABASE_URL: postgresql://${POSTGRES_USER:-campuspulse}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-campuspulse}
+      NODE_ENV: development
+      # Note: 'db' matches the service name above
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-app_db}
     volumes:
-      # Mount source so nest --watch picks up changes without rebuilding
       - ./src:/app/src:ro
-      # Preserve node_modules from the image — don't shadow with host
       - /app/node_modules
     ports:
-      # Expose directly for debugging without going through nginx
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api || exit 1"]
+      # Updated to match the /api/ health check in your DTOs
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3000/api || exit 1']
       interval: 15s
       timeout: 5s
       retries: 3
@@ -59,17 +56,17 @@ services:
     networks:
       - internal
 
-  # ── Nginx ───────────────────────────────────────────────────────────────────
-  nginx:
+  # ── Nginx Proxy ─────────────────────────────────────────────────────────────
+  proxy:
     image: nginx:1.27-alpine
-    container_name: campuspulse_nginx
+    container_name: pulse_proxy
     restart: unless-stopped
     ports:
-      - "80:80"
+      - '80:80'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      app:
+      backend:
         condition: service_healthy
     networks:
       - internal
@@ -77,13 +74,12 @@ services:
 
 volumes:
   postgres_data:
-    name: campuspulse_postgres_data
+    name: pulse_db_data
 
 networks:
-  # Internal network — postgres and app communicate here, never exposed
   internal:
     driver: bridge
+    # Keep 'internal: true' to isolate DB/Backend from direct internet access
     internal: true
-  # External network — only nginx is attached, handles all public traffic
   external:
     driver: bridge

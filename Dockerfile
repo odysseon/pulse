@@ -1,53 +1,56 @@
 # ─── Stage 1: Build ───────────────────────────────────────────────────────────
-# Full dev environment: installs all deps (including devDeps) and compiles TypeScript.
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
+RUN npm install -g pnpm@latest
 WORKDIR /app
 
-# Copy manifests first — dependency layer is cached independently of source changes
+# Install dependencies
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy config files and source
+# Copy configuration and source code
 COPY nest-cli.json tsconfig.json tsconfig.build.json ./
+COPY prisma/ ./prisma/
 COPY src/ ./src/
 
-# Compile — fails fast if TypeScript has errors, so a broken build = broken image
-RUN pnpm build
+# Generate Prisma client (matches the output directory in your schema)
+# And compile TypeScript to /dist
+RUN pnpm exec prisma generate && pnpm build
 
 
-# ─── Stage 2: Production image ────────────────────────────────────────────────
-# Minimal runtime: no source, no devDependencies, no build tools.
-FROM node:22-alpine AS production
+# ─── Stage 2: Production ──────────────────────────────────────────────────────
+FROM node:25-alpine AS production
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@latest
 
-# Non-root user — principle of least privilege
+# Security: Run as non-root user
 RUN addgroup --system --gid 1001 nodejs \
- && adduser  --system --uid 1001 nestjs
+  && adduser --system --uid 1001 nestjs
 
 WORKDIR /app
 
+# Install ONLY production dependencies
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod \
- && pnpm store prune
+  && pnpm add prisma \
+  && pnpm store prune
 
-# Copy compiled output from the builder stage
-COPY --from=builder /app/dist ./dist
-
-# Copy the entrypoint script before switching user
+# Copy runtime essentials
+COPY prisma/ ./prisma/
+COPY prisma.config.ts ./
 COPY docker-entrypoint.sh ./
+
+# Copy compiled code and the generated client from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src/generated ./src/generated
+
+# Set permissions for the non-root user
 RUN chmod +x docker-entrypoint.sh \
- && chown -R nestjs:nodejs /app
+  && chown -R nestjs:nodejs /app
 
 USER nestjs
 
 EXPOSE 3000
 
-# Health check against the API root (AppController returns 200)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:3000/api || exit 1
-
+# The entrypoint handles "prisma migrate deploy" before starting the server
 ENTRYPOINT ["./docker-entrypoint.sh"]

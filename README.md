@@ -1,59 +1,74 @@
-# CampusPulse
+## 🚀 Getting Started
 
-Campus event aggregation platform for OAU (Obafemi Awolowo University).
+### Prerequisites
 
-Events at OAU are announced across dozens of WhatsApp groups, departmental notice boards, and student union channels — with no single place to find them all. CampusPulse aggregates them into one unified feed, so students always know what is happening on campus.
+- [Docker](https://www.docker.com/) & Docker Compose
+- [pnpm](https://pnpm.io/) (Recommended for local tooling)
+
+### 1. Environment Setup
+
+Clone the repository and set up your environment variables:
+
+```bash
+git clone https://github.com/phastboy/campuspulse.git
+cd pulse
+cp .env.example .env
+```
+
+_Be sure to edit `.env` with your desired database credentials before proceeding._
+
+### 2. Local Development
+
+The local stack mounts your source code for hot-reloading and exposes ports for debugging.
+
+**Build and Spin Up (Single Command):**
+The most common command. This builds the images (if changes were made to `Dockerfile` or `package.json`) and starts the containers in the background:
+
+```bash
+docker compose up -d --build
+```
+
+**Step-by-Step Lifecycle:**
+If you prefer granular control over the process:
+
+```bash
+# 1. Build the images without starting them
+docker compose build
+
+# 2. Spin up the containers
+docker compose up -d
+
+# 3. View the logs (follow mode)
+docker compose logs -f
+
+# 4. Tear down the stack
+docker compose down
+```
+
+### 3. Production Deployment
+
+The production stack uses the minimal `production` build stage, strips dev dependencies, and locks down internal ports.
+
+To deploy, you must pass both the base compose file and the production override file:
+
+**Build and Spin Up (Production):**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+**Tear Down (Production):**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+```
+
+### 4. Accessing the Application
+
+Once the stack is running, all traffic flows through the Nginx proxy on port 80:
+
+- **API Root:** `http://localhost/api`
+- **Swagger Docs:** `http://localhost/api/docs`
+- **Health Check:** `http://localhost/api/health`
 
 ---
-
-## What it does
-
-- Accepts event submissions from students and curators via a simple HTTP API
-- Automatically detects duplicate submissions before they reach the feed
-- Publishes clean events to a searchable, filterable event listing
-- Lets curators correct or remove events after the fact
-
-The duplication problem is handled by a weighted similarity engine that scores incoming submissions against existing events and either auto-publishes, auto-links, or asks the submitter to resolve ambiguity — without manual moderation for every submission.
-
----
-
-## Project status
-
-Phase 1 is live: manual curation and crowdsourced submission via this API.
-
-See [`docs/roadmap.md`](docs/roadmap.md) for what comes next.
-
----
-
-## For developers
-
-Everything you need to run, contribute to, or understand the codebase:
-
-| Document | What it covers |
-|----------|---------------|
-| [`docs/setup.md`](docs/setup.md) | Local development setup, environment variables, Docker |
-| [`docs/api.md`](docs/api.md) | All API endpoints with request/response examples |
-| [`docs/architecture.md`](docs/architecture.md) | Layer diagram, port map, dependency graph (auto-generated) |
-| [`docs/contributing.md`](docs/contributing.md) | How to contribute — branching, commits, PR checklist |
-| [`docs/roadmap.md`](docs/roadmap.md) | Planned phases and what changes in each |
-| [`src/README.md`](src/README.md) | Source tree orientation |
-
----
-
-## Stack
-
-| Concern | Technology |
-|---------|-----------|
-| Framework | NestJS 11 |
-| ORM | MikroORM 7 (PostgreSQL driver) |
-| Database | PostgreSQL 14+ |
-| Validation | class-validator + class-transformer |
-| Config validation | Zod |
-| API docs | Swagger (optional, basic-auth protected) |
-| Package manager | pnpm |
-
----
-
-## Licence
-
-ISC
