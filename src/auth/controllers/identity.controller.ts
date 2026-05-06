@@ -6,10 +6,7 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {
-  CurrentIdentity,
-  type RequestIdentity,
-} from '@odysseon/whoami-adapter-nestjs';
+import { CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { ProfileResponse } from '../dto/index.js';
 
 @ApiTags('identity')
