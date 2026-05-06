@@ -8,10 +8,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import * as os from 'os';
 
-import { AppModule } from '@modules/app.module';
-import { AllExceptionsFilter } from '@infrastructure/http/all-exceptions.filter';
-import { SwaggerSetup } from '@configs/swagger.config';
-import { AppConfig } from '@configs/validation';
+import { AppModule } from './app.module.js';
+import { SwaggerSetup } from './configs/swagger.config.js';
+import { AppConfig } from './configs/validation.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -31,7 +30,6 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.useGlobalFilters(new AllExceptionsFilter());
   SwaggerSetup.register(app);
   app.enableCors();
 
