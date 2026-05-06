@@ -47,7 +47,6 @@ WORKDIR /app
 # Install ONLY production dependencies to keep the image small
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod \
-  && pnpm add prisma \
   && pnpm store prune
 
 # Copy runtime essentials
