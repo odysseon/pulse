@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import basicAuth from 'express-basic-auth';
-import { AppConfig } from './validation';
+import { AppConfig } from './validation.js';
 
 /**
  * Encapsulates Swagger UI registration.
