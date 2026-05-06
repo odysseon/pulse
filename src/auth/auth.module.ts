@@ -6,7 +6,7 @@ import { PasswordAuthController } from './controllers/password.controller.js';
 import { IdentityController } from './controllers/identity.controller.js';
 
 @Module({
-  imports: [WhoamiModule.register(whoamiConfig)],
+  imports: [WhoamiModule.registerAsync(whoamiConfig)],
   controllers: [AccountsController, PasswordAuthController, IdentityController],
   providers: [],
 })
