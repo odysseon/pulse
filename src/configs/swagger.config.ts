@@ -30,10 +30,7 @@ export class SwaggerSetup {
       .setTitle(config.get('SWAGGER_TITLE') as string)
       .setDescription(config.get('SWAGGER_DESCRIPTION') as string)
       .setVersion(config.get('SWAGGER_VERSION') as string)
-      .addTag(
-        config.get('SWAGGER_TAG_NAME') as string,
-        config.get('SWAGGER_TAG_DESC') as string,
-      )
+      .addTag(config.get('SWAGGER_TAG_NAME') as string, config.get('SWAGGER_TAG_DESC') as string)
       .addBearerAuth()
       .build();
 

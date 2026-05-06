@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Post,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Body, Controller, Inject, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,

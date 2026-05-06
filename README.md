@@ -49,7 +49,8 @@ docker compose down
 
 ### 3. Production Deployment
 
-The production stack uses the minimal `production` build stage, strips dev dependencies, and locks down internal ports. To deploy, pass both the base compose file and the production override:
+The production stack uses the minimal `production` build stage, strips dev dependencies, and locks
+down internal ports. To deploy, pass both the base compose file and the production override:
 
 **Build and Spin Up:**
 
@@ -67,7 +68,8 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 
 ### 4. Scaling & Resilience
 
-Because the Nginx proxy is configured with `least_conn` load balancing, you can scale the backend horizontally with a single command:
+Because the Nginx proxy is configured with `least_conn` load balancing, you can scale the backend
+horizontally with a single command:
 
 ```bash
 # Creates N identical backend containers; Nginx automatically
@@ -77,8 +79,10 @@ docker compose up -d --scale backend=3
 
 **Why this works:**
 
-- **Port Reset:** The production override resets host port bindings, so multiple containers can all listen on port `3000` internally without conflict.
-- **Automatic Failover:** If an instance crashes, Nginx marks it as down for 30s (`max_fails=3`) and routes traffic to the healthy ones.
+- **Port Reset:** The production override resets host port bindings, so multiple containers can all
+  listen on port `3000` internally without conflict.
+- **Automatic Failover:** If an instance crashes, Nginx marks it as down for 30s (`max_fails=3`) and
+  routes traffic to the healthy ones.
 
 ---
 
@@ -92,6 +96,7 @@ Once the stack is running, all traffic flows through the Nginx proxy on port `80
 | Swagger Docs | `http://localhost/api/docs` |
 | Health Check | `http://localhost/health`   |
 
-> **Note:** The health check lives at `/health`, not `/api/health` — it's served directly by Nginx (bypassing the API prefix) as defined in `nginx.conf`.
+> **Note:** The health check lives at `/health`, not `/api/health` — it's served directly by Nginx
+> (bypassing the API prefix) as defined in `nginx.conf`.
 
 ---

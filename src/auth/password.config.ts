@@ -2,16 +2,9 @@ import { createPrismaAdapters } from '@odysseon/whoami-adapter-prisma';
 import { PasswordModuleConfig } from '@odysseon/whoami-core/password';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Argon2PasswordHasher } from '@odysseon/whoami-adapter-argon2';
-import {
-  JoseReceiptConfig,
-  JoseReceiptSigner,
-} from '@odysseon/whoami-adapter-jose';
+import { JoseReceiptConfig, JoseReceiptSigner } from '@odysseon/whoami-adapter-jose';
 import { WebCryptoSecureTokenAdapter } from '@odysseon/whoami-adapter-webcrypto';
-import {
-  UuidGenerator,
-  SystemClock,
-  NestLoggerAdapter,
-} from './auth.adapters.js';
+import { UuidGenerator, SystemClock, NestLoggerAdapter } from './auth.adapters.js';
 
 export const joseConfig: JoseReceiptConfig = {
   issuer: 'pulse',
@@ -29,8 +22,7 @@ const receiptSigner = new JoseReceiptSigner(joseConfig);
 const secureToken = new WebCryptoSecureTokenAdapter();
 const logger = new NestLoggerAdapter('PasswordModule');
 
-const { accountRepo, passwordHashStore, resetTokenStore } =
-  createPrismaAdapters(prisma);
+const { accountRepo, passwordHashStore, resetTokenStore } = createPrismaAdapters(prisma);
 
 export const passwordConfig: PasswordModuleConfig = {
   accountRepo,

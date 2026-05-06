@@ -1,6 +1,7 @@
 # src/
 
-Application source code. The architecture follows Hexagonal (Ports & Adapters) principles layered over Clean Architecture.
+Application source code. The architecture follows Hexagonal (Ports & Adapters) principles layered
+over Clean Architecture.
 
 ```
 src/
@@ -42,34 +43,37 @@ modules       ← everything (wiring only)
 common        ← nothing from src/
 ```
 
-The critical invariant: **`domain/` and `ports/` compile to zero with no npm packages installed** — they contain only TypeScript interfaces and plain types.
+The critical invariant: **`domain/` and `ports/` compile to zero with no npm packages installed** —
+they contain only TypeScript interfaces and plain types.
 
 ---
 
 ## Adapters
 
-Infrastructure adapters live in `infrastructure/adapters/`. Each adapter implements exactly one port interface. No class implements two ports. This is a strict rule — if you find yourself writing `implements IFoo, IBar`, split it into two adapters.
+Infrastructure adapters live in `infrastructure/adapters/`. Each adapter implements exactly one port
+interface. No class implements two ports. This is a strict rule — if you find yourself writing
+`implements IFoo, IBar`, split it into two adapters.
 
 ---
 
 ## Path aliases
 
-| Alias | Resolves to |
-|-------|------------|
-| `@domain` | `src/domain` |
-| `@application` | `src/application` |
-| `@ports` | `src/ports` |
-| `@services` | `src/services` |
-| `@controllers` | `src/controllers` |
+| Alias             | Resolves to          |
+| ----------------- | -------------------- |
+| `@domain`         | `src/domain`         |
+| `@application`    | `src/application`    |
+| `@ports`          | `src/ports`          |
+| `@services`       | `src/services`       |
+| `@controllers`    | `src/controllers`    |
 | `@infrastructure` | `src/infrastructure` |
-| `@similarity` | `src/similarity` |
-| `@rules` | `src/rules` |
-| `@mappers` | `src/mappers` |
-| `@helpers` | `src/helpers` |
-| `@dto` | `src/dto` |
-| `@configs` | `src/configs` |
-| `@modules` | `src/modules` |
-| `@common` | `src/common` |
+| `@similarity`     | `src/similarity`     |
+| `@rules`          | `src/rules`          |
+| `@mappers`        | `src/mappers`        |
+| `@helpers`        | `src/helpers`        |
+| `@dto`            | `src/dto`            |
+| `@configs`        | `src/configs`        |
+| `@modules`        | `src/modules`        |
+| `@common`         | `src/common`         |
 
 ---
 

@@ -1,35 +1,50 @@
-# ─── Stage 1: Build ───────────────────────────────────────────────────────────
-FROM node:25-alpine AS builder
+# ─── Stage 1: Base (Shared Dependencies) ──────────────────────────────────────
+FROM node:25-alpine AS base
 
 RUN npm install -g pnpm@latest
 WORKDIR /app
 
-# Install dependencies
+# Install all dependencies (dev + prod) for building and testing
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy configuration and source code
-COPY nest-cli.json tsconfig.json tsconfig.build.json ./
+# Copy Prisma schema and generate client so it's available to all stages
 COPY prisma/ ./prisma/
+RUN pnpm exec prisma generate
+
+
+# ─── Stage 2: Development (Target for Docker Compose) ─────────────────────────
+FROM base AS development
+
+# Copy the entrypoint and configuration
+COPY prisma.config.ts docker-entrypoint.sh nest-cli.json tsconfig.json tsconfig.build.json ./
+RUN chmod +x docker-entrypoint.sh
+
+# In dev, we mount 'src' via volumes in compose, but we need the entrypoint defined
+ENTRYPOINT ["./docker-entrypoint.sh"]
+
+
+# ─── Stage 3: Build (Compilation Only) ────────────────────────────────────────
+FROM base AS builder
+
+# Copy source and compile TypeScript
+COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
-
-# Generate Prisma client (matches the output directory in your schema)
-# And compile TypeScript to /dist
-RUN pnpm exec prisma generate && pnpm build
+RUN pnpm build
 
 
-# ─── Stage 2: Production ──────────────────────────────────────────────────────
+# ─── Stage 4: Production (Minimal Runtime) ────────────────────────────────────
 FROM node:25-alpine AS production
 
 RUN npm install -g pnpm@latest
 
-# Security: Run as non-root user
+# Security: Non-root user
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nestjs
 
 WORKDIR /app
 
-# Install ONLY production dependencies
+# Install ONLY production dependencies to keep the image small
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod \
   && pnpm add prisma \
@@ -37,14 +52,12 @@ RUN pnpm install --frozen-lockfile --prod \
 
 # Copy runtime essentials
 COPY prisma/ ./prisma/
-COPY prisma.config.ts ./
-COPY docker-entrypoint.sh ./
+COPY docker-entrypoint.sh prisma.config.ts ./
 
-# Copy compiled code and the generated client from builder
+# Copy compiled code and generated Prisma client from previous stages
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/generated ./src/generated
+COPY --from=base /app/src/generated ./src/generated
 
-# Set permissions for the non-root user
 RUN chmod +x docker-entrypoint.sh \
   && chown -R nestjs:nodejs /app
 
@@ -52,5 +65,4 @@ USER nestjs
 
 EXPOSE 3000
 
-# The entrypoint handles "prisma migrate deploy" before starting the server
 ENTRYPOINT ["./docker-entrypoint.sh"]

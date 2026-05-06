@@ -1,10 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import {
-  INestApplication,
-  Logger,
-  ValidationPipe,
-  ConsoleLogger,
-} from '@nestjs/common';
+import { INestApplication, Logger, ValidationPipe, ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as os from 'os';
 
@@ -38,15 +33,14 @@ async function bootstrap(): Promise<void> {
   logNetworkAddresses(app, port);
 }
 
-function logNetworkAddresses(app: INestApplication, port: number): void {
+function logNetworkAddresses(_app: INestApplication, port: number): void {
   const addresses: string[] = [];
   try {
     const interfaces = os.networkInterfaces();
     for (const iface of Object.values(interfaces)) {
       if (!iface) continue;
       for (const alias of iface) {
-        if (alias.family === 'IPv4' && !alias.internal)
-          addresses.push(alias.address);
+        if (alias.family === 'IPv4' && !alias.internal) addresses.push(alias.address);
       }
     }
   } catch {

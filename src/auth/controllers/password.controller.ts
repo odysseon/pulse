@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Post,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Body, Controller, Inject, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -32,9 +25,7 @@ export class PasswordAuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async loginPassword(
-    @Body() dto: LoginPasswordDto,
-  ): Promise<ReceiptTokenResponse> {
+  async loginPassword(@Body() dto: LoginPasswordDto): Promise<ReceiptTokenResponse> {
     const { receipt } = await this.password.authenticateWithPassword({
       email: dto.email,
       password: dto.password,
