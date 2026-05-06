@@ -53,9 +53,11 @@ RUN pnpm install --frozen-lockfile --prod \
 COPY prisma/ ./prisma/
 COPY docker-entrypoint.sh prisma.config.ts ./
 
-# Copy compiled code and generated Prisma client from previous stages
+# Copy compiled code from builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=base /app/src/generated ./src/generated
+
+# Copy generated Prisma client from base stage
+COPY --from=base /app/generated ./generated
 
 RUN chmod +x docker-entrypoint.sh \
   && chown -R nestjs:nodejs /app
