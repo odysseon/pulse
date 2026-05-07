@@ -1,38 +1,43 @@
-#  Production Overrides
 services:
-  # ── Database Override ──────────────────────────────────────────────────────
-  db:
-    restart: always
-    ports: !reset [] # Ensure database is not accessible from the public internet
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512m
-        reservations:
-          memory: 256m
-
-  # ── Application Override ───────────────────────────────────────────────────
   backend:
     build:
       context: .
-      target: production # Uses the slim image with no devDependencies
+      target: production
+      args:
+        DATABASE_URL: ${DATABASE_URL}
     restart: always
-    volumes: !reset [] # Production code is baked into the image[cite: 1]
-    ports: !reset [] # App is isolated; traffic must flow through the proxy
+    env_file: .env.production
+    volumes: []
+    ports: []
+    networks:
+      - external
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:8008/api/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
+      replicas: 3
       resources:
         limits:
-          cpus: '2.0'
-          memory: 512m
+          cpus: '0.75'
+          memory: 170m
         reservations:
-          memory: 128m
+          memory: 64m
 
-  # ── Proxy Override ─────────────────────────────────────────────────────────
   proxy:
     restart: always
+    ports:
+      - '80:80'
+    networks:
+      - external
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 64m
+
+networks:
+  external:
+    driver: bridge

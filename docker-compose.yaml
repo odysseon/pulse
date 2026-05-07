@@ -26,18 +26,16 @@ services:
     build:
       context: .
       target: development
-    container_name: pulse_backend
     restart: unless-stopped
     env_file: .env
     environment:
       NODE_ENV: development
-      # Note: 'db' matches the service name above
       DATABASE_URL: postgresql://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-app_db}
     volumes:
       - ./src:/app/src:ro
+      - ./generated:/app/generated
       - /app/node_modules
-    ports:
-      - '3000:3000'
+    # remove ports — can't bind same host port across replicas
     depends_on:
       db:
         condition: service_healthy
@@ -73,7 +71,5 @@ volumes:
 networks:
   internal:
     driver: bridge
-    # Keep 'internal: true' to isolate DB/Backend from direct internet access
-    internal: true
   external:
     driver: bridge

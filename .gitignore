@@ -76,3 +76,6 @@ docker-compose.override.yml
 keys/
 
 /generated/prisma
+.env.production
+ca.pem
+avn.txt
