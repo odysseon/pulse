@@ -1,7 +1,7 @@
 # ─── Stage 1: Base ────────────────────────────────────────────────────────────
 FROM node:25-alpine AS base
 
-RUN npm install -g pnpm@latest
+RUN npm install -g pnpm@11.0.8
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -44,7 +44,7 @@ RUN addgroup --system --gid 1001 nodejs \
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN npm install -g pnpm@latest \
+RUN npm install -g pnpm@11.0.8 \
   && pnpm install --frozen-lockfile --prod \
   && pnpm store prune
 
