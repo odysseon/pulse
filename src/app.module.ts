@@ -4,6 +4,7 @@ import { validateConfig } from './configs/validation.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { HealthController } from './health/health.controller.js';
+import { StorageModule } from './storage/storage.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { HealthController } from './health/health.controller.js';
     }),
     PrismaModule,
     AuthModule,
+    StorageModule.register(),
   ],
   controllers: [HealthController],
 })
