@@ -14,23 +14,21 @@ export interface BackblazeConfig {
 export const BackblazeClientProvider: Provider = {
   provide: BACKBLAZE_CLIENT,
   inject: [ConfigService],
-  useFactory: (configService: ConfigService): S3Client | undefined => {
+  useFactory: (configService: ConfigService): S3Client => {
     const logger = new Logger('BackblazeClientProvider');
 
-    let endpoint = configService.get<string>('B2_ENDPOINT');
-    const region = configService.get<string>('B2_REGION');
-    const accessKeyId = configService.get<string>('B2_APPLICATION_KEY_ID');
-    const secretAccessKey = configService.get<string>('B2_APPLICATION_KEY');
-    if (!endpoint || !region || !accessKeyId || !secretAccessKey) {
-      return undefined;
-    }
+    const endpoint = configService.getOrThrow<string>('B2_ENDPOINT');
+    const region = configService.getOrThrow<string>('B2_REGION');
+    const accessKeyId = configService.getOrThrow<string>('B2_APPLICATION_KEY_ID');
+    const secretAccessKey = configService.getOrThrow<string>('B2_APPLICATION_KEY');
 
-    if (endpoint && !endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
-      endpoint = `https://${endpoint}`;
-    }
+    const formattedEndpoint =
+      !endpoint.startsWith('http://') && !endpoint.startsWith('https://')
+        ? `https://${endpoint}`
+        : endpoint;
 
     logger.log('🔧 Backblaze B2 Configuration:', {
-      endpoint,
+      endpoint: formattedEndpoint,
       region,
       bucketName: configService.get<string>('B2_BUCKET_NAME'),
       hasKeyId: !!accessKeyId,
@@ -38,7 +36,7 @@ export const BackblazeClientProvider: Provider = {
     });
 
     return new S3Client({
-      endpoint,
+      endpoint: formattedEndpoint,
       region,
       credentials: {
         accessKeyId,
