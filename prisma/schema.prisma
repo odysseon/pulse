@@ -108,6 +108,14 @@ model User {
   name String
   role Role   @default(VENUE_OWNER)
 
+  // The public delivery URL for the avatar
+  avatarUrl String?
+  // The management ID for the avatar (used for the 'replace' endpoint cleanup)
+  avatarId  String?
+
+  // Optional but useful for owners to be reached directly
+  phoneNumber String?
+
   // A venue owner can manage multiple venues
   venues EventCentre[]
 
