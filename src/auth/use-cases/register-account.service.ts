@@ -38,8 +38,13 @@ export class RegisterAccountUseCase {
           email: account.email,
           name: user.name,
         };
-      } catch (error: any) {
-        if (error.code === 'P2002') {
+      } catch (error: unknown) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          error.code === 'P2002'
+        ) {
           throw new ConflictException('Email already exists');
         }
         throw error;
