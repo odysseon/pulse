@@ -1,0 +1,37 @@
+import { IsIn, IsString } from 'class-validator';
+
+/**
+ * Valid domain categories for storage destinations.
+ */
+export const MEDIA_FOLDER_TYPES = ['AVATAR', 'VENUE_GALLERY'] as const;
+
+/**
+ * Type derived from valid media folder constants.
+ */
+export type MediaFolderType = (typeof MEDIA_FOLDER_TYPES)[number];
+
+/**
+ * Payload for uploading a brand new media asset.
+ */
+export class UploadMediaDto {
+  /**
+   * The domain category for this file.
+   * Determines the internal storage path.
+   * @example "AVATAR"
+   */
+  @IsIn(MEDIA_FOLDER_TYPES)
+  folderType!: MediaFolderType;
+}
+
+/**
+ * Payload for replacing an existing media asset.
+ * Triggers a cleanup of the old file ID upon successful upload.
+ */
+export class ReplaceMediaDto extends UploadMediaDto {
+  /**
+   * The management ID (Key or PublicID) of the previous file to be deleted.
+   * @example "users/avatars/old-file-uuid.png"
+   */
+  @IsString()
+  oldFileId!: string;
+}

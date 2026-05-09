@@ -80,35 +80,13 @@ export class ImageStorageService {
 
   constructor(private readonly storageProvider: StorageProvider) {}
 
-  /**
-   * Orchestrates a safe image replacement.
-   * Validates and uploads the new file first, then triggers cleanup of the old file.
-   */
-  async replaceImage(params: UploadParams, previousFileId?: string): Promise<UploadResult> {
-    const uploadResult = await this.validateAndUpload(params);
-
-    if (previousFileId) {
-      await this.safeDelete(previousFileId);
-    }
-
-    return uploadResult;
-  }
-
-  /**
-   * Direct deletion for manual cleanup or account removal.
-   */
-  async deleteImage(fileId: string) {
-    return await this.storageProvider.delete(fileId);
-  }
-
-  private async validateAndUpload(params: UploadParams): Promise<UploadResult> {
+  public async uploadNewImage(params: UploadParams): Promise<UploadResult> {
     const extension = path.extname(params.fileName).toLowerCase();
 
     if (!this.allowedExtensions.includes(extension)) {
       throw new BadRequestException(`${extension} is not a supported image format.`);
     }
 
-    // Peek the first bytes without consuming the stream
     const head = await peekStream(params.fileData, MAGIC_PEEK_BYTES);
 
     const mime = detectMimeType(head);
@@ -122,6 +100,27 @@ export class ImageStorageService {
       ...params,
       fileName: safeFileName,
     });
+  }
+
+  /**
+   * Orchestrates a safe image replacement.
+   * Validates and uploads the new file first, then triggers cleanup of the old file.
+   */
+  async replaceImage(params: UploadParams, previousFileId?: string): Promise<UploadResult> {
+    const uploadResult = await this.uploadNewImage(params);
+
+    if (previousFileId) {
+      await this.safeDelete(previousFileId);
+    }
+
+    return uploadResult;
+  }
+
+  /**
+   * Direct deletion for manual cleanup or account removal.
+   */
+  async deleteImage(fileId: string) {
+    return await this.storageProvider.delete(fileId);
   }
 
   private async safeDelete(fileId: string) {
