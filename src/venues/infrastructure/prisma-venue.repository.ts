@@ -4,16 +4,21 @@ import { IVenueRepository } from '../core/ports/venue.repository.interface.js';
 import { Prisma } from '../../../generated/prisma/client.js';
 import { GetVenuesFilterDto } from '../delivery/http/dto/get-venues-filter.dto.js';
 import { CreateVenueDto } from '../delivery/http/dto/create-venue.dto.js';
+import {
+  EventCentreDiscoveryEntity,
+  EventCentreDetailedEntity,
+} from '../core/domain/venue.types.js';
 
 @Injectable()
 export class PrismaVenueRepository implements IVenueRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findMany(filters: GetVenuesFilterDto) {
+  async findMany(
+    filters: GetVenuesFilterDto,
+  ): Promise<{ data: EventCentreDiscoveryEntity[]; total: number }> {
     const { location, minCapacity, maxPrice, amenities, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
-    // Constructing the query object dynamically
     const whereClause: Prisma.EventCentreWhereInput = {
       ...(location && { location: { contains: location, mode: 'insensitive' } }),
       ...(minCapacity && { capacity: { gte: minCapacity } }),
@@ -23,9 +28,7 @@ export class PrismaVenueRepository implements IVenueRepository {
       ...(amenities &&
         amenities.length > 0 && {
           amenities: {
-            some: {
-              name: { in: amenities },
-            },
+            some: { name: { in: amenities } },
           },
         }),
     };
@@ -38,8 +41,8 @@ export class PrismaVenueRepository implements IVenueRepository {
         orderBy: { createdAt: 'desc' },
         include: {
           media: {
-            orderBy: { order: 'asc' }, // Ensure main image (0) is first
-            take: 1, // Only pull the main image for discovery list
+            orderBy: { order: 'asc' },
+            take: 1,
           },
           amenities: true,
         },
@@ -47,17 +50,17 @@ export class PrismaVenueRepository implements IVenueRepository {
       this.prisma.eventCentre.count({ where: whereClause }),
     ]);
 
-    return { data, total };
+    // Prisma's generated payload structurally satisfies EventCentreDiscoveryEntity
+    return { data: data, total };
   }
 
-  async create(ownerId: string, payload: CreateVenueDto) {
-    // Generate a slug from the name. In production, ensure uniqueness.
+  async create(ownerId: string, payload: CreateVenueDto): Promise<EventCentreDetailedEntity> {
     const slug =
       payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') +
       '-' +
       Date.now().toString().slice(-4);
 
-    return this.prisma.eventCentre.create({
+    const createdVenue = await this.prisma.eventCentre.create({
       data: {
         slug,
         ownerId,
@@ -71,7 +74,6 @@ export class PrismaVenueRepository implements IVenueRepository {
         contactPhone: payload.contactPhone,
         contactWhatsapp: payload.contactWhatsapp,
 
-        // Nested Writes for Relations
         media: payload.media
           ? {
               create: payload.media.map((m) => ({
@@ -92,7 +94,6 @@ export class PrismaVenueRepository implements IVenueRepository {
             }
           : undefined,
 
-        // Implicit M:N - Connect existing or create new amenities
         amenities: payload.amenities
           ? {
               connectOrCreate: payload.amenities.map((amenityName) => ({
@@ -108,5 +109,8 @@ export class PrismaVenueRepository implements IVenueRepository {
         amenities: true,
       },
     });
+
+    // Prisma's generated payload structurally satisfies EventCentreDetailedEntity
+    return createdVenue;
   }
 }
