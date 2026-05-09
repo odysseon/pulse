@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { GetVenuesFilterDto } from '../delivery/http/dto/get-venues-filter.dto.js';
 import { CreateVenueDto } from '../delivery/http/dto/create-venue.dto.js';
 import {
@@ -15,10 +15,8 @@ export class VenuesService {
 
   /**
    * Discovers event centres based on public filter criteria.
-   * Handles the 'Discover -> Compare' segment of the product loop.
    */
   async discoverVenues(filters: GetVenuesFilterDto) {
-    // Domain rules or data sanitization can happen here
     const result = await this.venueRepository.findMany(filters);
 
     return {
@@ -35,14 +33,14 @@ export class VenuesService {
    * Registers a new event centre under a venue owner's account.
    */
   async createVenue(accountId: string, payload: CreateVenueDto) {
-    if (
-      payload.priceRangeMin &&
-      payload.priceRangeMax &&
-      payload.priceRangeMin > payload.priceRangeMax
-    ) {
-      throw new Error('Minimum price cannot exceed maximum price');
+    // Check against null/undefined to allow 0 as a valid price
+    if (payload.priceRangeMin != null && payload.priceRangeMax != null) {
+      if (payload.priceRangeMin > payload.priceRangeMax) {
+        throw new BadRequestException('Minimum price cannot exceed maximum price');
+      }
     }
 
+    // Sort media by order to ensure deterministic "main image" selection
     if (payload.media && payload.media.length > 0) {
       payload.media.sort((a, b) => a.order - b.order);
     }
