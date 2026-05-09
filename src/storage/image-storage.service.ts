@@ -33,43 +33,65 @@ function detectMimeType(head: Buffer): string | undefined {
 }
 
 /**
- * Reads exactly `n` bytes from a paused Readable, then unshifts them back
- * so the stream is whole for downstream consumers.
+ * Accurately reads `n` bytes by accumulating chunks, resolving early if the stream ends.
+ * It unshifts the exact bytes read back into the stream for downstream consumers.
  */
 async function peekStream(stream: Readable, n: number): Promise<Buffer> {
-  // Ensure paused mode
-  stream.pause();
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let totalLength = 0;
 
-  // Wait for data to be available if the buffer is empty
-  const chunk: Buffer | null = await new Promise((resolve, reject) => {
-    const onReadable = () => {
-      stream.removeListener('error', onError);
-      resolve(stream.read(n) as Buffer | null);
-    };
-    const onError = (err: Error) => {
+    const cleanup = () => {
       stream.removeListener('readable', onReadable);
+      stream.removeListener('end', onEnd);
+      stream.removeListener('error', onError);
+    };
+
+    const onReadable = () => {
+      // Pull data in a loop
+      while (totalLength < n) {
+        const chunk = stream.read() as Buffer | null;
+
+        // Explicitly break if the stream is drained
+        if (chunk === null) break;
+
+        // 3. Now chunk is guaranteed to be a Buffer here
+        chunks.push(chunk);
+        totalLength += chunk.length;
+      }
+
+      if (totalLength >= n) {
+        cleanup();
+        const fullBuffer = Buffer.concat(chunks);
+        stream.unshift(fullBuffer);
+        resolve(fullBuffer.subarray(0, n));
+      }
+    };
+
+    const onEnd = () => {
+      cleanup();
+      if (totalLength === 0) {
+        reject(new BadRequestException('File stream is empty.'));
+        return;
+      }
+      // If file is smaller than `n`, return what we have (magic number check will reject it if invalid)
+      const fullBuffer = Buffer.concat(chunks);
+      stream.unshift(fullBuffer);
+      resolve(fullBuffer);
+    };
+
+    const onError = (err: Error) => {
+      cleanup();
       reject(err);
     };
-    stream.once('readable', onReadable);
-    stream.once('error', onError);
 
-    // If data is already buffered, read immediately
-    const immediate = stream.read(n) as Buffer | null;
-    if (immediate !== null) {
-      stream.removeListener('readable', onReadable);
-      stream.removeListener('error', onError);
-      resolve(immediate);
-    }
+    stream.on('readable', onReadable);
+    stream.on('end', onEnd);
+    stream.on('error', onError);
+
+    stream.pause();
+    onReadable(); // Kickstart
   });
-
-  if (!chunk || chunk.length === 0) {
-    throw new BadRequestException('File stream is empty.');
-  }
-
-  // Put the bytes back so the adapter sees a complete stream
-  stream.unshift(chunk);
-
-  return chunk;
 }
 
 @Injectable()
