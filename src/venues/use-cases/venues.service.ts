@@ -34,18 +34,19 @@ export class VenuesService {
   /**
    * Registers a new event centre under a venue owner's account.
    */
-  async createVenue(ownerId: string, payload: CreateVenueDto) {
-    if (payload.priceRangeMin && payload.priceRangeMax) {
-      if (payload.priceRangeMin > payload.priceRangeMax) {
-        throw new Error('Minimum price cannot exceed maximum price'); // Replace with domain exception
-      }
+  async createVenue(accountId: string, payload: CreateVenueDto) {
+    if (
+      payload.priceRangeMin &&
+      payload.priceRangeMax &&
+      payload.priceRangeMin > payload.priceRangeMax
+    ) {
+      throw new Error('Minimum price cannot exceed maximum price');
     }
 
-    // Ensure main image is sorted correctly before persistence
     if (payload.media && payload.media.length > 0) {
       payload.media.sort((a, b) => a.order - b.order);
     }
 
-    return this.venueRepository.create(ownerId, payload);
+    return this.venueRepository.create(accountId, payload);
   }
 }

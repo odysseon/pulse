@@ -22,8 +22,6 @@ export class VenuesController {
    */
   @Post()
   async createVenue(@Body() payload: CreateVenueDto, @CurrentIdentity() accountId: string) {
-    const ownerId = accountId;
-
-    return this.venuesService.createVenue(ownerId, payload);
+    return this.venuesService.createVenue(accountId, payload);
   }
 }

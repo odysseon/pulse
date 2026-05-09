@@ -1,4 +1,4 @@
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException, Logger } from '@nestjs/common';
 import { moduleToken } from '@odysseon/whoami-adapter-nestjs';
 import type { PasswordMethods } from '@odysseon/whoami-core/password';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -6,6 +6,8 @@ import { RegisterDto } from '../dto/index.js';
 
 @Injectable()
 export class RegisterAccountUseCase {
+  private readonly logger = new Logger(RegisterAccountUseCase.name);
+
   constructor(
     @Inject(moduleToken('password'))
     private readonly passwordAuth: PasswordMethods,
@@ -13,42 +15,44 @@ export class RegisterAccountUseCase {
   ) {}
 
   async execute(dto: RegisterDto) {
-    // We use a transaction to ensure that if the User creation fails,
-    // we don't end up with an "orphaned" Account.
-    return this.prisma.$transaction(async (tx) => {
-      try {
-        // 1. Create the identity record via Whoami
-        const { account } = await this.passwordAuth.registerWithPassword({
-          email: dto.email,
-          password: dto.password,
-        });
-
-        // 2. Create the domain User linked to that account
-        const user = await tx.user.create({
-          data: {
-            accountId: account.id,
-            name: dto.name,
-            role: 'VENUE_OWNER',
-          },
-        });
-
-        return {
-          accountId: account.id,
-          userId: user.id,
-          email: account.email,
-          name: user.name,
-        };
-      } catch (error: unknown) {
-        if (
-          typeof error === 'object' &&
-          error !== null &&
-          'code' in error &&
-          error.code === 'P2002'
-        ) {
-          throw new ConflictException('Email already exists');
-        }
-        throw error;
-      }
+    // 1. Create Identity (Executes outside domain transaction)
+    const { account } = await this.passwordAuth.registerWithPassword({
+      email: dto.email,
+      password: dto.password,
     });
+
+    try {
+      // 2. Create Domain User
+      const user = await this.prisma.user.create({
+        data: {
+          accountId: account.id,
+          name: dto.name,
+          role: 'VENUE_OWNER',
+        },
+      });
+
+      return {
+        accountId: account.id,
+        userId: user.id,
+        email: account.email,
+        name: user.name,
+      };
+    } catch (error: unknown) {
+      // 3. COMPENSATING ROLLBACK
+      this.logger.warn(`Registration failed for ${account.email}. Rolling back identity creation.`);
+
+      await this.prisma.account
+        .delete({ where: { id: account.id } })
+        .catch((err) =>
+          this.logger.error(`FATAL: Failed to rollback orphaned account ${account.id}`, err),
+        );
+
+      // check for Prisma unique constraint violation
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+        throw new ConflictException('Email already exists');
+      }
+
+      throw error;
+    }
   }
 }
