@@ -12,7 +12,7 @@ import { ApiTags, ApiConsumes } from '@nestjs/swagger';
 import { Readable } from 'stream';
 import { ImageStorageService } from '../../image-storage.service.js';
 import { UploadMediaDto, ReplaceMediaDto, MediaFolderType } from './dto/upload-media.dto.js';
-import type { Express } from 'express';
+import 'multer';
 
 @ApiTags('Media')
 @Controller('media')
