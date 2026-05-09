@@ -27,12 +27,11 @@ export class CloudinaryStorageProvider implements StorageProvider {
         },
         (error, result) => {
           if (error || !result) {
-            this.logger.error('Cloudinary Upload Error:', error);
+            this.logger.error('Cloudinary Upload Callback Error:', error);
             return reject(new InternalServerErrorException('Failed to upload image.'));
           }
 
           this.logger.log(`Uploaded image to Cloudinary: ${result.public_id}`);
-
           resolve({
             url: result.secure_url,
             fileId: result.public_id,
@@ -40,7 +39,23 @@ export class CloudinaryStorageProvider implements StorageProvider {
         },
       );
 
-      params.fileData.pipe(uploadStream);
+      const readStream = params.fileData;
+
+      // Handle incoming stream errors (e.g., client aborts upload halfway)
+      readStream.once('error', (err) => {
+        this.logger.error('Incoming read stream error:', err);
+        uploadStream.destroy();
+        reject(new InternalServerErrorException('Failed to read incoming file stream.'));
+      });
+
+      // Handle outgoing stream errors (e.g., Cloudinary API drops connection)
+      uploadStream.once('error', (err) => {
+        this.logger.error('Cloudinary pipe stream error:', err);
+        readStream.destroy();
+        reject(new InternalServerErrorException('Failed to pipe image to Cloudinary.'));
+      });
+
+      readStream.pipe(uploadStream);
     });
   }
 
