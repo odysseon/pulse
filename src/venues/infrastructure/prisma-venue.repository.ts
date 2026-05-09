@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { IVenueRepository } from '../core/ports/venue.repository.interface.js';
 import { Prisma } from '../../../generated/prisma/client.js';
@@ -54,16 +54,21 @@ export class PrismaVenueRepository implements IVenueRepository {
     return { data: data, total };
   }
 
-  async create(ownerId: string, payload: CreateVenueDto): Promise<EventCentreDetailedEntity> {
-    const slug =
-      payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') +
-      '-' +
-      Date.now().toString().slice(-4);
+  async create(accountId: string, payload: CreateVenueDto): Promise<EventCentreDetailedEntity> {
+    // Resolve the internal User ID from the Auth Account ID
+    const user = await this.prisma.user.findUnique({
+      where: { accountId },
+      select: { id: true },
+    });
 
-    const createdVenue = await this.prisma.eventCentre.create({
+    if (!user) throw new UnauthorizedException('User profile not found for this account');
+
+    const slug = `${payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-4)}`;
+
+    return await this.prisma.eventCentre.create({
       data: {
         slug,
-        ownerId,
+        ownerId: user.id,
         name: payload.name,
         description: payload.description,
         location: payload.location,
@@ -73,44 +78,26 @@ export class PrismaVenueRepository implements IVenueRepository {
         priceRangeMax: payload.priceRangeMax,
         contactPhone: payload.contactPhone,
         contactWhatsapp: payload.contactWhatsapp,
-
         media: payload.media
           ? {
-              create: payload.media.map((m) => ({
-                url: m.url,
-                type: m.type,
-                order: m.order,
-                caption: m.caption,
-              })),
+              create: payload.media.map((m) => ({ ...m })),
             }
           : undefined,
-
         perks: payload.perks
           ? {
-              create: payload.perks.map((p) => ({
-                title: p.title,
-                description: p.description,
-              })),
+              create: payload.perks.map((p) => ({ ...p })),
             }
           : undefined,
-
         amenities: payload.amenities
           ? {
-              connectOrCreate: payload.amenities.map((amenityName) => ({
-                where: { name: amenityName },
-                create: { name: amenityName },
+              connectOrCreate: payload.amenities.map((name) => ({
+                where: { name },
+                create: { name },
               })),
             }
           : undefined,
       },
-      include: {
-        media: true,
-        perks: true,
-        amenities: true,
-      },
+      include: { media: true, perks: true, amenities: true },
     });
-
-    // Prisma's generated payload structurally satisfies EventCentreDetailedEntity
-    return createdVenue;
   }
 }
