@@ -41,6 +41,18 @@ export class RegisterResponse {
   email!: string;
 
   /**
+   * The unique identifier of the newly created user.
+   * @example 01J...
+   */
+  userId!: string;
+
+  /**
+   * The full name of the registered user.
+   * @example "Hammed Anuoluwapo"
+   */
+  name!: string;
+
+  /**
    * The date and time when the account was created.
    */
   createdAt!: Date;

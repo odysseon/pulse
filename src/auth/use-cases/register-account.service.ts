@@ -36,6 +36,7 @@ export class RegisterAccountUseCase {
         userId: user.id,
         email: account.email,
         name: user.name,
+        createdAt: account.createdAt,
       };
     } catch (error: unknown) {
       // 3. COMPENSATING ROLLBACK
