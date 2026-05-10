@@ -12,6 +12,8 @@ const MAGIC_PEEK_BYTES = 12;
  */
 function detectMimeType(head: Buffer): string | undefined {
   if (head.length < 4) return undefined;
+
+  // --- IMAGES ---
   if (head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47)
     return 'image/png';
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'image/jpeg';
@@ -29,6 +31,33 @@ function detectMimeType(head: Buffer): string | undefined {
     head[11] === 0x50
   )
     return 'image/webp';
+
+  // --- VIDEOS ---
+  // WebM (EBML Header)
+  if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3)
+    return 'video/webm';
+
+  // ISO Base Media (MP4 / MOV) - Check for 'ftyp' at bytes 4-7
+  if (
+    head.length >= 8 &&
+    head[4] === 0x66 &&
+    head[5] === 0x74 &&
+    head[6] === 0x79 &&
+    head[7] === 0x70
+  ) {
+    // QuickTime specific check: bytes 8-11 are 'qt  '
+    if (
+      head.length >= 12 &&
+      head[8] === 0x71 &&
+      head[9] === 0x74 &&
+      head[10] === 0x20 &&
+      head[11] === 0x20
+    ) {
+      return 'video/quicktime';
+    }
+    return 'video/mp4';
+  }
+
   return undefined;
 }
 
@@ -48,14 +77,9 @@ async function peekStream(stream: Readable, n: number): Promise<Buffer> {
     };
 
     const onReadable = () => {
-      // Pull data in a loop
       while (totalLength < n) {
         const chunk = stream.read() as Buffer | null;
-
-        // Explicitly break if the stream is drained
         if (chunk === null) break;
-
-        // 3. Now chunk is guaranteed to be a Buffer here
         chunks.push(chunk);
         totalLength += chunk.length;
       }
@@ -74,7 +98,6 @@ async function peekStream(stream: Readable, n: number): Promise<Buffer> {
         reject(new BadRequestException('File stream is empty.'));
         return;
       }
-      // If file is smaller than `n`, return what we have (magic number check will reject it if invalid)
       const fullBuffer = Buffer.concat(chunks);
       stream.unshift(fullBuffer);
       resolve(fullBuffer);
@@ -90,30 +113,48 @@ async function peekStream(stream: Readable, n: number): Promise<Buffer> {
     stream.on('error', onError);
 
     stream.pause();
-    onReadable(); // Kickstart
+    onReadable();
   });
 }
 
 @Injectable()
-export class ImageStorageService {
-  private readonly logger = new Logger(ImageStorageService.name);
-  private readonly allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
-  private readonly allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+export class MediaStorageService {
+  private readonly logger = new Logger(MediaStorageService.name);
+
+  private readonly allowedExtensions = [
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.webp',
+    '.mp4',
+    '.mov',
+    '.webm',
+  ];
+  private readonly allowedMimeTypes = [
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'video/mp4',
+    'video/quicktime',
+    'video/webm',
+  ];
 
   constructor(private readonly storageProvider: StorageProvider) {}
 
-  public async uploadNewImage(params: UploadParams): Promise<UploadResult> {
+  public async uploadNewMedia(params: UploadParams): Promise<UploadResult> {
     const extension = path.extname(params.fileName).toLowerCase();
 
     if (!this.allowedExtensions.includes(extension)) {
-      throw new BadRequestException(`${extension} is not a supported image format.`);
+      throw new BadRequestException(`${extension} is not a supported media format.`);
     }
 
     const head = await peekStream(params.fileData, MAGIC_PEEK_BYTES);
 
     const mime = detectMimeType(head);
     if (!mime || !this.allowedMimeTypes.includes(mime)) {
-      throw new BadRequestException('The file content is not a valid image.');
+      throw new BadRequestException('The file content is not a valid or supported media type.');
     }
 
     const safeFileName = `${uuidv4()}${extension}`;
@@ -124,15 +165,11 @@ export class ImageStorageService {
     });
   }
 
-  /**
-   * Direct deletion for manual cleanup, account removal, or orchestrated replacements
-   * triggered by domain services (e.g., UsersService, VenuesService).
-   */
-  public async deleteImage(fileId: string) {
+  public async deleteMedia(fileId: string) {
     try {
       const result = await this.storageProvider.delete(fileId);
       if (!result.success) {
-        this.logger.warn(`File cleanup failed for ID: ${fileId}`);
+        this.logger.warn(`Media cleanup failed for ID: ${fileId}`);
       }
       return result;
     } catch (error) {
