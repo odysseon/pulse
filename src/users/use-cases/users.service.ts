@@ -4,14 +4,14 @@ import {
   USER_REPOSITORY_TOKEN,
 } from '../core/ports/user.repository.interface.js';
 import { UpdateUserProfileDto } from '../delivery/http/dto/update-user-profile.dto.js';
-import { ImageStorageService } from '../../storage/image-storage.service.js';
+import { MediaStorageService } from '../../storage/media-storage.service.js';
 
 @Injectable()
 export class UsersService {
   constructor(
     @Inject(USER_REPOSITORY_TOKEN)
     private readonly userRepository: IUserRepository,
-    private readonly imageStorage: ImageStorageService,
+    private readonly mediaStorage: MediaStorageService,
   ) {}
 
   async getMyProfile(accountId: string) {
@@ -35,7 +35,7 @@ export class UsersService {
 
     // Clean up the orphaned image from the storage provider
     if (isReplacingAvatar) {
-      await this.imageStorage.deleteImage(oldAvatarId);
+      await this.mediaStorage.deleteMedia(oldAvatarId);
     }
 
     return updatedProfile;

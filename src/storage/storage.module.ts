@@ -4,7 +4,7 @@ import 'dotenv/config';
 
 // Port & Application Service
 import { StorageProvider } from './ports/provider.port.js';
-import { ImageStorageService } from './image-storage.service.js';
+import { MediaStorageService } from './media-storage.service.js';
 
 import { CloudinaryProvider } from './adapters/cloudinary/cloudinary.provider.js';
 import { CloudinaryStorageProvider } from './adapters/cloudinary/cloudinary.adapter.js';
@@ -44,7 +44,7 @@ export class StorageModule {
     const isProduction = process.env.NODE_ENV === 'production';
 
     // The ImageStorageService is always required
-    const providers: Provider[] = [ImageStorageService];
+    const providers: Provider[] = [MediaStorageService];
 
     logger.log(`📦 Bootstrapping Storage Module. Active Provider: ${activeProvider || 'UNSET'}`);
 
@@ -107,7 +107,7 @@ export class StorageModule {
       module: StorageModule,
       providers: providers,
       controllers: [MediaController],
-      exports: [ImageStorageService, StorageProvider],
+      exports: [MediaStorageService, StorageProvider],
     };
   }
 }
