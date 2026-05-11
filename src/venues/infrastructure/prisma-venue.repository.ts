@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { IVenueRepository } from '../core/ports/venue.repository.interface.js';
 import { Prisma } from '../../../generated/prisma/client.js';
@@ -8,10 +13,14 @@ import {
   EventCentreDiscoveryEntity,
   EventCentreDetailedEntity,
 } from '../core/domain/venue.types.js';
+import { MediaStorageService } from '../../storage/media-storage.service.js';
 
 @Injectable()
 export class PrismaVenueRepository implements IVenueRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mediaSrorage: MediaStorageService,
+  ) {}
 
   async findMany(
     filters: GetVenuesFilterDto,
@@ -97,6 +106,80 @@ export class PrismaVenueRepository implements IVenueRepository {
             }
           : undefined,
       },
+      include: { media: true, perks: true, amenities: true },
+    });
+  }
+
+  async findById(id: string): Promise<EventCentreDetailedEntity | null> {
+    return await this.prisma.eventCentre.findUnique({
+      where: { id },
+      include: { media: true, perks: true, amenities: true },
+    });
+  }
+
+  async update(
+    id: string,
+    accountId: string,
+    payload: Partial<CreateVenueDto>,
+  ): Promise<EventCentreDetailedEntity> {
+    const existingVenue = await this.prisma.eventCentre.findUnique({
+      where: { id },
+      include: {
+        media: true,
+        perks: true,
+        amenities: true,
+        owner: { select: { accountId: true } }, // Pull owner accountId to verify
+      },
+    });
+
+    if (!existingVenue) throw new NotFoundException('Venue not found');
+
+    if (existingVenue.owner.accountId !== accountId) {
+      throw new ForbiddenException('You do not have permission to update this venue');
+    }
+
+    const updateData: Prisma.EventCentreUpdateInput = {
+      ...Object.fromEntries(
+        Object.entries(payload).filter(([key]) => !['media', 'perks', 'amenities'].includes(key)),
+      ),
+    };
+
+    // handle media clean up if media is being updated
+    if (payload.media) {
+      const currentPublicIds = existingVenue.media.map((m) => m.publicId);
+      const newPublicIds = payload.media.map((m) => m.publicId);
+
+      const toDelete = currentPublicIds.filter((id) => !newPublicIds.includes(id));
+      if (toDelete.length > 0) {
+        await Promise.all(toDelete.map((publicId) => this.mediaSrorage.deleteMedia(publicId)));
+      }
+
+      updateData.media = {
+        deleteMany: {}, // Delete all DB records for this venue's media
+        create: payload.media.map((m) => ({ ...m })), // Re-insert incoming set
+      };
+    }
+
+    if (payload.perks) {
+      updateData.perks = {
+        deleteMany: { eventCentreId: id },
+        create: payload.perks.map((p) => ({ ...p })),
+      };
+    }
+
+    if (payload.amenities) {
+      updateData.amenities = {
+        set: [], // Clear existing amenities
+        connectOrCreate: payload.amenities.map((name) => ({
+          where: { name },
+          create: { name },
+        })),
+      };
+    }
+
+    return await this.prisma.eventCentre.update({
+      where: { id },
+      data: updateData,
       include: { media: true, perks: true, amenities: true },
     });
   }

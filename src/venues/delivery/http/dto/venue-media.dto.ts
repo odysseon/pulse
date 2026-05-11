@@ -7,6 +7,12 @@ export const MEDIA_TYPES = ['IMAGE', 'VIDEO'] as const;
 export type MediaTypeDto = (typeof MEDIA_TYPES)[number];
 export class VenueMediaDto {
   /**
+   * The public ID of the media asset in the CDN
+   */
+  @IsString()
+  publicId!: string;
+
+  /**
    * The CDN URL of the media asset
    */
   @IsString()
