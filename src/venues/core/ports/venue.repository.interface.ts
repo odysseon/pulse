@@ -17,4 +17,18 @@ export interface IVenueRepository {
    * Persists a newly created venue associated with a specific owner.
    */
   create(accountId: string, payload: CreateVenueDto): Promise<EventCentreDetailedEntity>;
+
+  /**
+   * Retrieves detailed information about a specific venue by its ID.
+   */
+  findById(venueId: string): Promise<EventCentreDetailedEntity | null>;
+
+  /**
+   * Updates the details of an existing venue.
+   */
+  update(
+    venueId: string,
+    accountId: string,
+    payload: Partial<CreateVenueDto>,
+  ): Promise<EventCentreDetailedEntity>;
 }

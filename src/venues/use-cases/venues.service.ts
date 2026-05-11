@@ -47,4 +47,12 @@ export class VenuesService {
 
     return this.venueRepository.create(accountId, payload);
   }
+
+  async getVenue(venueId: string) {
+    return await this.venueRepository.findById(venueId);
+  }
+
+  async updateVenue(venueId: string, accountId: string, payload: Partial<CreateVenueDto>) {
+    return await this.venueRepository.update(venueId, accountId, payload);
+  }
 }

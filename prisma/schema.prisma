@@ -167,11 +167,12 @@ enum MediaType {
 }
 
 model VenueMedia {
-  id      String    @id @default(cuid())
-  url     String
-  type    MediaType @default(IMAGE)
-  caption String?
-  order   Int       @default(0) // Crucial for "mainImage" sorting
+  id       String    @id @default(cuid())
+  publicId String    @unique // For external storage reference (e.g., Cloudinary public_id)
+  url      String
+  type     MediaType @default(IMAGE)
+  caption  String?
+  order    Int       @default(0) // Crucial for "mainImage" sorting
 
   eventCentreId String
   eventCentre   EventCentre @relation(fields: [eventCentreId], references: [id], onDelete: Cascade)
