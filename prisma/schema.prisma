@@ -94,9 +94,89 @@ model MagicLinkToken {
 // End of @odysseon/whoami-adapter-prisma
 // ============================================
 
+// ==========================================
+// DISCOVERY ENGINE
+// ==========================================
+
+model Category {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  // The Blueprint: Defines what a user sees/filters for in this category
+  attributes CategoryAttribute[]
+  listings   Listing[]
+
+  createdAt DateTime @default(now())
+}
+
+enum AttributeType {
+  STRING
+  NUMBER
+  BOOLEAN
+  SELECT
+}
+
+model CategoryAttribute {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  key        String // e.g., "capacity", "parking_slots"
+  label      String // e.g., "Guest Capacity"
+  type       AttributeType
+  isRequired Boolean       @default(false)
+
+  // For SELECT types: e.g., ["Lekki", "Ikeja", "Victoria Island"]
+  options Json?
+
+  @@unique([categoryId, key])
+}
+
+model Listing {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String?
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  // Core searchable fields (Common across all listings)
+  basePrice  Float
+  currency   String  @default("NGN")
+  isVerified Boolean @default(false)
+
+  // ==========================================
+  // DYNAMIC DATA
+  // Validated against CategoryAttribute blueprint in the Service layer
+  // ==========================================
+  attributes Json @default("{}")
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  media Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId, isVerified])
+}
+
+model Media {
+  id       String @id @default(cuid())
+  publicId String @unique
+  url      String
+  type     String @default("IMAGE")
+  order    Int    @default(0)
+
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   USER
-  VENUE_OWNER
   ADMIN
 }
 
@@ -106,94 +186,9 @@ model User {
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   name String
-  role Role   @default(VENUE_OWNER)
+  role Role   @default(USER)
 
-  // The public delivery URL for the avatar
   avatarUrl String?
-  // The management ID for the avatar (used for the 'replace' endpoint cleanup)
   avatarId  String?
-
-  // Optional but useful for owners to be reached directly
-  phoneNumber String?
-
-  // A venue owner can manage multiple venues
-  venues EventCentre[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// --- CORE PRODUCT LAYER ---
-
-model EventCentre {
-  id   String @id @default(cuid())
-  slug String @unique
-
-  // Core Info
-  name        String
-  description String?
-  location    String // e.g., "Ikeja", "Lekki" (Good for fast filtering)
-  address     String
-  capacity    Int
-
-  // Pricing Range
-  priceRangeMin Float?
-  priceRangeMax Float?
-
-  // Conversion / Contact
-  contactPhone    String?
-  contactWhatsapp String?
-
-  // Trust Signal
-  isVerified Boolean @default(false)
-
-  // Relations
-  ownerId String
-  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  media     VenueMedia[]
-  perks     Perk[]
-  amenities Amenity[] // Implicit Many-to-Many
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([location, capacity]) // Optimize for discovery/filtering
-}
-
-enum MediaType {
-  IMAGE
-  VIDEO
-}
-
-model VenueMedia {
-  id       String    @id @default(cuid())
-  publicId String    @unique // For external storage reference (e.g., Cloudinary public_id)
-  url      String
-  type     MediaType @default(IMAGE)
-  caption  String?
-  order    Int       @default(0) // Crucial for "mainImage" sorting
-
-  eventCentreId String
-  eventCentre   EventCentre @relation(fields: [eventCentreId], references: [id], onDelete: Cascade)
-
-  @@index([eventCentreId])
-}
-
-model Amenity {
-  id   String @id @default(cuid())
-  name String @unique // e.g., "Parking", "AC", "Generator"
-
-  venues EventCentre[]
-}
-
-model Perk {
-  id          String  @id @default(cuid())
-  title       String // e.g., "Free Photography"
-  description String? // e.g., "6 hours coverage included"
-
-  eventCentreId String
-  eventCentre   EventCentre @relation(fields: [eventCentreId], references: [id], onDelete: Cascade)
-
-  @@index([eventCentreId])
+  listings  Listing[]
 }

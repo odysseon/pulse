@@ -5,8 +5,8 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { HealthController } from './health/health.controller.js';
 import { StorageModule } from './storage/storage.module.js';
-import { VenuesModule } from './venues/venues.module.js';
 import { UsersModule } from './users/users.module.js';
+import { CategoriesModule } from './categories/categories.module.js';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     StorageModule.register(),
     UsersModule,
-    VenuesModule,
+    CategoriesModule,
   ],
   controllers: [HealthController],
 })
