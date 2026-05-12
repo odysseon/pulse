@@ -27,7 +27,6 @@ export class RegisterAccountUseCase {
         data: {
           accountId: account.id,
           name: dto.name,
-          role: 'VENUE_OWNER',
         },
       });
 

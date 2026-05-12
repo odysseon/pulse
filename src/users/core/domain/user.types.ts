@@ -1,4 +1,4 @@
-export type RoleType = 'USER' | 'VENUE_OWNER' | 'ADMIN';
+export type RoleType = 'USER' | 'ADMIN';
 
 export interface UserEntity {
   id: string;
@@ -7,7 +7,4 @@ export interface UserEntity {
   role: RoleType;
   avatarUrl: string | null;
   avatarId: string | null;
-  phoneNumber: string | null;
-  createdAt: Date;
-  updatedAt: Date;
 }

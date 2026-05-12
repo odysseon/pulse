@@ -11,9 +11,9 @@ import { ProfileResponse } from '../dto/index.js';
 
 @ApiTags('identity')
 @ApiBearerAuth()
-@Controller('me')
+@Controller('identity')
 export class IdentityController {
-  @Get()
+  @Get('me')
   @ApiOperation({ summary: 'Get authenticated account profile' })
   @ApiOkResponse({ type: ProfileResponse })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid receipt token' })
