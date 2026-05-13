@@ -27,13 +27,6 @@ export class RegisterDto {
   @IsString()
   @MinLength(2)
   name!: string;
-
-  /**
-   * The Role of the user being registered. Can be only be RoleTpe.ADMIN or RoleType.USER
-   * @example "USER"
-   */
-  @IsOptional()
-  role?: RoleType[];
 }
 
 export class RegisterResponse {
