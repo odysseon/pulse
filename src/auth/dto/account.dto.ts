@@ -1,4 +1,6 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { RoleType } from '../../users/core/domain/user.types.js';
+import { Type } from 'class-transformer';
 
 export class RegisterDto {
   /**
@@ -25,6 +27,13 @@ export class RegisterDto {
   @IsString()
   @MinLength(2)
   name!: string;
+
+  /**
+   * The Role of the user being registered. Can be only be RoleTpe.ADMIN or RoleType.USER
+   * @example "USER"
+   */
+  @IsOptional()
+  role?: RoleType[];
 }
 
 export class RegisterResponse {

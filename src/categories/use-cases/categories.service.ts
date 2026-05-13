@@ -3,13 +3,18 @@ import { GetCategoryBlueprintUseCase } from './get-category-blueprint.use-case.j
 import { ListCategoriesUseCase } from './list-categories.use-case.js';
 import { CategoryBlueprintResponse } from '../delivery/http/dto/category-blueprint-response.dto.js';
 import { ValidateCategoryAttributesUseCase } from './validate-category-attributes.use-case.js';
+import { CreateCategoryDto } from '../delivery/http/dto/create-category.dto.js';
+import { CreateCategoryUseCase } from './create-category.use-case.js';
+import { DeleteCategoryUseCase } from './delete-category.use-case.js';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     private readonly getBlueprintUseCase: GetCategoryBlueprintUseCase,
     private readonly listCategoriesUseCase: ListCategoriesUseCase,
+    private readonly createCategoryUseCase: CreateCategoryUseCase,
     private readonly validateAttributesUseCase: ValidateCategoryAttributesUseCase,
+    private readonly deleteCategoryUseCase: DeleteCategoryUseCase,
   ) {}
 
   async getBlueprint(slug: string): Promise<CategoryBlueprintResponse> {
@@ -18,6 +23,14 @@ export class CategoriesService {
 
   async listCategories(): Promise<CategoryBlueprintResponse[]> {
     return await this.listCategoriesUseCase.execute();
+  }
+
+  async createCategory(payload: CreateCategoryDto): Promise<CategoryBlueprintResponse> {
+    return await this.createCategoryUseCase.execute(payload);
+  }
+
+  async deleteCategory(categoryId: string): Promise<void> {
+    return await this.deleteCategoryUseCase.execute(categoryId);
   }
 
   /**

@@ -1,4 +1,15 @@
-import { IsString, IsNumber, IsObject, IsNotEmpty, IsOptional, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsNumber,
+  IsObject,
+  IsNotEmpty,
+  IsOptional,
+  Min,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { MediaDto } from '../../../../shared/dto/media.dto.js';
 
 /**
  * Payload for creating a new listing.
@@ -51,4 +62,10 @@ export class CreateListingDto {
   @IsObject()
   @IsNotEmpty()
   attributes!: Record<string, any>;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MediaDto)
+  media?: MediaDto[];
 }

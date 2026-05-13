@@ -4,7 +4,7 @@ export interface UserEntity {
   id: string;
   accountId: string;
   name: string;
-  role: RoleType;
+  role: RoleType[];
   avatarUrl: string | null;
   avatarId: string | null;
 }

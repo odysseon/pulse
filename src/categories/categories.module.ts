@@ -6,6 +6,9 @@ import { ListCategoriesUseCase } from './use-cases/list-categories.use-case.js';
 import { ValidateCategoryAttributesUseCase } from './use-cases/validate-category-attributes.use-case.js';
 import { PrismaCategoryRepository } from './infrastructure/prisma-category.repository.js';
 import { CATEGORY_REPOSITORY_TOKEN } from './core/ports/category.repository.interface.js';
+import { CreateCategoryUseCase } from './use-cases/create-category.use-case.js';
+import { UpdateCategoryUseCase } from './use-cases/update-category.use-case.js';
+import { DeleteCategoryUseCase } from './use-cases/delete-category.use-case.js';
 
 /**
  * The Categories Module manages the "Blueprint" system.
@@ -16,11 +19,12 @@ import { CATEGORY_REPOSITORY_TOKEN } from './core/ports/category.repository.inte
   controllers: [CategoriesController],
   providers: [
     CategoriesService,
-
+    CreateCategoryUseCase,
     GetCategoryBlueprintUseCase,
     ListCategoriesUseCase,
     ValidateCategoryAttributesUseCase,
-
+    UpdateCategoryUseCase,
+    DeleteCategoryUseCase,
     {
       provide: CATEGORY_REPOSITORY_TOKEN,
       useClass: PrismaCategoryRepository,
@@ -31,6 +35,7 @@ import { CATEGORY_REPOSITORY_TOKEN } from './core/ports/category.repository.inte
      * call 'validateAttributes' during listing creation.
      */
     CategoriesService,
+    ValidateCategoryAttributesUseCase,
   ],
 })
 export class CategoriesModule {}

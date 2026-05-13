@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { ICategoryRepository } from '../core/ports/category.repository.interface.js';
 import { CategoryBlueprintResponse } from '../delivery/http/dto/category-blueprint-response.dto.js';
 import { Prisma } from '../../../generated/prisma/client.js';
+import { CreateCategoryDto } from '../delivery/http/dto/create-category.dto.js';
 
 type CategoryWithAttributes = Prisma.CategoryGetPayload<{
   include: { attributes: true };
@@ -57,6 +58,68 @@ export class PrismaCategoryRepository implements ICategoryRepository {
     });
 
     return categories.map((cat) => this.mapToBlueprint(cat));
+  }
+
+  async create(data: CreateCategoryDto): Promise<CategoryBlueprintResponse> {
+    const slug =
+      data.slug ||
+      data.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    const created = await this.prisma.category.create({
+      data: {
+        name: data.name,
+        slug,
+        attributes: {
+          create: data.attributes.map((attr) => ({
+            key: attr.key,
+            label: attr.label,
+            type: attr.type,
+            isRequired: attr.isRequired,
+            options: attr.options ?? undefined,
+          })),
+        },
+      },
+      include: {
+        attributes: true,
+      },
+    });
+
+    return this.mapToBlueprint(created);
+  }
+
+  async update(id: string, data: Partial<CreateCategoryDto>): Promise<CategoryBlueprintResponse> {
+    const updated = await this.prisma.category.update({
+      where: { id },
+      data: {
+        name: data.name,
+        attributes: data.attributes
+          ? {
+              deleteMany: {},
+              create: data.attributes.map((attr) => ({
+                key: attr.key,
+                label: attr.label,
+                type: attr.type,
+                isRequired: attr.isRequired,
+                options: attr.options ?? undefined,
+              })),
+            }
+          : undefined,
+      },
+      include: { attributes: true },
+    });
+
+    return this.mapToBlueprint(updated);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.category.delete({
+      where: { id },
+    });
   }
 
   /**
