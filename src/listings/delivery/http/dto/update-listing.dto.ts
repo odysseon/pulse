@@ -25,6 +25,10 @@ export class UpdateListingDto {
   @IsNumber()
   basePrice?: number;
 
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
   /**
    * When provided, this will be validated against the
    * Category Blueprint before saving.

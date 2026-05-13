@@ -1,4 +1,4 @@
-import { Inject, Injectable, ConflictException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   CATEGORY_REPOSITORY_TOKEN,
   type ICategoryRepository,
@@ -14,13 +14,6 @@ export class CreateCategoryUseCase {
   ) {}
 
   async execute(payload: CreateCategoryDto): Promise<CategoryBlueprintResponse> {
-    // 1. Check for slug uniqueness
-    const existing = await this.repository.findBySlug(payload.slug);
-    if (existing) {
-      throw new ConflictException(`Category with slug "${payload.slug}" already exists.`);
-    }
-
-    // 2. Persist
     return this.repository.create(payload);
   }
 }
