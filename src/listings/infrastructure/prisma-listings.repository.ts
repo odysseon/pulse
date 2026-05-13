@@ -8,6 +8,7 @@ import { Prisma } from '../../../generated/prisma/client.js';
 import { ListingMapper } from './mappers/listing.mapper.js';
 import { UpdateListingDto } from '../delivery/http/dto/update-listing.dto.js';
 import { MediaStorageService } from '../../storage/media-storage.service.js';
+import slugify from 'slugify';
 
 @Injectable()
 export class PrismaListingsRepository implements IListingRepository {
@@ -70,7 +71,9 @@ export class PrismaListingsRepository implements IListingRepository {
   }
 
   async create(accountId: string, payload: CreateListingDto): Promise<ListingView> {
-    const slug = `${payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-4)}`;
+    const baseSlug = slugify(payload.title, { lower: true, strict: true, trim: true });
+    // Append timestamp suffix to prevent collisions
+    const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
     const user = await this.prisma.user.findUniqueOrThrow({ where: { accountId } });
 
@@ -124,7 +127,7 @@ export class PrismaListingsRepository implements IListingRepository {
       description: payload.description,
       basePrice: payload.basePrice,
       ...(payload.categoryId ? { category: { connect: { id: payload.categoryId } } } : {}),
-      attributes: payload.attributes,
+      attributes: payload.attributes as Prisma.JsonObject | undefined,
     };
 
     // 3. Media Cleanup & Sync

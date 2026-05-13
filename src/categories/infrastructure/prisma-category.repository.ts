@@ -4,10 +4,12 @@ import { ICategoryRepository } from '../core/ports/category.repository.interface
 import { CategoryBlueprintResponse } from '../delivery/http/dto/category-blueprint-response.dto.js';
 import { Prisma } from '../../../generated/prisma/client.js';
 import { CreateCategoryDto } from '../delivery/http/dto/create-category.dto.js';
+import slugify from 'slugify';
 
 type CategoryWithAttributes = Prisma.CategoryGetPayload<{
   include: { attributes: true };
 }>;
+
 @Injectable()
 export class PrismaCategoryRepository implements ICategoryRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -61,12 +63,12 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   }
 
   async create(data: CreateCategoryDto): Promise<CategoryBlueprintResponse> {
-    const slug = data.name
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    // Generate a clean, SEO-friendly slug
+    const slug = slugify(data.name, {
+      lower: true, // Convert to lower case
+      strict: true, // Strip special characters except replacement
+      trim: true, // Trim leading and trailing replacement chars
+    });
 
     try {
       const created = await this.prisma.category.create({
