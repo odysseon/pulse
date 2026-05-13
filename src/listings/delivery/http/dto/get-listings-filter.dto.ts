@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsInt, Min, IsNumber, IsObject } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
 
 /**
  * Query parameters for searching and filtering the discovery catalog.
@@ -44,6 +44,21 @@ export class GetListingsFilterDto {
    */
   @IsOptional()
   @IsObject()
+  @Transform(({ value }: TransformFnParams): Record<string, any> | unknown => {
+    // Handle if it's already a valid object (null check included)
+    if (value && typeof value === 'object') return value;
+
+    // Handle string parsing
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value) as Record<string, any>;
+      } catch {
+        return value;
+      }
+    }
+
+    return value;
+  })
   attributes?: Record<string, any>;
 
   /**

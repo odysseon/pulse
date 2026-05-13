@@ -162,6 +162,7 @@ model Listing {
   updatedAt DateTime @updatedAt
 
   @@index([categoryId, isVerified])
+  @@index([attributes], type: Gin)
 }
 
 model Media {

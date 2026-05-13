@@ -38,16 +38,16 @@ export class PrismaListingsRepository implements IListingRepository {
       }),
     };
 
+    // We use the 'path' and 'equals' approach for Postgres JSONB efficiency.
     if (attributes && Object.keys(attributes).length > 0) {
       where.AND = Object.entries(attributes).map(([key, value]) => ({
-        attributes: { path: [key], equals: value },
+        attributes: {
+          path: [key],
+          equals: value,
+        },
       }));
     }
 
-    /**
-     * 1. Capture the raw results in a variable.
-     * This variable 'rawListings' is now strictly typed by Prisma.
-     */
     const [rawListings, total] = await this.prisma.$transaction([
       this.prisma.listing.findMany({
         where,
@@ -63,10 +63,6 @@ export class PrismaListingsRepository implements IListingRepository {
       this.prisma.listing.count({ where }),
     ]);
 
-    /**
-     * 2. Map the variable.
-     * ListingMapper.toView now receives the exact type it expects.
-     */
     return {
       data: rawListings.map((listing) => ListingMapper.toView(listing)),
       total,
