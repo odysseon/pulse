@@ -186,7 +186,7 @@ model User {
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   name String
-  role Role   @default(USER)
+  role Role[]
 
   avatarUrl String?
   avatarId  String?

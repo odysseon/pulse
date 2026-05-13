@@ -7,6 +7,8 @@ import { GetListingDetailUseCase } from './use-cases/get-listing-detail.use-case
 import { PrismaListingsRepository } from './infrastructure/prisma-listings.repository.js';
 import { LISTING_REPOSITORY_TOKEN } from './core/ports/listing.repository.interface.js';
 import { CategoriesModule } from '../categories/categories.module.js';
+import { UpdateListingUseCase } from './use-cases/update-listing.use-case.js';
+import { DeleteListingUseCase } from './use-cases/delete-listing.use-case.js';
 
 @Module({
   imports: [CategoriesModule],
@@ -16,6 +18,8 @@ import { CategoriesModule } from '../categories/categories.module.js';
     CreateListingUseCase,
     DiscoverListingsUseCase,
     GetListingDetailUseCase,
+    UpdateListingUseCase,
+    DeleteListingUseCase,
     {
       provide: LISTING_REPOSITORY_TOKEN,
       useClass: PrismaListingsRepository,

@@ -8,6 +8,9 @@ import {
   ListingResponseDto,
   PaginatedListingsResponseDto,
 } from '../delivery/http/dto/listing-response.dto.js';
+import { UpdateListingUseCase } from './update-listing.use-case.js';
+import { UpdateListingDto } from '../delivery/http/dto/update-listing.dto.js';
+import { DeleteListingUseCase } from './delete-listing.use-case.js';
 
 @Injectable()
 export class ListingsService {
@@ -15,6 +18,8 @@ export class ListingsService {
     private readonly createUseCase: CreateListingUseCase,
     private readonly discoverUseCase: DiscoverListingsUseCase,
     private readonly getDetailUseCase: GetListingDetailUseCase,
+    private readonly updateListingUseCase: UpdateListingUseCase,
+    private readonly deleteListingUseCase: DeleteListingUseCase,
   ) {}
 
   /**
@@ -36,5 +41,17 @@ export class ListingsService {
    */
   async getListingBySlug(slug: string): Promise<ListingResponseDto> {
     return await this.getDetailUseCase.execute(slug);
+  }
+
+  async updateListing(
+    accountId: string,
+    slug: string,
+    payload: UpdateListingDto,
+  ): Promise<ListingResponseDto> {
+    return await this.updateListingUseCase.execute(accountId, slug, payload);
+  }
+
+  async deleteListing(accountId: string, slug: string): Promise<void> {
+    return await this.deleteListingUseCase.execute(accountId, slug);
   }
 }

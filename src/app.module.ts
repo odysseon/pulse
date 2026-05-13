@@ -7,6 +7,7 @@ import { HealthController } from './health/health.controller.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
+import { ListingsModule } from './listings/listings.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CategoriesModule } from './categories/categories.module.js';
     StorageModule.register(),
     UsersModule,
     CategoriesModule,
+    ListingsModule,
   ],
   controllers: [HealthController],
 })

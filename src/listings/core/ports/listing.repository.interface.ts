@@ -1,5 +1,6 @@
 import { CreateListingDto } from '../../delivery/http/dto/create-listing.dto.js';
 import { GetListingsFilterDto } from '../../delivery/http/dto/get-listings-filter.dto.js';
+import { UpdateListingDto } from '../../delivery/http/dto/update-listing.dto.js';
 import { ListingView } from '../domain/listing.view.js';
 
 /**
@@ -17,6 +18,10 @@ export interface IListingRepository {
    * Handles the initial attachment of media and category relations.
    */
   create(ownerId: string, payload: CreateListingDto, slug: string): Promise<ListingView>;
+
+  update(id: string, accountId: string, data: UpdateListingDto): Promise<ListingView>;
+
+  delete(id: string, accountId: string): Promise<void>;
 
   /**
    * Retrieves a paginated list of listings based on standard and dynamic filters.
