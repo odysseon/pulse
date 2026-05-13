@@ -39,12 +39,11 @@ export class PrismaListingsRepository implements IListingRepository {
       }),
     };
 
-    // We use the 'path' and 'equals' approach for Postgres JSONB efficiency.
     if (attributes && Object.keys(attributes).length > 0) {
       where.AND = Object.entries(attributes).map(([key, value]) => ({
         attributes: {
           path: [key],
-          equals: value,
+          equals: value as Prisma.InputJsonValue,
         },
       }));
     }
@@ -108,7 +107,6 @@ export class PrismaListingsRepository implements IListingRepository {
   }
 
   async update(id: string, accountId: string, payload: UpdateListingDto): Promise<ListingView> {
-    // 1. Fetch the existing state to compare media and check ownership
     const existing = await this.prisma.listing.findUnique({
       where: { id },
       include: { media: true, owner: { select: { accountId: true } } },
@@ -116,7 +114,6 @@ export class PrismaListingsRepository implements IListingRepository {
 
     if (!existing) throw new NotFoundException('Listing not found');
 
-    // 2. Authorization Check
     if (existing.owner.accountId !== accountId) {
       throw new ForbiddenException('You do not have permission to update this listing');
     }
@@ -129,22 +126,18 @@ export class PrismaListingsRepository implements IListingRepository {
       attributes: payload.attributes,
     };
 
-    // 3. Media Cleanup & Sync
     if (payload.media) {
       const currentPublicIds = existing.media.map((m) => m.publicId);
       const newPublicIds = payload.media.map((m) => m.publicId);
 
-      // Identify what was removed
       const toDelete = currentPublicIds.filter((pubId) => !newPublicIds.includes(pubId));
 
       if (toDelete.length > 0) {
-        // Clean up external storage (Cloudinary/S3)
         await Promise.all(toDelete.map((pubId) => this.mediaStorage.deleteMedia(pubId)));
       }
 
-      // Sync database records
       updateData.media = {
-        deleteMany: {}, // Clear current media relations
+        deleteMany: {},
         create: payload.media.map((m) => ({
           url: m.url,
           publicId: m.publicId,
@@ -153,7 +146,6 @@ export class PrismaListingsRepository implements IListingRepository {
       };
     }
 
-    // 4. Final Update
     const updated = await this.prisma.listing.update({
       where: { id },
       data: updateData,
@@ -198,7 +190,6 @@ export class PrismaListingsRepository implements IListingRepository {
   }
 
   async delete(id: string, accountId: string): Promise<void> {
-    // 1. Fetch to verify ownership and get media IDs
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       include: {
@@ -209,18 +200,15 @@ export class PrismaListingsRepository implements IListingRepository {
 
     if (!listing) throw new NotFoundException('Listing not found');
 
-    // 2. Ownership Guard
     if (listing.owner.accountId !== accountId) {
       throw new ForbiddenException('You do not have permission to delete this listing');
     }
 
-    // 3. Cleanup Cloud Storage
     if (listing.media.length > 0) {
       const publicIds = listing.media.map((m) => m.publicId);
       await Promise.all(publicIds.map((pid) => this.mediaStorage.deleteMedia(pid)));
     }
 
-    // 4. Delete from DB (Cascade will handle Media rows)
     await this.prisma.listing.delete({
       where: { id },
     });

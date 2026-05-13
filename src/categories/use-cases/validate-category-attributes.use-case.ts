@@ -5,10 +5,6 @@ import {
 } from '../core/ports/category.repository.interface.js';
 import { ATTRIBUTE_TYPES } from '../../shared/domain/listing.constants.js';
 
-/**
- * Business logic for validating a dynamic attributes payload against a category blueprint.
- * Ensures data integrity before listings are persisted to the database.
- */
 @Injectable()
 export class ValidateCategoryAttributesUseCase {
   constructor(
@@ -16,15 +12,7 @@ export class ValidateCategoryAttributesUseCase {
     private readonly repository: ICategoryRepository,
   ) {}
 
-  /**
-   * Executes the validation logic.
-   *
-   * @param categoryId - The internal ID of the category to validate against.
-   * @param attributes - The dynamic key-value pairs provided by the user.
-   * @throws NotFoundException if the category does not exist.
-   * @throws BadRequestException if validation fails for any attribute.
-   */
-  async execute(categoryId: string, attributes: Record<string, any>): Promise<void> {
+  async execute(categoryId: string, attributes: Record<string, unknown>): Promise<void> {
     const blueprint = await this.repository.findById(categoryId);
 
     if (!blueprint) {
@@ -34,15 +22,12 @@ export class ValidateCategoryAttributesUseCase {
     for (const rule of blueprint.attributes) {
       const value = attributes[rule.key];
 
-      // 1. Requirement Check
       if (rule.isRequired && (value === undefined || value === null)) {
         throw new BadRequestException(`Attribute "${rule.key}" (${rule.label}) is required.`);
       }
 
-      // Skip type checks if value is missing and not required
       if (value === undefined || value === null) continue;
 
-      // 2. Strict Type Enforcement
       switch (rule.type) {
         case ATTRIBUTE_TYPES.NUMBER:
           if (typeof value !== 'number') {

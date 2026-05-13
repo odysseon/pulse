@@ -1,6 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
-import { RoleType } from '../../users/core/domain/user.types.js';
-import { Type } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class RegisterDto {
   /**
