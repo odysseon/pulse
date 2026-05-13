@@ -28,7 +28,7 @@ export class RegisterAccountUseCase {
         data: {
           accountId: account.id,
           name: dto.name,
-          role: dto.role ? dto.role : [Role.USER],
+          role: [Role.USER],
         },
       });
 
