@@ -63,11 +63,10 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   }
 
   async create(data: CreateCategoryDto): Promise<CategoryBlueprintResponse> {
-    // Generate a clean, SEO-friendly slug
     const slug = slugify(data.name, {
-      lower: true, // Convert to lower case
-      strict: true, // Strip special characters except replacement
-      trim: true, // Trim leading and trailing replacement chars
+      lower: true,
+      strict: true,
+      trim: true,
     });
 
     try {

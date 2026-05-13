@@ -72,7 +72,6 @@ export class PrismaListingsRepository implements IListingRepository {
 
   async create(accountId: string, payload: CreateListingDto): Promise<ListingView> {
     const baseSlug = slugify(payload.title, { lower: true, strict: true, trim: true });
-    // Append timestamp suffix to prevent collisions
     const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
     const user = await this.prisma.user.findUniqueOrThrow({ where: { accountId } });
@@ -127,7 +126,7 @@ export class PrismaListingsRepository implements IListingRepository {
       description: payload.description,
       basePrice: payload.basePrice,
       ...(payload.categoryId ? { category: { connect: { id: payload.categoryId } } } : {}),
-      attributes: payload.attributes as Prisma.JsonObject | undefined,
+      attributes: payload.attributes,
     };
 
     // 3. Media Cleanup & Sync
