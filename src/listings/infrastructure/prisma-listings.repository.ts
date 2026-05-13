@@ -127,6 +127,7 @@ export class PrismaListingsRepository implements IListingRepository {
       title: payload.title,
       description: payload.description,
       basePrice: payload.basePrice,
+      ...(payload.categoryId ? { category: { connect: { id: payload.categoryId } } } : {}),
       attributes: payload.attributes,
     };
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { ICategoryRepository } from '../core/ports/category.repository.interface.js';
 import { CategoryBlueprintResponse } from '../delivery/http/dto/category-blueprint-response.dto.js';
@@ -61,35 +61,42 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   }
 
   async create(data: CreateCategoryDto): Promise<CategoryBlueprintResponse> {
-    const slug =
-      data.slug ||
-      data.name
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+    const slug = data.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
 
-    const created = await this.prisma.category.create({
-      data: {
-        name: data.name,
-        slug,
-        attributes: {
-          create: data.attributes.map((attr) => ({
-            key: attr.key,
-            label: attr.label,
-            type: attr.type,
-            isRequired: attr.isRequired,
-            options: attr.options ?? undefined,
-          })),
+    try {
+      const created = await this.prisma.category.create({
+        data: {
+          name: data.name,
+          slug,
+          attributes: {
+            create: data.attributes.map((attr) => ({
+              key: attr.key,
+              label: attr.label,
+              type: attr.type,
+              isRequired: attr.isRequired,
+              options: attr.options ?? undefined,
+            })),
+          },
         },
-      },
-      include: {
-        attributes: true,
-      },
-    });
+        include: {
+          attributes: true,
+        },
+      });
 
-    return this.mapToBlueprint(created);
+      return this.mapToBlueprint(created);
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException(`Category with slug "${slug}" already exists.`);
+        }
+      }
+      throw error;
+    }
   }
 
   async update(id: string, data: Partial<CreateCategoryDto>): Promise<CategoryBlueprintResponse> {
