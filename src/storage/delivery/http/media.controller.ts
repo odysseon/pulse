@@ -37,7 +37,7 @@ const mediaUploadOptions = {
 export class MediaController {
   private readonly folderMap: Record<MediaFolderType, string> = {
     AVATAR: 'users/avatars',
-    VENUE_GALLERY: 'venues/galleries',
+    LISTING_GALLERY: 'listings/galleries',
   };
 
   constructor(private readonly mediaStorage: MediaStorageService) {}

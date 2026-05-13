@@ -3,7 +3,7 @@ import { IsIn } from 'class-validator';
 /**
  * Valid domain categories for storage destinations.
  */
-export const MEDIA_FOLDER_TYPES = ['AVATAR', 'VENUE_GALLERY'] as const;
+export const MEDIA_FOLDER_TYPES = ['AVATAR', 'LISTING_GALLERY'] as const;
 
 /**
  * Type derived from valid media folder constants.
