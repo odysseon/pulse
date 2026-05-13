@@ -10,9 +10,12 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({ adapter });
 const hasher = new Argon2PasswordHasher();
-const password = process.env['ADMIN_PASSWORD'] || 'Ju$tanadm1n';
+const password = process.env['ADMIN_PASSWORD'];
 
 async function main() {
+  if (!password) {
+    throw new Error('ADMIN_PASSWORD environment variable is not set');
+  }
   const email = 'aanusteven8@gmail.com';
   console.log('🔐 Hashing admin password...', password);
   const hashedPassword = await hasher.hash(password);
