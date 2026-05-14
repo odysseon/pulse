@@ -1,0 +1,20 @@
+// Enums
+export { BusinessType } from './types/business-type.enum.js';
+export { VerificationStatus } from './types/verification-status.enum.js';
+
+// Entity
+export type { BusinessProfile } from './types/business-profile.entity.js';
+
+// Domain types
+export type {
+  CreateBusinessProfileInput,
+  UpdateBusinessProfileInput,
+  UpdateBusinessProfileBrandingInput,
+  BusinessProfileView,
+  BusinessSummary,
+  DiscoverBusinessesInput,
+  PaginatedBusinessSummaries,
+} from './types/business-profile.types.js';
+
+// Ports
+export type { IBusinessProfileRepository } from './ports/business-profile.repository.port.js';
