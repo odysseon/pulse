@@ -3,7 +3,6 @@ import { moduleToken } from '@odysseon/whoami-adapter-nestjs';
 import type { PasswordMethods } from '@odysseon/whoami-core/password';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RegisterDto } from '../dto/index.js';
-import { Role } from '../../../generated/prisma/client.js';
 
 @Injectable()
 export class RegisterAccountUseCase {
@@ -13,7 +12,7 @@ export class RegisterAccountUseCase {
     @Inject(moduleToken('password'))
     private readonly passwordAuth: PasswordMethods,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   async execute(dto: RegisterDto) {
     // 1. Create Identity (Executes outside domain transaction)
@@ -28,7 +27,6 @@ export class RegisterAccountUseCase {
         data: {
           accountId: account.id,
           name: dto.name,
-          role: [Role.USER],
         },
       });
 

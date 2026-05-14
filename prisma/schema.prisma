@@ -115,24 +115,22 @@ model User {
 
   role PlatformRole @default(USER)
 
-  // Commercial identities owned by this user
-  businessProfiles BusinessProfile[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  businessProfiles BusinessProfile[]
 
   @@index([accountId])
 }
 
-// ==========================================
-// COMMERCIAL / BUSINESS LAYER
-// ==========================================
+// ============================================
+// Business Profile
+// ============================================
 
 enum BusinessType {
   INDIVIDUAL
   RETAILER
   DISTRIBUTOR
-  MANUFACTURER
   WHOLESALER
   AGENCY
 }
@@ -147,52 +145,36 @@ enum VerificationStatus {
 model BusinessProfile {
   id String @id @default(cuid())
 
-  // ==========================================
   // Ownership
-  // ==========================================
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  // ==========================================
-  // Public Identity
-  // ==========================================
+  // Public identity
   name String
   slug String @unique
 
+  // Classification — descriptive only, not authorization
+  businessType BusinessType
+
+  // Trust signal — not a permission or role
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+
+  // Discoverability control
+  isPublic Boolean @default(false)
+
   description String?
 
-  type BusinessType @default(INDIVIDUAL)
-
-  // ==========================================
   // Branding
-  // ==========================================
-  logoUrl String?
-  logoId  String?
-
+  logoUrl   String?
+  logoId    String?
   bannerUrl String?
   bannerId  String?
 
-  // ==========================================
-  // Contact / Trust
-  // ==========================================
-  email String?
-
+  // External contact — Pulse does not execute commerce
   phoneNumber String?
   whatsapp    String?
-
-  location String?
-
-  verificationStatus VerificationStatus @default(UNVERIFIED)
-
-  // ==========================================
-  // Visibility
-  // ==========================================
-  isPublic Boolean @default(true)
-
-  // ==========================================
-  // Marketplace Relations
-  // ==========================================
-  listings Listing[]
+  email       String?
+  location    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -200,157 +182,6 @@ model BusinessProfile {
   @@index([ownerId])
   @@index([slug])
   @@index([verificationStatus])
-}
-
-// ==========================================
-// CATEGORY / TAXONOMY LAYER
-// ==========================================
-
-model Category {
-  id String @id @default(cuid())
-
-  slug String @unique
-  name String
-
-  description String?
-
-  // Hierarchical taxonomy
-  parentId String?
-  parent   Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-
-  children Category[] @relation("CategoryHierarchy")
-
-  // Blueprint attributes
-  attributes CategoryAttribute[]
-
-  listings Listing[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum AttributeType {
-  STRING
-  NUMBER
-  BOOLEAN
-  SELECT
-}
-
-model CategoryAttribute {
-  id String @id @default(cuid())
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  key         String
-  label       String
-  description String?
-
-  type AttributeType
-
-  isRequired Boolean @default(false)
-
-  // Used for SELECT options
-  options Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([categoryId, key])
-}
-
-// ==========================================
-// LISTING / DISCOVERY LAYER
-// ==========================================
-
-enum ListingStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-  SUSPENDED
-}
-
-model Listing {
-  id String @id @default(cuid())
-
-  slug String @unique
-
-  title       String
-  description String?
-
-  // ==========================================
-  // Category
-  // ==========================================
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-
-  // ==========================================
-  // Ownership
-  // ==========================================
-  businessProfileId String
-  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
-
-  // ==========================================
-  // Commercial Data
-  // ==========================================
-  priceMin Float?
-  priceMax Float?
-
-  currency String @default("NGN")
-
-  // ==========================================
-  // Dynamic Attributes
-  // ==========================================
-  attributes Json @default("{}")
-
-  // ==========================================
-  // Visibility / Moderation
-  // ==========================================
-  status ListingStatus @default(DRAFT)
-
-  isVerified Boolean @default(false)
-
-  // ==========================================
-  // Relations
-  // ==========================================
-  media Media[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([categoryId])
-  @@index([businessProfileId])
-  @@index([status])
-  @@index([categoryId, status])
-  @@index([attributes], type: Gin)
-}
-
-// ==========================================
-// MEDIA LAYER
-// ==========================================
-
-enum MediaType {
-  IMAGE
-  VIDEO
-  DOCUMENT
-}
-
-model Media {
-  id String @id @default(cuid())
-
-  publicId String @unique
-  url      String
-
-  type MediaType @default(IMAGE)
-
-  order Int @default(0)
-
-  caption String?
-
-  listingId String?
-  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([listingId])
+  @@index([isPublic])
+  @@map("business_profiles")
 }
