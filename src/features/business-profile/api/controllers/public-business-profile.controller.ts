@@ -4,7 +4,9 @@ import { DiscoverBusinessesUseCase } from '../../application/use-cases/discover-
 import { GetPublicBusinessProfileUseCase } from '../../application/use-cases/get-public-business-profile.use-case.js';
 import { GetBusinessesQueryDto } from '../dto/request.dto.js';
 import { BusinessProfileResponseDto, PaginatedBusinessesResponseDto } from '../dto/response.dto.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('businesses public access')
 @Public()
 @Controller('businesses')
 export class PublicBusinessProfileController {

@@ -9,9 +9,16 @@ import { BusinessProfileController } from './api/controllers/business-profile.co
 import { PublicBusinessProfileController } from './api/controllers/public-business-profile.controller.js';
 import { IBusinessProfileRepository } from './domain/ports/business-profile.repository.port.js';
 import { PrismaBusinessProfileRepository } from './infrastructure/prisma-business-profile.repository.js';
+import { BusinessBrandingController } from './api/controllers/business-branding.controller.js';
+import { UploadBusinessBannerUseCase } from './application/use-cases/upload-business-banner.use-case.js';
+import { UploadBusinessLogoUseCase } from './application/use-cases/upload-business-logo.use-case.js';
 
 @Module({
-  controllers: [PublicBusinessProfileController, BusinessProfileController],
+  controllers: [
+    PublicBusinessProfileController,
+    BusinessProfileController,
+    BusinessBrandingController,
+  ],
   providers: [
     {
       provide: IBusinessProfileRepository,
@@ -23,6 +30,8 @@ import { PrismaBusinessProfileRepository } from './infrastructure/prisma-busines
     GetPublicBusinessProfileUseCase,
     GetMyBusinessProfilesUseCase,
     DiscoverBusinessesUseCase,
+    UploadBusinessBannerUseCase,
+    UploadBusinessLogoUseCase,
   ],
 })
 export class BusinessProfileModule {}

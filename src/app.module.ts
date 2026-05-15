@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { HealthController } from './health/health.controller.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
+import { BusinessProfileModule } from './features/business-profile/business-profile-module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     StorageModule.register(),
     UsersModule,
+    BusinessProfileModule,
   ],
   controllers: [HealthController],
 })

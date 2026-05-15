@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
+import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
 import { BusinessProfile } from '../../domain/types/business-profile.entity.js';
 
 @Injectable()
