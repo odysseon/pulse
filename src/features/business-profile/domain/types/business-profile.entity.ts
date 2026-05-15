@@ -58,4 +58,3 @@ export interface BusinessProfile {
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
-

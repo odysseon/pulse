@@ -69,4 +69,3 @@ export interface IBusinessProfileRepository {
    */
   discover(input: DiscoverBusinessesInput): Promise<PaginatedBusinessSummaries>;
 }
-

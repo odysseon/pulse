@@ -12,7 +12,7 @@ export class RegisterAccountUseCase {
     @Inject(moduleToken('password'))
     private readonly passwordAuth: PasswordMethods,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   async execute(dto: RegisterDto) {
     // 1. Create Identity (Executes outside domain transaction)

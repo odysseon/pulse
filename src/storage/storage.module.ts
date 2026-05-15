@@ -14,7 +14,6 @@ import {
   BackblazeConfigProvider,
 } from './adapters/backblaze/backblaze.provider.js';
 import { BackblazeStorageProvider } from './adapters/backblaze/backblaze.adapter.js';
-import { MediaController } from './delivery/http/media.controller.js';
 
 // No-op storage provider for development/testing when no provider is configured
 class NoopStorageProvider implements StorageProvider {
@@ -106,7 +105,6 @@ export class StorageModule {
     return {
       module: StorageModule,
       providers: providers,
-      controllers: [MediaController],
       exports: [MediaStorageService, StorageProvider],
     };
   }
