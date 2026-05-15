@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import type { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
+import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
 
 @Injectable()
 export class DeleteBusinessProfileUseCase {

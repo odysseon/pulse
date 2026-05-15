@@ -1,6 +1,6 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import slugify from 'slugify';
-import type { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
+import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
 import { CreateBusinessProfileInput } from '../../domain/types/business-profile.types.js';
 import { BusinessProfile } from '../../domain/types/business-profile.entity.js';
 

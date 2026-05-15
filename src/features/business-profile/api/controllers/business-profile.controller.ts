@@ -18,7 +18,9 @@ import { UpdateBusinessProfileUseCase } from '../../application/use-cases/update
 import { CreateBusinessProfileDto, UpdateBusinessProfileDto } from '../dto/request.dto.js';
 import { BusinessProfileResponseDto } from '../dto/response.dto.js';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('businesses management')
 @Controller()
 export class BusinessProfileController {
   constructor(
