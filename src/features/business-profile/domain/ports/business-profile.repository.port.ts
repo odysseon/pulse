@@ -54,4 +54,3 @@ export abstract class IBusinessProfileRepository {
    */
   abstract discover(input: DiscoverBusinessesInput): Promise<PaginatedBusinessSummaries>;
 }
-
