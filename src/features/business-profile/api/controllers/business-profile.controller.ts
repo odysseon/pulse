@@ -27,7 +27,7 @@ export class BusinessProfileController {
     private readonly updateBusinessProfile: UpdateBusinessProfileUseCase,
     private readonly deleteBusinessProfile: DeleteBusinessProfileUseCase,
     private readonly getMyBusinessProfiles: GetMyBusinessProfilesUseCase,
-  ) { }
+  ) {}
 
   @Post('businesses')
   async create(
@@ -104,4 +104,3 @@ export class BusinessProfileController {
     return user.id;
   }
 }
-

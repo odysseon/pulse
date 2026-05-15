@@ -25,5 +25,4 @@ import { PrismaBusinessProfileRepository } from './infrastructure/prisma-busines
     DiscoverBusinessesUseCase,
   ],
 })
-export class BusinessProfileModule { }
-
+export class BusinessProfileModule {}
