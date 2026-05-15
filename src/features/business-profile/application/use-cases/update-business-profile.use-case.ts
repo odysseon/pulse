@@ -1,0 +1,27 @@
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import type { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
+import { UpdateBusinessProfileInput } from '../../domain/types/business-profile.types.js';
+import { BusinessProfile } from '../../domain/types/business-profile.entity.js';
+
+@Injectable()
+export class UpdateBusinessProfileUseCase {
+  constructor(private readonly repo: IBusinessProfileRepository) {}
+
+  async execute(
+    id: string,
+    requesterId: string,
+    input: UpdateBusinessProfileInput,
+  ): Promise<BusinessProfile> {
+    const profile = await this.repo.findById(id);
+
+    if (!profile) {
+      throw new NotFoundException('Business profile not found.');
+    }
+
+    if (profile.ownerId !== requesterId) {
+      throw new ForbiddenException('You do not own this business profile.');
+    }
+
+    return this.repo.update(id, input);
+  }
+}

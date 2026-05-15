@@ -77,7 +77,7 @@ export class PaginatedBusinessesResponseDto {
   limit: number;
 
   private constructor(paginated: PaginatedBusinessSummaries) {
-    this.items = paginated.items.map(BusinessSummaryResponseDto.from);
+    this.items = paginated.items.map((s) => BusinessSummaryResponseDto.from(s));
     this.total = paginated.total;
     this.page = paginated.page;
     this.limit = paginated.limit;
