@@ -2,19 +2,10 @@
 CREATE TYPE "PlatformRole" AS ENUM ('USER', 'MODERATOR', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "BusinessType" AS ENUM ('INDIVIDUAL', 'RETAILER', 'DISTRIBUTOR', 'MANUFACTURER', 'WHOLESALER', 'AGENCY');
+CREATE TYPE "BusinessType" AS ENUM ('INDIVIDUAL', 'RETAILER', 'DISTRIBUTOR', 'WHOLESALER', 'AGENCY');
 
 -- CreateEnum
 CREATE TYPE "VerificationStatus" AS ENUM ('UNVERIFIED', 'PENDING', 'VERIFIED', 'REJECTED');
-
--- CreateEnum
-CREATE TYPE "AttributeType" AS ENUM ('STRING', 'NUMBER', 'BOOLEAN', 'SELECT');
-
--- CreateEnum
-CREATE TYPE "ListingStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED', 'SUSPENDED');
-
--- CreateEnum
-CREATE TYPE "MediaType" AS ENUM ('IMAGE', 'VIDEO', 'DOCUMENT');
 
 -- CreateTable
 CREATE TABLE "Account" (
@@ -88,90 +79,27 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "BusinessProfile" (
+CREATE TABLE "business_profiles" (
     "id" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
+    "businessType" "BusinessType" NOT NULL,
+    "verificationStatus" "VerificationStatus" NOT NULL DEFAULT 'UNVERIFIED',
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
     "description" TEXT,
-    "type" "BusinessType" NOT NULL DEFAULT 'INDIVIDUAL',
     "logoUrl" TEXT,
     "logoId" TEXT,
     "bannerUrl" TEXT,
     "bannerId" TEXT,
-    "email" TEXT,
     "phoneNumber" TEXT,
     "whatsapp" TEXT,
+    "email" TEXT,
     "location" TEXT,
-    "verificationStatus" "VerificationStatus" NOT NULL DEFAULT 'UNVERIFIED',
-    "isPublic" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "BusinessProfile_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Category" (
-    "id" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "parentId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CategoryAttribute" (
-    "id" TEXT NOT NULL,
-    "categoryId" TEXT NOT NULL,
-    "key" TEXT NOT NULL,
-    "label" TEXT NOT NULL,
-    "description" TEXT,
-    "type" "AttributeType" NOT NULL,
-    "isRequired" BOOLEAN NOT NULL DEFAULT false,
-    "options" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "CategoryAttribute_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Listing" (
-    "id" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "description" TEXT,
-    "categoryId" TEXT NOT NULL,
-    "businessProfileId" TEXT NOT NULL,
-    "priceMin" DOUBLE PRECISION,
-    "priceMax" DOUBLE PRECISION,
-    "currency" TEXT NOT NULL DEFAULT 'NGN',
-    "attributes" JSONB NOT NULL DEFAULT '{}',
-    "status" "ListingStatus" NOT NULL DEFAULT 'DRAFT',
-    "isVerified" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Listing_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Media" (
-    "id" TEXT NOT NULL,
-    "publicId" TEXT NOT NULL,
-    "url" TEXT NOT NULL,
-    "type" "MediaType" NOT NULL DEFAULT 'IMAGE',
-    "order" INTEGER NOT NULL DEFAULT 0,
-    "caption" TEXT,
-    "listingId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Media_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "business_profiles_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -211,46 +139,19 @@ CREATE UNIQUE INDEX "User_accountId_key" ON "User"("accountId");
 CREATE INDEX "User_accountId_idx" ON "User"("accountId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "BusinessProfile_slug_key" ON "BusinessProfile"("slug");
+CREATE UNIQUE INDEX "business_profiles_slug_key" ON "business_profiles"("slug");
 
 -- CreateIndex
-CREATE INDEX "BusinessProfile_ownerId_idx" ON "BusinessProfile"("ownerId");
+CREATE INDEX "business_profiles_ownerId_idx" ON "business_profiles"("ownerId");
 
 -- CreateIndex
-CREATE INDEX "BusinessProfile_slug_idx" ON "BusinessProfile"("slug");
+CREATE INDEX "business_profiles_slug_idx" ON "business_profiles"("slug");
 
 -- CreateIndex
-CREATE INDEX "BusinessProfile_verificationStatus_idx" ON "BusinessProfile"("verificationStatus");
+CREATE INDEX "business_profiles_verificationStatus_idx" ON "business_profiles"("verificationStatus");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
-
--- CreateIndex
-CREATE UNIQUE INDEX "CategoryAttribute_categoryId_key_key" ON "CategoryAttribute"("categoryId", "key");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Listing_slug_key" ON "Listing"("slug");
-
--- CreateIndex
-CREATE INDEX "Listing_categoryId_idx" ON "Listing"("categoryId");
-
--- CreateIndex
-CREATE INDEX "Listing_businessProfileId_idx" ON "Listing"("businessProfileId");
-
--- CreateIndex
-CREATE INDEX "Listing_status_idx" ON "Listing"("status");
-
--- CreateIndex
-CREATE INDEX "Listing_categoryId_status_idx" ON "Listing"("categoryId", "status");
-
--- CreateIndex
-CREATE INDEX "Listing_attributes_idx" ON "Listing" USING GIN ("attributes");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Media_publicId_key" ON "Media"("publicId");
-
--- CreateIndex
-CREATE INDEX "Media_listingId_idx" ON "Media"("listingId");
+CREATE INDEX "business_profiles_isPublic_idx" ON "business_profiles"("isPublic");
 
 -- AddForeignKey
 ALTER TABLE "password_hashes" ADD CONSTRAINT "password_hashes_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -268,19 +169,4 @@ ALTER TABLE "magic_link_tokens" ADD CONSTRAINT "magic_link_tokens_accountId_fkey
 ALTER TABLE "User" ADD CONSTRAINT "User_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BusinessProfile" ADD CONSTRAINT "BusinessProfile_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CategoryAttribute" ADD CONSTRAINT "CategoryAttribute_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Listing" ADD CONSTRAINT "Listing_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Listing" ADD CONSTRAINT "Listing_businessProfileId_fkey" FOREIGN KEY ("businessProfileId") REFERENCES "BusinessProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Media" ADD CONSTRAINT "Media_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "Listing"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "business_profiles" ADD CONSTRAINT "business_profiles_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
