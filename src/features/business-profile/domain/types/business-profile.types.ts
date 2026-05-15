@@ -100,4 +100,3 @@ export interface PaginatedBusinessSummaries {
   readonly page: number;
   readonly limit: number;
 }
-
