@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service.js';
-import { IUserRepository } from '../core/ports/user.repository.interface.js';
-import { UpdateUserProfileDto } from '../delivery/http/dto/update-user-profile.dto.js';
-import { UserEntity } from '../core/domain/user.types.js';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service.js";
+import { IUserRepository } from "../core/ports/user.repository.interface.js";
+import { UpdateUserProfileDto } from "../delivery/http/dto/update-user-profile.dto.js";
+import { UserEntity } from "../core/domain/user.types.js";
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {
@@ -11,6 +11,9 @@ export class PrismaUserRepository implements IUserRepository {
   async findByAccountId(accountId: string): Promise<UserEntity | null> {
     const user = await this.prisma.user.findUnique({
       where: { accountId },
+      include: {
+        account: true,
+      },
     });
 
     if (!user) return null;
@@ -34,11 +37,11 @@ export class PrismaUserRepository implements IUserRepository {
     } catch (error: unknown) {
       if (
         error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === 'P2025' // Prisma "Record to update not found" code
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "P2025" // Prisma "Record to update not found" code
       ) {
-        throw new NotFoundException('User profile not found for this account.');
+        throw new NotFoundException("User profile not found for this account.");
       }
       throw error;
     }
