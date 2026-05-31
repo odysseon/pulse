@@ -1,0 +1,115 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../prisma/prisma.service.js';
+import { IMediaRepository } from '../domain/ports/media.repository.port.js';
+import { Media } from '../domain/types/media.entity.js';
+import { MediaResourceType } from '../domain/types/media-resource-type.enum.js';
+import { MediaRole } from '../domain/types/media-role.enum.js';
+import { AddMediaInput, ReorderMediaInput } from '../domain/types/media.types.js';
+import { Media as PrismaMedia } from '../../../../generated/prisma/client.js';
+
+function toDomain(raw: PrismaMedia): Media {
+  return {
+    id: raw.id,
+    resourceType: raw.resourceType,
+    resourceId: raw.resourceId,
+    url: raw.url,
+    fileId: raw.fileId,
+    mediaType: raw.mediaType,
+    role: raw.role,
+    order: raw.order,
+    createdAt: raw.createdAt,
+  };
+}
+
+@Injectable()
+export class PrismaMediaRepository extends IMediaRepository {
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
+
+  async add(input: AddMediaInput): Promise<Media> {
+    const raw = await this.prisma.media.create({
+      data: {
+        ...input,
+      },
+    });
+    return toDomain(raw);
+  }
+
+  async findByResource(resourceType: MediaResourceType, resourceId: string): Promise<Media[]> {
+    const rows = await this.prisma.media.findMany({
+      where: { resourceType, resourceId },
+      orderBy: [{ role: 'asc' }, { order: 'asc' }],
+    });
+    return rows.map(toDomain);
+  }
+
+  async findByRole(
+    resourceType: MediaResourceType,
+    resourceId: string,
+    role: MediaRole,
+  ): Promise<Media[]> {
+    const rows = await this.prisma.media.findMany({
+      where: { resourceType, resourceId, role },
+      orderBy: { order: 'asc' },
+    });
+    return rows.map(toDomain);
+  }
+
+  async findById(id: string): Promise<Media | null> {
+    const raw = await this.prisma.media.findUnique({ where: { id } });
+    return raw ? toDomain(raw) : null;
+  }
+
+  async reorder(
+    resourceType: MediaResourceType,
+    resourceId: string,
+    input: ReorderMediaInput,
+  ): Promise<Media[]> {
+    // Only reorders GALLERY items — singleton roles are excluded at the use case level
+    await this.prisma.$transaction(
+      input.orderedIds.map((id, index) =>
+        this.prisma.media.update({
+          where: { id },
+          data: { order: index },
+        }),
+      ),
+    );
+
+    return this.findByRole(resourceType, resourceId, MediaRole.GALLERY);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.media.delete({ where: { id } });
+  }
+
+  async renormalize(resourceType: MediaResourceType, resourceId: string): Promise<void> {
+    // Only renormalizes GALLERY items — singletons have no order to renormalize
+    const items = await this.prisma.media.findMany({
+      where: { resourceType, resourceId, role: MediaRole.GALLERY },
+      orderBy: { order: 'asc' },
+      select: { id: true },
+    });
+
+    await this.prisma.$transaction(
+      items.map((item, index) =>
+        this.prisma.media.update({
+          where: { id: item.id },
+          data: { order: index },
+        }),
+      ),
+    );
+  }
+
+  async countByResource(resourceType: MediaResourceType, resourceId: string): Promise<number> {
+    return this.prisma.media.count({ where: { resourceType, resourceId } });
+  }
+
+  async countByRole(
+    resourceType: MediaResourceType,
+    resourceId: string,
+    role: MediaRole,
+  ): Promise<number> {
+    return this.prisma.media.count({ where: { resourceType, resourceId, role } });
+  }
+}
