@@ -80,3 +80,6 @@ keys/
 .env.production
 ca.pem
 avn.txt
+
+*.jpg
+reports
