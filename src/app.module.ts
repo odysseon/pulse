@@ -7,6 +7,9 @@ import { HealthController } from './health/health.controller.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 import { BusinessProfileModule } from './features/business-profile/business-profile.module.js';
+import { ListingModule } from './features/listing/listing.module.js';
+import { MediaModule } from './features/media/media.module.js';
+import { CategoryModule } from './features/category/category.module.js';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { BusinessProfileModule } from './features/business-profile/business-prof
     StorageModule.register(),
     UsersModule,
     BusinessProfileModule,
+    ListingModule,
+    MediaModule,
+    CategoryModule,
   ],
   controllers: [HealthController],
 })
