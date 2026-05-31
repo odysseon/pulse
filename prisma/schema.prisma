@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -15,20 +13,12 @@ datasource db {
 // ============================================
 // @odysseon/whoami-adapter-prisma
 // ============================================
-// ============================================
-// @odysseon/whoami-adapter-prisma
-// Auth Tables Fragment
-// ============================================
-// This file is automatically appended to your schema.prisma
-// Do not edit directly — changes will be preserved but overwritten on update
-// ============================================
 
 model Account {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
 
-  // Auth relations (internal — do not query directly)
   passwordHash PasswordHash?
   resetTokens  PasswordResetToken[]
   oauthCreds   OAuthCredential[]
@@ -106,11 +96,9 @@ model User {
   accountId String  @unique
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  name String
-
-  avatarUrl String?
-  avatarId  String?
-
+  name        String
+  avatarUrl   String?
+  avatarId    String?
   phoneNumber String?
 
   role PlatformRole @default(USER)
@@ -127,14 +115,6 @@ model User {
 // Business Profile
 // ============================================
 
-enum BusinessType {
-  INDIVIDUAL
-  RETAILER
-  DISTRIBUTOR
-  WHOLESALER
-  AGENCY
-}
-
 enum VerificationStatus {
   UNVERIFIED
   PENDING
@@ -145,30 +125,17 @@ enum VerificationStatus {
 model BusinessProfile {
   id String @id @default(cuid())
 
-  // Ownership
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  // Public identity
   name String
   slug String @unique
-
-  // Classification — descriptive only, not authorization
-  businessType BusinessType
 
   // Trust signal — not a permission or role
   verificationStatus VerificationStatus @default(UNVERIFIED)
 
-  // Discoverability control
-  isPublic Boolean @default(false)
-
+  isPublic    Boolean @default(false)
   description String?
-
-  // Branding
-  logoUrl   String?
-  logoId    String?
-  bannerUrl String?
-  bannerId  String?
 
   // External contact — Pulse does not execute commerce
   phoneNumber String?
@@ -176,12 +143,161 @@ model BusinessProfile {
   email       String?
   location    String?
 
+  // Commercial identity — leaf category only (see Category constraints)
+  categoryId String?
+  category   Category? @relation("BusinessProfileCategory", fields: [categoryId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  listings Listing[]
 
   @@index([ownerId])
   @@index([slug])
   @@index([verificationStatus])
   @@index([isPublic])
+  @@index([categoryId])
   @@map("business_profiles")
+}
+
+// ============================================
+// Listing
+// ============================================
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  ARCHIVED
+}
+
+enum Currency {
+  NGN
+  USD
+  GBP
+  EUR
+}
+
+model Listing {
+  id String @id @default(cuid())
+
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  title       String
+  slug        String
+  description String?
+
+  status ListingStatus @default(DRAFT)
+
+  // Prices stored as Decimal for monetary precision
+  minPrice     Decimal?  @db.Decimal(18, 2)
+  maxPrice     Decimal?  @db.Decimal(18, 2)
+  currency     Currency?
+  isNegotiable Boolean   @default(false)
+
+  // Offering type — leaf category only (see Category constraints)
+  categoryId String?
+  category   Category? @relation("ListingCategory", fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessProfileId, slug])
+  @@index([businessProfileId])
+  @@index([status])
+  @@index([currency])
+  @@index([minPrice])
+  @@index([maxPrice])
+  @@index([isNegotiable])
+  @@index([categoryId])
+  @@map("listings")
+}
+
+// ============================================
+// Media
+// ============================================
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum MediaResourceType {
+  LISTING
+  BUSINESS_PROFILE
+}
+
+enum MediaRole {
+  /// BusinessProfile only — singleton
+  LOGO
+  /// BusinessProfile only — singleton
+  BANNER
+  /// Listing only — singleton
+  COVER
+  /// Both resource types — reorderable multi-items
+  GALLERY
+}
+
+model Media {
+  id String @id @default(cuid())
+
+  // Polymorphic ownership
+  resourceType MediaResourceType
+  resourceId   String
+
+  url    String
+  fileId String
+
+  mediaType MediaType
+
+  // Semantic role — determines cardinality and display context
+  role MediaRole
+
+  // Display sequence — only meaningful for GALLERY role items
+  // null for singleton roles (LOGO, BANNER, COVER)
+  order Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([resourceType, resourceId])
+  @@index([resourceType, resourceId, order])
+  @@index([resourceType, resourceId, role])
+  @@map("media")
+}
+
+// ============================================
+// Category
+// ============================================
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+
+  // Self-referential: null = root node; non-null = leaf node
+  // Max depth = 2 enforced at application layer.
+  // parentId must point to a root (parentId = null) — no grandparents.
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  // Display order within siblings
+  order Int @default(0)
+
+  // Soft-disable: inactive categories hidden from filters, not assignable to new entities.
+  // Existing assignments are preserved.
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessProfiles BusinessProfile[] @relation("BusinessProfileCategory")
+  listings         Listing[]         @relation("ListingCategory")
+
+  @@index([parentId])
+  @@index([slug])
+  @@index([isActive])
+  @@map("categories")
 }
