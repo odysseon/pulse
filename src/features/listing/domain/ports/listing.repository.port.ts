@@ -4,7 +4,6 @@ import {
   DiscoverListingsInput,
   PaginatedListingSummaries,
   TransitionListingStatusInput,
-  UpdateListingCoverInput,
   UpdateListingInput,
 } from '../types/listing.types.js';
 
@@ -47,12 +46,6 @@ export abstract class IListingRepository {
    * Separated from update() — status transitions carry their own rules.
    */
   abstract transitionStatus(id: string, input: TransitionListingStatusInput): Promise<Listing>;
-
-  /**
-   * Apply cover media update.
-   * Separated from update() — goes through the upload pipeline.
-   */
-  abstract updateCover(id: string, input: UpdateListingCoverInput): Promise<Listing>;
 
   abstract delete(id: string): Promise<void>;
 
