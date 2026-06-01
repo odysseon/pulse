@@ -21,12 +21,18 @@ export interface AddMediaInput {
   readonly role: MediaRole;
 }
 
-/** Max gallery items per resource (excludes singleton slots LOGO/BANNER/COVER) */
-const MAX_GALLERY_ITEMS = 18;
+/** Max gallery items per resource — business resources allow more (curated). */
+const MAX_GALLERY_ITEMS: Record<MediaResourceType, number> = {
+  [MediaResourceType.LISTING]: 18,
+  [MediaResourceType.BUSINESS_PROFILE]: 18,
+  // Reviews are raw & concise — 8 photos max.
+  [MediaResourceType.REVIEW]: 8,
+};
 
 const STORAGE_DESTINATION: Record<MediaResourceType, string> = {
   [MediaResourceType.LISTING]: 'listings/media',
   [MediaResourceType.BUSINESS_PROFILE]: 'businesses/media',
+  [MediaResourceType.REVIEW]: 'reviews/media',
 };
 
 @Injectable()
@@ -69,9 +75,10 @@ export class AddMediaUseCase {
         input.resourceId,
         MediaRole.GALLERY,
       );
-      if (galleryCount >= MAX_GALLERY_ITEMS) {
+      const cap = MAX_GALLERY_ITEMS[input.resourceType];
+      if (galleryCount >= cap) {
         throw new BadRequestException(
-          `Maximum of ${MAX_GALLERY_ITEMS} gallery items allowed per resource.`,
+          `Maximum of ${cap} gallery items allowed per resource.`,
         );
       }
     }

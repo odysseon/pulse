@@ -236,6 +236,7 @@ enum MediaType {
 enum MediaResourceType {
   LISTING
   BUSINESS_PROFILE
+  REVIEW
 }
 
 enum MediaRole {
@@ -271,6 +272,7 @@ model Media {
   createdAt DateTime @default(now())
 
   businessProfile BusinessProfile? @relation("BusinessProfileMedia", fields: [resourceId], references: [id], onDelete: Cascade, map: "media_business_profile_fk")
+  review          Review?          @relation("ReviewMedia", fields: [resourceId], references: [id], onDelete: Cascade, map: "media_review_fk")
 
   @@index([resourceType, resourceId])
   @@index([resourceType, resourceId, order])
@@ -333,6 +335,8 @@ model Review {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  media Media[] @relation("ReviewMedia")
 
   // One review per business per user
   @@unique([businessProfileId, reviewerId])

@@ -30,6 +30,7 @@ import {
   UploadMediaDto,
   BusinessProfileMediaDto,
   ListingMediaDto,
+  ReviewMediaDto,
 } from '../dto/media.dto.js';
 import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
@@ -88,6 +89,28 @@ export class MediaController {
     return this.handleAdd(identity, MediaResourceType.BUSINESS_PROFILE, resourceId, file, dto.role);
   }
 
+  /**
+   * POST /reviews/:resourceId/media
+   *
+   * Accepts multipart/form-data with:
+   *   - file: the image file
+   *   - role: "GALLERY" (only valid role for reviews)
+   *
+   * Only the reviewer who created the review may upload media.
+   */
+  @Post('reviews/:resourceId/media')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadMediaDto })
+  async addReviewMedia(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('resourceId') resourceId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() dto: UploadMediaDto,
+  ): Promise<MediaResponseDto> {
+    return this.handleAdd(identity, MediaResourceType.REVIEW, resourceId, file, dto.role);
+  }
+
   // ---------------------------------------------------------------------------
   // Fetch (grouped by role)
   // ---------------------------------------------------------------------------
@@ -115,6 +138,16 @@ export class MediaController {
       resourceId,
     );
     return BusinessProfileMediaDto.from(items);
+  }
+
+  /**
+   * GET /reviews/:resourceId/media
+   * Returns { gallery } — raw user photos, gallery-ordered.
+   */
+  @Get('reviews/:resourceId/media')
+  async getReviewMedia(@Param('resourceId') resourceId: string): Promise<ReviewMediaDto> {
+    const items = await this.getResourceMedia.execute(MediaResourceType.REVIEW, resourceId);
+    return ReviewMediaDto.from(items);
   }
 
   // ---------------------------------------------------------------------------
@@ -171,6 +204,26 @@ export class MediaController {
     );
     const items = await this.reorderMedia.execute(
       MediaResourceType.BUSINESS_PROFILE,
+      resourceId,
+      dto.orderedIds,
+    );
+    return items.map((m) => MediaResponseDto.from(m));
+  }
+
+  /**
+   * PATCH /reviews/:resourceId/media/reorder
+   * orderedIds must include all GALLERY item IDs for this review.
+   * Only the reviewer may reorder their own review media.
+   */
+  @Patch('reviews/:resourceId/media/reorder')
+  async reorderReviewMedia(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('resourceId') resourceId: string,
+    @Body() dto: ReorderMediaDto,
+  ): Promise<MediaResponseDto[]> {
+    await this.assertResourceOwnership(MediaResourceType.REVIEW, resourceId, identity.accountId);
+    const items = await this.reorderMedia.execute(
+      MediaResourceType.REVIEW,
       resourceId,
       dto.orderedIds,
     );
@@ -242,6 +295,17 @@ export class MediaController {
       if (!profile) throw new NotFoundException('Business profile not found.');
       if (profile.ownerId !== userId) {
         throw new ForbiddenException('You do not own this business profile.');
+      }
+    }
+
+    if (resourceType === MediaResourceType.REVIEW) {
+      const review = await this.prisma.review.findUnique({
+        where: { id: resourceId },
+        select: { reviewerId: true },
+      });
+      if (!review) throw new NotFoundException('Review not found.');
+      if (review.reviewerId !== userId) {
+        throw new ForbiddenException('You can only manage media on your own reviews.');
       }
     }
   }

@@ -1,0 +1,23 @@
+import { Module } from '@nestjs/common';
+import { IReviewRepository } from './domain/ports/review.repository.port.js';
+import { PrismaReviewRepository } from './infrastructure/prisma-review.repository.js';
+import { CreateReviewUseCase } from './application/use-cases/create-review.use-case.js';
+import { UpdateReviewUseCase } from './application/use-cases/update-review.use-case.js';
+import { DeleteReviewUseCase } from './application/use-cases/delete-review.use-case.js';
+import { GetBusinessReviewsUseCase } from './application/use-cases/get-business-reviews.use-case.js';
+import { ReviewController } from './api/controllers/review.controller.js';
+
+@Module({
+  controllers: [ReviewController],
+  providers: [
+    {
+      provide: IReviewRepository,
+      useClass: PrismaReviewRepository,
+    },
+    CreateReviewUseCase,
+    UpdateReviewUseCase,
+    DeleteReviewUseCase,
+    GetBusinessReviewsUseCase,
+  ],
+})
+export class ReviewModule {}

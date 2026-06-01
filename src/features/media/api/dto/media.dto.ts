@@ -112,3 +112,27 @@ export class ListingMediaDto {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Response — grouped by role (Review — gallery only)
+// ---------------------------------------------------------------------------
+
+export class ReviewMediaDto {
+  /**
+   * Raw, user-uploaded photos attached to this review.
+   * Gallery-ordered. No logo/banner/cover slots — reviews are unprocessed.
+   */
+  gallery: MediaResponseDto[];
+
+  private constructor(gallery: MediaResponseDto[]) {
+    this.gallery = gallery;
+  }
+
+  static from(items: Media[]): ReviewMediaDto {
+    const gallery = items
+      .filter((m) => m.role === MediaRole.GALLERY)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    return new ReviewMediaDto(gallery.map((item) => MediaResponseDto.from(item)));
+  }
+}
