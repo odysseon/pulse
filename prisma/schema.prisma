@@ -213,6 +213,8 @@ model Listing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  reviews Review[]
+
   @@unique([businessProfileId, slug])
   @@index([businessProfileId])
   @@index([status])
@@ -326,6 +328,9 @@ model Review {
   businessProfileId String
   businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
   reviewerId String
   reviewer   User   @relation("ReviewsGiven", fields: [reviewerId], references: [id])
 
@@ -338,10 +343,11 @@ model Review {
 
   media Media[] @relation("ReviewMedia")
 
-  // One review per business per user
-  @@unique([businessProfileId, reviewerId])
+  // One general review per business, OR one review per specific listing
+  @@unique([businessProfileId, reviewerId, listingId])
   @@index([businessProfileId])
   @@index([reviewerId])
+  @@index([listingId])
   @@map("reviews")
 }
 
@@ -364,7 +370,7 @@ model BusinessProfileTag {
   businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
   tagId String
-  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([businessProfileId, tagId])
   @@map("business_profile_tags")
@@ -391,8 +397,8 @@ model OperatingHours {
   businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
   day       DayOfWeek
-  openTime  String    // "09:00" — HH:mm, UTC
-  closeTime String    // "17:00" — HH:mm, UTC
+  openTime  String // "09:00" — HH:mm, UTC
+  closeTime String // "17:00" — HH:mm, UTC
   isClosed  Boolean   @default(false) // explicit closure override for this day
 
   @@unique([businessProfileId, day])

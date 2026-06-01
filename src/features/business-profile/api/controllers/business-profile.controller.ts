@@ -9,14 +9,19 @@ import {
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { CreateBusinessProfileUseCase } from '../../application/use-cases/create-business-profile.use-case.js';
 import { DeleteBusinessProfileUseCase } from '../../application/use-cases/delete-business-profile.use-case.js';
 import { GetMyBusinessProfilesUseCase } from '../../application/use-cases/get-my-business-profiles.use-case.js';
 import { UpdateBusinessProfileUseCase } from '../../application/use-cases/update-business-profile.use-case.js';
+import { SetOperatingHoursUseCase } from '../../application/use-cases/set-operating-hours.use-case.js';
+import { SetBusinessTagsUseCase } from '../../application/use-cases/set-business-tags.use-case.js';
 import { CreateBusinessProfileDto, UpdateBusinessProfileDto } from '../dto/request.dto.js';
 import { BusinessProfileResponseDto } from '../dto/response.dto.js';
+import { SetOperatingHoursDto } from '../dto/operating-hours.dto.js';
+import { SetTagsDto } from '../dto/tag.dto.js';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -29,6 +34,8 @@ export class BusinessProfileController {
     private readonly updateBusinessProfile: UpdateBusinessProfileUseCase,
     private readonly deleteBusinessProfile: DeleteBusinessProfileUseCase,
     private readonly getMyBusinessProfiles: GetMyBusinessProfilesUseCase,
+    private readonly setOperatingHours: SetOperatingHoursUseCase,
+    private readonly setBusinessTags: SetBusinessTagsUseCase,
   ) {}
 
   @Post('businesses')
@@ -36,7 +43,7 @@ export class BusinessProfileController {
     @CurrentIdentity() identity: RequestIdentity,
     @Body() dto: CreateBusinessProfileDto,
   ): Promise<BusinessProfileResponseDto> {
-    const userId = await this.resolveUserId(identity.accountId);
+    const { id: userId } = await this.resolveUser(identity.accountId);
 
     const profile = await this.createBusinessProfile.execute({
       ...dto,
@@ -52,7 +59,7 @@ export class BusinessProfileController {
     @Param('id') id: string,
     @Body() dto: UpdateBusinessProfileDto,
   ): Promise<BusinessProfileResponseDto> {
-    const userId = await this.resolveUserId(identity.accountId);
+    const { id: userId } = await this.resolveUser(identity.accountId);
 
     const profile = await this.updateBusinessProfile.execute(id, userId, {
       ...dto,
@@ -67,7 +74,7 @@ export class BusinessProfileController {
     @CurrentIdentity() identity: RequestIdentity,
     @Param('id') id: string,
   ): Promise<void> {
-    const userId = await this.resolveUserId(identity.accountId);
+    const { id: userId } = await this.resolveUser(identity.accountId);
     await this.deleteBusinessProfile.execute(id, userId);
   }
 
@@ -75,21 +82,46 @@ export class BusinessProfileController {
   async getMyProfiles(
     @CurrentIdentity() identity: RequestIdentity,
   ): Promise<BusinessProfileResponseDto[]> {
-    const userId = await this.resolveUserId(identity.accountId);
+    const { id: userId } = await this.resolveUser(identity.accountId);
     const profiles = await this.getMyBusinessProfiles.execute(userId);
     return profiles.map((p) => BusinessProfileResponseDto.from(p));
   }
 
-  private async resolveUserId(accountId: string): Promise<string> {
+  @Put('businesses/:id/hours')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateHours(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') id: string,
+    @Body() dto: SetOperatingHoursDto,
+  ): Promise<void> {
+    const { id: userId, isAdmin } = await this.resolveUser(identity.accountId);
+    await this.setOperatingHours.execute(id, dto.hours, userId, isAdmin);
+  }
+
+  @Put('businesses/:id/tags')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateTags(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') id: string,
+    @Body() dto: SetTagsDto,
+  ): Promise<void> {
+    const { id: userId, isAdmin } = await this.resolveUser(identity.accountId);
+    await this.setBusinessTags.execute(id, dto.tagIds, userId, isAdmin);
+  }
+
+  private async resolveUser(accountId: string): Promise<{ id: string; isAdmin: boolean }> {
     const user = await this.prisma.user.findUnique({
       where: { accountId },
-      select: { id: true },
+      select: { id: true, role: true },
     });
 
     if (!user) {
       throw new NotFoundException('User profile not found.');
     }
 
-    return user.id;
+    return {
+      id: user.id,
+      isAdmin: user.role === 'ADMIN',
+    };
   }
 }
