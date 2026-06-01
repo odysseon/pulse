@@ -1,0 +1,67 @@
+# Profile Creation & Validation Boundary Tests
+
+# --- Create a business profile ---
+POST {{api_url}}/api/businesses
+Authorization: Bearer {{owner_token}}
+Content-Type: application/json
+{
+  "name": "Pulse Logistics Co {{run_id}}",
+  "businessType": "DISTRIBUTOR",
+  "description": "End-to-end logistics solutions across Nigeria.",
+  "phoneNumber": "+2348000000001",
+  "whatsapp": "+2348000000001",
+  "email": "contact@pulselogistics.test",
+  "location": "Lagos, Nigeria"
+}
+HTTP 201
+[Captures]
+business_id: jsonpath "$.id"
+business_slug: jsonpath "$.slug"
+[Asserts]
+jsonpath "$.id" matches "^c[a-z0-9]{23,32}$" # Enforce strict Cuidv2 format
+jsonpath "$.ownerId" isString
+jsonpath "$.name" == "Pulse Logistics Co {{run_id}}"
+jsonpath "$.slug" isString
+jsonpath "$.businessType" == "DISTRIBUTOR"
+jsonpath "$.verificationStatus" == "UNVERIFIED"
+jsonpath "$.isPublic" == false
+jsonpath "$.description" == "End-to-end logistics solutions across Nigeria."
+jsonpath "$.email" == "contact@pulselogistics.test"
+jsonpath "$.location" == "Lagos, Nigeria"
+jsonpath "$.logoUrl" == null
+jsonpath "$.bannerUrl" == null
+
+# --- MULTI-TENANT ISOLATION: Intruder must not view owner's private profile ---
+GET {{api_url}}/api/businesses/{{business_id}}
+Authorization: Bearer {{intruder_token}}
+HTTP *
+[Asserts]
+status toString matches "^(403|404)$"
+
+# --- Reject missing required fields ---
+POST {{api_url}}/api/businesses
+Authorization: Bearer {{owner_token}}
+Content-Type: application/json
+{
+  "description": "Missing name and businessType"
+}
+HTTP 400
+
+# --- Reject invalid businessType ---
+POST {{api_url}}/api/businesses
+Authorization: Bearer {{owner_token}}
+Content-Type: application/json
+{
+  "name": "Bad Type Biz {{run_id}}",
+  "businessType": "INVALID_TYPE"
+}
+HTTP 400
+
+# --- Reject unauthenticated request ---
+POST {{api_url}}/api/businesses
+Content-Type: application/json
+{
+  "name": "Ghost Business {{run_id}}",
+  "businessType": "RETAILER"
+}
+HTTP 401
