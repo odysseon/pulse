@@ -10,6 +10,7 @@ import { BusinessProfileModule } from './features/business-profile/business-prof
 import { ListingModule } from './features/listing/listing.module.js';
 import { MediaModule } from './features/media/media.module.js';
 import { CategoryModule } from './features/category/category.module.js';
+import { ReviewModule } from './features/review/review.module.js';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CategoryModule } from './features/category/category.module.js';
     ListingModule,
     MediaModule,
     CategoryModule,
+    ReviewModule,
   ],
   controllers: [HealthController],
 })

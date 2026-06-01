@@ -30,4 +30,6 @@ export const SINGLETON_ROLES: ReadonlySet<MediaRole> = new Set([
 export const ROLES_BY_RESOURCE_TYPE: Record<string, ReadonlySet<MediaRole>> = {
   BUSINESS_PROFILE: new Set([MediaRole.LOGO, MediaRole.BANNER, MediaRole.GALLERY]),
   LISTING: new Set([MediaRole.COVER, MediaRole.GALLERY]),
+  // Reviews only support raw gallery photos — no logo, banner, or cover slots.
+  REVIEW: new Set([MediaRole.GALLERY]),
 };
