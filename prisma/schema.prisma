@@ -107,6 +107,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   businessProfiles BusinessProfile[]
+  reviewsGiven     Review[]          @relation("ReviewsGiven")
 
   @@index([accountId])
 }
@@ -143,6 +144,10 @@ model BusinessProfile {
   email       String?
   location    String?
 
+  // Geography — for proximity queries
+  latitude  Float?
+  longitude Float?
+
   // Commercial identity — leaf category only (see Category constraints)
   categoryId String?
   category   Category? @relation("BusinessProfileCategory", fields: [categoryId], references: [id])
@@ -151,12 +156,17 @@ model BusinessProfile {
   updatedAt DateTime @updatedAt
 
   listings Listing[]
+  hours    OperatingHours[]
+  tags     BusinessProfileTag[]
+  reviews  Review[]
+  media    Media[]              @relation("BusinessProfileMedia")
 
   @@index([ownerId])
   @@index([slug])
   @@index([verificationStatus])
   @@index([isPublic])
   @@index([categoryId])
+  @@index([latitude, longitude])
   @@map("business_profiles")
 }
 
@@ -260,6 +270,8 @@ model Media {
 
   createdAt DateTime @default(now())
 
+  businessProfile BusinessProfile? @relation("BusinessProfileMedia", fields: [resourceId], references: [id], onDelete: Cascade, map: "media_business_profile_fk")
+
   @@index([resourceType, resourceId])
   @@index([resourceType, resourceId, order])
   @@index([resourceType, resourceId, role])
@@ -300,4 +312,86 @@ model Category {
   @@index([slug])
   @@index([isActive])
   @@map("categories")
+}
+
+// ============================================
+// Review
+// ============================================
+
+model Review {
+  id String @id @default(cuid())
+
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  reviewerId String
+  reviewer   User   @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+
+  // 1–5, enforced at application layer
+  rating  Int
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One review per business per user
+  @@unique([businessProfileId, reviewerId])
+  @@index([businessProfileId])
+  @@index([reviewerId])
+  @@map("reviews")
+}
+
+// ============================================
+// Tag
+// ============================================
+
+model Tag {
+  id   String @id @default(cuid())
+  name String @unique // normalised lowercase e.g. "sedan", "certified", "luxury"
+  slug String @unique
+
+  businesses BusinessProfileTag[]
+
+  @@map("tags")
+}
+
+model BusinessProfileTag {
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  tagId String
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([businessProfileId, tagId])
+  @@map("business_profile_tags")
+}
+
+// ============================================
+// Operating Hours
+// ============================================
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+model OperatingHours {
+  id String @id @default(cuid())
+
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  day       DayOfWeek
+  openTime  String    // "09:00" — HH:mm, UTC
+  closeTime String    // "17:00" — HH:mm, UTC
+  isClosed  Boolean   @default(false) // explicit closure override for this day
+
+  @@unique([businessProfileId, day])
+  @@index([businessProfileId])
+  @@map("operating_hours")
 }
