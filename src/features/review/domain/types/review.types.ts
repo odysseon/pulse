@@ -1,18 +1,23 @@
 export interface CreateReviewInput {
   readonly businessProfileId: string;
+  readonly listingId?: string;
   /** Resolved user ID of the authenticated caller */
   readonly reviewerId: string;
   readonly rating: number;
   readonly comment?: string;
+  readonly mediaIds?: string[];
 }
 
 export interface UpdateReviewInput {
   readonly rating?: number;
   readonly comment?: string | null;
+  // Currently, we don't allow changing the attached listingId after creation
+  // Media handling (e.g., adding/removing) might be done via separate endpoints or integrated here.
 }
 
 export interface GetBusinessReviewsInput {
   readonly businessProfileId: string;
+  readonly listingId?: string;
   /** Cursor-based pagination — ID of the last item received */
   readonly cursor?: string;
   readonly limit?: number;
@@ -27,6 +32,7 @@ export interface ReviewPage {
 export interface ReviewWithMedia {
   readonly id: string;
   readonly businessProfileId: string;
+  readonly listingId: string | null;
   readonly reviewerId: string;
   readonly rating: number;
   readonly comment: string | null;

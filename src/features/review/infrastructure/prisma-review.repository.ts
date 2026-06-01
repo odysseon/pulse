@@ -27,6 +27,7 @@ function toDomain(raw: PrismaReview): Review {
   return {
     id: raw.id,
     businessProfileId: raw.businessProfileId,
+    listingId: raw.listingId,
     reviewerId: raw.reviewerId,
     rating: raw.rating,
     comment: raw.comment,
@@ -67,6 +68,7 @@ export class PrismaReviewRepository extends IReviewRepository {
     const raw = await this.prisma.review.create({
       data: {
         businessProfileId: input.businessProfileId,
+        listingId: input.listingId,
         reviewerId: input.reviewerId,
         rating: input.rating,
         comment: input.comment ?? null,
@@ -99,9 +101,10 @@ export class PrismaReviewRepository extends IReviewRepository {
   async existsByBusinessAndReviewer(
     businessProfileId: string,
     reviewerId: string,
+    listingId: string | null = null,
   ): Promise<boolean> {
     const count = await this.prisma.review.count({
-      where: { businessProfileId, reviewerId },
+      where: { businessProfileId, reviewerId, listingId },
     });
     return count > 0;
   }
@@ -110,7 +113,10 @@ export class PrismaReviewRepository extends IReviewRepository {
     const limit = input.limit ?? 20;
 
     const rows = await this.prisma.review.findMany({
-      where: { businessProfileId: input.businessProfileId },
+      where: { 
+        businessProfileId: input.businessProfileId,
+        ...(input.listingId !== undefined ? { listingId: input.listingId } : {}),
+      },
       include: {
         media: {
           where: {

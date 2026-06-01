@@ -10,6 +10,7 @@ export interface Review {
   readonly id: string;
 
   readonly businessProfileId: string;
+  readonly listingId: string | null;
   readonly reviewerId: string;
 
   /** Integer 1–5 */

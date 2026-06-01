@@ -32,13 +32,32 @@ export class CreateReviewUseCase {
       throw new NotFoundException('Business profile not found.');
     }
 
-    // 3. Enforce one-review-per-business-per-user
+    // 3. Ensure the listing exists and belongs to the business if listingId is provided
+    if (input.listingId) {
+      const listing = await this.prisma.listing.findUnique({
+        where: { id: input.listingId },
+        select: { businessProfileId: true },
+      });
+      if (!listing) {
+        throw new NotFoundException('Listing not found.');
+      }
+      if (listing.businessProfileId !== input.businessProfileId) {
+        throw new BadRequestException('The specified listing does not belong to this business profile.');
+      }
+    }
+
+    // 4. Enforce one-review-per-business-or-listing-per-user
     const alreadyReviewed = await this.reviewRepo.existsByBusinessAndReviewer(
       input.businessProfileId,
       input.reviewerId,
+      input.listingId ?? null,
     );
     if (alreadyReviewed) {
-      throw new ConflictException('You have already submitted a review for this business.');
+      if (input.listingId) {
+        throw new ConflictException('You have already submitted a review for this specific listing.');
+      } else {
+        throw new ConflictException('You have already submitted a general review for this business.');
+      }
     }
 
     try {
