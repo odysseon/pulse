@@ -21,6 +21,7 @@ export abstract class IReviewRepository {
   abstract existsByBusinessAndReviewer(
     businessProfileId: string,
     reviewerId: string,
+    listingId?: string | null,
   ): Promise<boolean>;
 
   /**
