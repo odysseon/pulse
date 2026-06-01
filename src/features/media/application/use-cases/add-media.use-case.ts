@@ -77,9 +77,7 @@ export class AddMediaUseCase {
       );
       const cap = MAX_GALLERY_ITEMS[input.resourceType];
       if (galleryCount >= cap) {
-        throw new BadRequestException(
-          `Maximum of ${cap} gallery items allowed per resource.`,
-        );
+        throw new BadRequestException(`Maximum of ${cap} gallery items allowed per resource.`);
       }
     }
 

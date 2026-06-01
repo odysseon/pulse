@@ -41,9 +41,7 @@ function mediaItemFromRaw(raw: PrismaMedia): ReviewMediaItem {
   };
 }
 
-function toWithMedia(
-  raw: PrismaReview & { media: PrismaMedia[] },
-): ReviewWithMedia {
+function toWithMedia(raw: PrismaReview & { media: PrismaMedia[] }): ReviewWithMedia {
   const sorted = [...raw.media].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return {
     ...toDomain(raw),
