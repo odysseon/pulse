@@ -1,4 +1,6 @@
 import { VerificationStatus } from './verification-status.enum.js';
+import { OperatingHours } from './operating-hours.types.js';
+import { Tag } from './tag.types.js';
 
 export interface CreateBusinessProfileInput {
   readonly ownerId: string;
@@ -34,6 +36,9 @@ export interface BusinessProfileView {
   readonly location: string | null;
   readonly categoryId: string | null;
   readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly operatingHours?: OperatingHours[];
+  readonly tags?: Tag[];
 }
 
 export interface BusinessSummary {

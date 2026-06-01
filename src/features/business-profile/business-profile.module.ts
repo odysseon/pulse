@@ -5,21 +5,30 @@ import { DiscoverBusinessesUseCase } from './application/use-cases/discover-busi
 import { GetMyBusinessProfilesUseCase } from './application/use-cases/get-my-business-profiles.use-case.js';
 import { GetPublicBusinessProfileUseCase } from './application/use-cases/get-public-business-profile.use-case.js';
 import { UpdateBusinessProfileUseCase } from './application/use-cases/update-business-profile.use-case.js';
+import { SetOperatingHoursUseCase } from './application/use-cases/set-operating-hours.use-case.js';
+import { SetBusinessTagsUseCase } from './application/use-cases/set-business-tags.use-case.js';
+import { GetTagsUseCase } from './application/use-cases/get-tags.use-case.js';
 import { BusinessProfileController } from './api/controllers/business-profile.controller.js';
 import { PublicBusinessProfileController } from './api/controllers/public-business-profile.controller.js';
 import { IBusinessProfileRepository } from './domain/ports/business-profile.repository.port.js';
 import { PrismaBusinessProfileRepository } from './infrastructure/prisma-business-profile.repository.js';
+import { ITagRepository } from './domain/ports/tag.repository.port.js';
+import { PrismaTagRepository } from './infrastructure/prisma-tag.repository.js';
 
 @Module({
   controllers: [PublicBusinessProfileController, BusinessProfileController],
   providers: [
     { provide: IBusinessProfileRepository, useClass: PrismaBusinessProfileRepository },
+    { provide: ITagRepository, useClass: PrismaTagRepository },
     CreateBusinessProfileUseCase,
     UpdateBusinessProfileUseCase,
     DeleteBusinessProfileUseCase,
     GetPublicBusinessProfileUseCase,
     GetMyBusinessProfilesUseCase,
     DiscoverBusinessesUseCase,
+    SetOperatingHoursUseCase,
+    SetBusinessTagsUseCase,
+    GetTagsUseCase,
   ],
 })
 export class BusinessProfileModule {}

@@ -8,7 +8,10 @@ import {
   DiscoverBusinessesInput,
   PaginatedBusinessSummaries,
   UpdateBusinessProfileInput,
+  BusinessProfileView,
 } from '../domain/types/business-profile.types.js';
+import { OperatingHours, SetOperatingHoursInput, DayOfWeek } from '../domain/types/operating-hours.types.js';
+import { Tag } from '../domain/types/tag.types.js';
 
 // Post-migration type guard
 type PrismaBusinessProfileExtended = {
@@ -26,9 +29,11 @@ type PrismaBusinessProfileExtended = {
   categoryId?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  hours?: any[];
+  tags?: any[];
 };
 
-function toDomain(raw: PrismaBusinessProfileExtended): BusinessProfile {
+function toDomain(raw: PrismaBusinessProfileExtended): BusinessProfileView {
   return {
     id: raw.id,
     ownerId: raw.ownerId,
@@ -44,6 +49,19 @@ function toDomain(raw: PrismaBusinessProfileExtended): BusinessProfile {
     categoryId: raw.categoryId ?? null,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
+    operatingHours: raw.hours?.map(h => ({
+      id: h.id,
+      businessProfileId: h.businessProfileId,
+      day: h.day as DayOfWeek,
+      openTime: h.openTime,
+      closeTime: h.closeTime,
+      isClosed: h.isClosed,
+    })),
+    tags: raw.tags?.map(t => ({
+      id: t.tag.id,
+      name: t.tag.name,
+      slug: t.tag.slug,
+    })),
   };
 }
 
@@ -53,20 +71,26 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     super();
   }
 
-  async create(input: CreateBusinessProfileInput, slug: string): Promise<BusinessProfile> {
+  async create(input: CreateBusinessProfileInput, slug: string): Promise<BusinessProfileView> {
     const raw = await this.prisma.businessProfile.create({
       data: { ...input, slug },
     });
     return toDomain(raw);
   }
 
-  async findById(id: string): Promise<BusinessProfile | null> {
-    const raw = await this.prisma.businessProfile.findUnique({ where: { id } });
+  async findById(id: string): Promise<BusinessProfileView | null> {
+    const raw = await this.prisma.businessProfile.findUnique({
+      where: { id },
+      include: { hours: true, tags: { include: { tag: true } } },
+    });
     return raw ? toDomain(raw) : null;
   }
 
-  async findBySlug(slug: string): Promise<BusinessProfile | null> {
-    const raw = await this.prisma.businessProfile.findUnique({ where: { slug } });
+  async findBySlug(slug: string): Promise<BusinessProfileView | null> {
+    const raw = await this.prisma.businessProfile.findUnique({
+      where: { slug },
+      include: { hours: true, tags: { include: { tag: true } } },
+    });
     return raw ? toDomain(raw) : null;
   }
 
@@ -75,15 +99,16 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     return count > 0;
   }
 
-  async findByOwner(ownerId: string): Promise<BusinessProfile[]> {
+  async findByOwner(ownerId: string): Promise<BusinessProfileView[]> {
     const rows = await this.prisma.businessProfile.findMany({
       where: { ownerId },
+      include: { hours: true, tags: { include: { tag: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    return rows.map((r) => toDomain(r as unknown as PrismaBusinessProfileExtended));
+    return rows.map(toDomain);
   }
 
-  async update(id: string, input: UpdateBusinessProfileInput): Promise<BusinessProfile> {
+  async update(id: string, input: UpdateBusinessProfileInput): Promise<BusinessProfileView> {
     const raw = await this.prisma.businessProfile.update({
       where: { id },
       data: {
@@ -95,12 +120,48 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ...(input.location !== undefined && { location: input.location }),
         ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
       },
+      include: { hours: true, tags: { include: { tag: true } } },
     });
     return toDomain(raw);
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.businessProfile.delete({ where: { id } });
+  }
+
+  async setOperatingHours(businessId: string, hours: SetOperatingHoursInput[]): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.operatingHours.deleteMany({
+        where: { businessProfileId: businessId },
+      });
+      if (hours.length > 0) {
+        await tx.operatingHours.createMany({
+          data: hours.map((h) => ({
+            businessProfileId: businessId,
+            day: h.day,
+            openTime: h.openTime,
+            closeTime: h.closeTime,
+            isClosed: h.isClosed,
+          })),
+        });
+      }
+    });
+  }
+
+  async setTags(businessId: string, tagIds: string[]): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.businessProfileTag.deleteMany({
+        where: { businessProfileId: businessId },
+      });
+      if (tagIds.length > 0) {
+        await tx.businessProfileTag.createMany({
+          data: tagIds.map((tagId) => ({
+            businessProfileId: businessId,
+            tagId,
+          })),
+        });
+      }
+    });
   }
 
   async discover(input: DiscoverBusinessesInput): Promise<PaginatedBusinessSummaries> {

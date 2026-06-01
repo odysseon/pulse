@@ -214,6 +214,33 @@ async function main() {
   }
 
   console.log("\n✅ Category taxonomy seeded successfully.");
+
+  // -------------------------------------------------------------------------
+  // Tags — idempotent (upsert by slug)
+  // -------------------------------------------------------------------------
+  console.log("\n🌱 Seeding tags...");
+  
+  const standardTags = [
+    { name: "24/7", slug: "24-7" },
+    { name: "Eco-Friendly", slug: "eco-friendly" },
+    { name: "Delivery", slug: "delivery" },
+    { name: "Wholesale", slug: "wholesale" },
+    { name: "Certified", slug: "certified" },
+    { name: "Women-Owned", slug: "women-owned" },
+    { name: "Student Discount", slug: "student-discount" },
+    { name: "Wheelchair Accessible", slug: "wheelchair-accessible" },
+  ];
+
+  for (const tag of standardTags) {
+    await prisma.tag.upsert({
+      where: { slug: tag.slug },
+      update: { name: tag.name },
+      create: { name: tag.name, slug: tag.slug },
+    });
+    console.log(`  ✅ Tag: ${tag.name}`);
+  }
+
+  console.log("\n✅ Tags seeded successfully.");
 }
 
 main()
