@@ -42,7 +42,9 @@ export class CreateReviewUseCase {
         throw new NotFoundException('Listing not found.');
       }
       if (listing.businessProfileId !== input.businessProfileId) {
-        throw new BadRequestException('The specified listing does not belong to this business profile.');
+        throw new BadRequestException(
+          'The specified listing does not belong to this business profile.',
+        );
       }
     }
 
@@ -54,9 +56,13 @@ export class CreateReviewUseCase {
     );
     if (alreadyReviewed) {
       if (input.listingId) {
-        throw new ConflictException('You have already submitted a review for this specific listing.');
+        throw new ConflictException(
+          'You have already submitted a review for this specific listing.',
+        );
       } else {
-        throw new ConflictException('You have already submitted a general review for this business.');
+        throw new ConflictException(
+          'You have already submitted a general review for this business.',
+        );
       }
     }
 

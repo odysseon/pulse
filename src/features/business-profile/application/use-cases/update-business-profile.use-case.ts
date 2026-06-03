@@ -1,6 +1,9 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
-import { UpdateBusinessProfileInput, BusinessProfileView } from '../../domain/types/business-profile.types.js';
+import {
+  UpdateBusinessProfileInput,
+  BusinessProfileView,
+} from '../../domain/types/business-profile.types.js';
 
 @Injectable()
 export class UpdateBusinessProfileUseCase {

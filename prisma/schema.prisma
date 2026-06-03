@@ -2,12 +2,14 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [postgis]
 }
 
 // ============================================
@@ -142,11 +144,9 @@ model BusinessProfile {
   phoneNumber String?
   whatsapp    String?
   email       String?
-  location    String?
-
-  // Geography — for proximity queries
-  latitude  Float?
-  longitude Float?
+  // Physical location using PostGIS
+  locationId  String?
+  geoEntity   Location? @relation(fields: [locationId], references: [id])
 
   // Commercial identity — leaf category only (see Category constraints)
   categoryId String?
@@ -166,8 +166,16 @@ model BusinessProfile {
   @@index([verificationStatus])
   @@index([isPublic])
   @@index([categoryId])
-  @@index([latitude, longitude])
+  @@index([locationId])
   @@map("business_profiles")
+}
+
+model Location {
+  id          String                               @id @default(cuid())
+  name        String
+  coordinates Unsupported("geometry(Point, 4326)")
+
+  businessProfiles BusinessProfile[]
 }
 
 // ============================================

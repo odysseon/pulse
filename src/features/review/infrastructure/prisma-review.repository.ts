@@ -113,7 +113,7 @@ export class PrismaReviewRepository extends IReviewRepository {
     const limit = input.limit ?? 20;
 
     const rows = await this.prisma.review.findMany({
-      where: { 
+      where: {
         businessProfileId: input.businessProfileId,
         ...(input.listingId !== undefined ? { listingId: input.listingId } : {}),
       },

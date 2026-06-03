@@ -16,7 +16,9 @@ export class CreateReviewDto {
   @MaxLength(2000)
   comment?: string;
 
-  @ApiPropertyOptional({ description: 'Optional listing ID if this review is for a specific product/service' })
+  @ApiPropertyOptional({
+    description: 'Optional listing ID if this review is for a specific product/service',
+  })
   @IsOptional()
   @IsString()
   listingId?: string;

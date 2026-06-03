@@ -1,4 +1,3 @@
-import { BusinessProfile } from '../types/business-profile.entity.js';
 import {
   CreateBusinessProfileInput,
   DiscoverBusinessesInput,
@@ -6,8 +5,7 @@ import {
   UpdateBusinessProfileInput,
   BusinessProfileView,
 } from '../types/business-profile.types.js';
-import { OperatingHours, SetOperatingHoursInput } from '../types/operating-hours.types.js';
-import { Tag } from '../types/tag.types.js';
+import { SetOperatingHoursInput } from '../types/operating-hours.types.js';
 
 export abstract class IBusinessProfileRepository {
   abstract create(input: CreateBusinessProfileInput, slug: string): Promise<BusinessProfileView>;
@@ -18,7 +16,7 @@ export abstract class IBusinessProfileRepository {
   abstract update(id: string, input: UpdateBusinessProfileInput): Promise<BusinessProfileView>;
   abstract delete(id: string): Promise<void>;
   abstract discover(input: DiscoverBusinessesInput): Promise<PaginatedBusinessSummaries>;
-  
+
   // Operating Hours & Tags
   abstract setOperatingHours(businessId: string, hours: SetOperatingHoursInput[]): Promise<void>;
   abstract setTags(businessId: string, tagIds: string[]): Promise<void>;

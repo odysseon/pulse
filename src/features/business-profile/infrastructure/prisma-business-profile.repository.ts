@@ -10,8 +10,7 @@ import {
   UpdateBusinessProfileInput,
   BusinessProfileView,
 } from '../domain/types/business-profile.types.js';
-import { OperatingHours, SetOperatingHoursInput, DayOfWeek } from '../domain/types/operating-hours.types.js';
-import { Tag } from '../domain/types/tag.types.js';
+import { SetOperatingHoursInput, DayOfWeek } from '../domain/types/operating-hours.types.js';
 
 // Post-migration type guard
 type PrismaBusinessProfileExtended = {
@@ -25,15 +24,38 @@ type PrismaBusinessProfileExtended = {
   phoneNumber: string | null;
   whatsapp: string | null;
   email: string | null;
-  location: string | null;
+  locationId: string | null;
   categoryId?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  hours?: any[];
-  tags?: any[];
+  hours?: {
+    id: string;
+    businessProfileId: string;
+    day: string;
+    openTime: string;
+    closeTime: string;
+    isClosed: boolean;
+  }[];
+  tags?: {
+    tag: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }[];
+  geoEntity?: {
+    id: string;
+    name: string;
+  } | null;
 };
 
-function toDomain(raw: PrismaBusinessProfileExtended): BusinessProfileView {
+type HydratedProfile = PrismaBusinessProfileExtended & {
+  latitude: number | null;
+  longitude: number | null;
+  locationName: string | null;
+};
+
+function toDomain(raw: HydratedProfile): BusinessProfileView {
   return {
     id: raw.id,
     ownerId: raw.ownerId,
@@ -45,11 +67,13 @@ function toDomain(raw: PrismaBusinessProfileExtended): BusinessProfileView {
     phoneNumber: raw.phoneNumber,
     whatsapp: raw.whatsapp,
     email: raw.email,
-    location: raw.location,
+    location: raw.locationName,
+    latitude: raw.latitude,
+    longitude: raw.longitude,
     categoryId: raw.categoryId ?? null,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
-    operatingHours: raw.hours?.map(h => ({
+    operatingHours: raw.hours?.map((h) => ({
       id: h.id,
       businessProfileId: h.businessProfileId,
       day: h.day as DayOfWeek,
@@ -57,7 +81,7 @@ function toDomain(raw: PrismaBusinessProfileExtended): BusinessProfileView {
       closeTime: h.closeTime,
       isClosed: h.isClosed,
     })),
-    tags: raw.tags?.map(t => ({
+    tags: raw.tags?.map((t) => ({
       id: t.tag.id,
       name: t.tag.name,
       slug: t.tag.slug,
@@ -71,27 +95,82 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     super();
   }
 
-  async create(input: CreateBusinessProfileInput, slug: string): Promise<BusinessProfileView> {
-    const raw = await this.prisma.businessProfile.create({
-      data: { ...input, slug },
+  private async hydrate(profiles: PrismaBusinessProfileExtended[]): Promise<HydratedProfile[]> {
+    if (profiles.length === 0) return [];
+
+    const locationIds = profiles.map((p) => p.locationId).filter((id): id is string => id !== null);
+    const locationMap = new Map<string, { lat: number; lng: number }>();
+
+    if (locationIds.length > 0) {
+      const coords = await this.prisma.$queryRaw<{ id: string; lat: number; lng: number }[]>`
+        SELECT id, ST_Y(coordinates::geometry) as lat, ST_X(coordinates::geometry) as lng
+        FROM "Location"
+        WHERE id IN (${Prisma.join(locationIds)})
+      `;
+      for (const row of coords) {
+        locationMap.set(row.id, { lat: row.lat, lng: row.lng });
+      }
+    }
+
+    return profiles.map((p) => {
+      const coords = p.locationId ? locationMap.get(p.locationId) : undefined;
+      return {
+        ...p,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
+        locationName: p.geoEntity?.name ?? null,
+      };
     });
-    return toDomain(raw);
+  }
+
+  async create(input: CreateBusinessProfileInput, slug: string): Promise<BusinessProfileView> {
+    let locationId: string | undefined = undefined;
+
+    if (input.latitude !== undefined && input.longitude !== undefined) {
+      const newLocId = crypto.randomUUID();
+      await this.prisma.$executeRaw`
+        INSERT INTO "Location" (id, name, coordinates)
+        VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
+      `;
+      locationId = newLocId;
+    }
+
+    const raw = await this.prisma.businessProfile.create({
+      data: {
+        ownerId: input.ownerId,
+        name: input.name,
+        slug,
+        description: input.description,
+        phoneNumber: input.phoneNumber,
+        whatsapp: input.whatsapp,
+        email: input.email,
+        locationId,
+      },
+      include: { geoEntity: true },
+    });
+
+    const [hydrated] = await this.hydrate([raw]);
+    return toDomain(hydrated);
   }
 
   async findById(id: string): Promise<BusinessProfileView | null> {
     const raw = await this.prisma.businessProfile.findUnique({
       where: { id },
-      include: { hours: true, tags: { include: { tag: true } } },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
     });
-    return raw ? toDomain(raw) : null;
+    if (!raw) return null;
+    const [hydrated] = await this.hydrate([raw]);
+    return toDomain(hydrated);
   }
 
   async findBySlug(slug: string): Promise<BusinessProfileView | null> {
     const raw = await this.prisma.businessProfile.findUnique({
       where: { slug },
-      include: { hours: true, tags: { include: { tag: true } } },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
     });
-    return raw ? toDomain(raw) : null;
+    if (!raw) return null;
+    const [hydrated] = await this.hydrate([raw]);
+    return toDomain(hydrated);
   }
 
   async isSlugTaken(slug: string): Promise<boolean> {
@@ -102,13 +181,41 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findByOwner(ownerId: string): Promise<BusinessProfileView[]> {
     const rows = await this.prisma.businessProfile.findMany({
       where: { ownerId },
-      include: { hours: true, tags: { include: { tag: true } } },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
       orderBy: { createdAt: 'desc' },
     });
-    return rows.map(toDomain);
+    const hydrated = await this.hydrate(rows);
+    return hydrated.map(toDomain);
   }
 
   async update(id: string, input: UpdateBusinessProfileInput): Promise<BusinessProfileView> {
+    const existing = await this.prisma.businessProfile.findUnique({ where: { id } });
+    if (!existing) throw new Error('BusinessProfile not found');
+
+    let locationId = existing.locationId;
+
+    if (input.latitude !== undefined && input.longitude !== undefined) {
+      if (locationId) {
+        await this.prisma.$executeRaw`
+          UPDATE "Location"
+          SET coordinates = ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326),
+              name = COALESCE(${input.location ?? null}, name)
+          WHERE id = ${locationId}
+        `;
+      } else {
+        const newLocId = crypto.randomUUID();
+        await this.prisma.$executeRaw`
+          INSERT INTO "Location" (id, name, coordinates)
+          VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
+        `;
+        locationId = newLocId;
+      }
+    } else if (input.location !== undefined && locationId) {
+      await this.prisma.$executeRaw`
+        UPDATE "Location" SET name = ${input.location} WHERE id = ${locationId}
+      `;
+    }
+
     const raw = await this.prisma.businessProfile.update({
       where: { id },
       data: {
@@ -117,12 +224,14 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ...(input.phoneNumber !== undefined && { phoneNumber: input.phoneNumber }),
         ...(input.whatsapp !== undefined && { whatsapp: input.whatsapp }),
         ...(input.email !== undefined && { email: input.email }),
-        ...(input.location !== undefined && { location: input.location }),
+        ...(locationId !== undefined && { locationId }),
         ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
       },
-      include: { hours: true, tags: { include: { tag: true } } },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
     });
-    return toDomain(raw);
+
+    const [hydrated] = await this.hydrate([raw]);
+    return toDomain(hydrated);
   }
 
   async delete(id: string): Promise<void> {
@@ -178,12 +287,92 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         OR: [
           { name: { contains: input.search, mode: 'insensitive' } },
           { description: { contains: input.search, mode: 'insensitive' } },
-          { location: { contains: input.search, mode: 'insensitive' } },
+          { geoEntity: { name: { contains: input.search, mode: 'insensitive' } } },
         ],
       }),
     };
 
     const skip = (input.page - 1) * input.limit;
+
+    if (input.lat !== undefined && input.lng !== undefined) {
+      const radiusMeters = (input.radiusInKm ?? 10) * 1000;
+
+      const rawItems = await this.prisma.$queryRaw<
+        {
+          id: string;
+          name: string;
+          slug: string;
+          verificationStatus: BusinessProfile['verificationStatus'];
+          description: string | null;
+          location: string | null;
+          latitude: number;
+          longitude: number;
+          categoryId: string | null;
+          distance: number;
+        }[]
+      >`
+        SELECT bp.id, bp.name, bp.slug, bp."verificationStatus", bp.description, loc.name as location, 
+               ST_Y(loc.coordinates::geometry) as latitude, ST_X(loc.coordinates::geometry) as longitude, bp."categoryId",
+               (ST_Distance(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography) / 1000) AS distance
+        FROM "business_profiles" bp
+        JOIN "Location" loc ON bp."locationId" = loc.id
+        WHERE bp."isPublic" = true
+          AND ST_DWithin(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusMeters})
+          ${input.verificationStatus ? Prisma.sql`AND bp."verificationStatus" = ${input.verificationStatus}::"VerificationStatus"` : Prisma.empty}
+          ${input.categoryId ? Prisma.sql`AND bp."categoryId" = ${input.categoryId}` : Prisma.empty}
+          ${
+            input.search
+              ? Prisma.sql`AND (
+                  bp.name ILIKE ${'%' + input.search + '%'} OR 
+                  bp.description ILIKE ${'%' + input.search + '%'} OR 
+                  loc.name ILIKE ${'%' + input.search + '%'}
+                )`
+              : Prisma.empty
+          }
+        ORDER BY distance ASC
+        LIMIT ${input.limit}
+        OFFSET ${skip};
+      `;
+
+      const countResult = await this.prisma.$queryRaw<{ total: bigint }[]>`
+        SELECT COUNT(*) as total 
+        FROM "business_profiles" bp
+        JOIN "Location" loc ON bp."locationId" = loc.id
+        WHERE bp."isPublic" = true
+          AND ST_DWithin(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusMeters})
+          ${input.verificationStatus ? Prisma.sql`AND bp."verificationStatus" = ${input.verificationStatus}::"VerificationStatus"` : Prisma.empty}
+          ${input.categoryId ? Prisma.sql`AND bp."categoryId" = ${input.categoryId}` : Prisma.empty}
+          ${
+            input.search
+              ? Prisma.sql`AND (
+                  bp.name ILIKE ${'%' + input.search + '%'} OR 
+                  bp.description ILIKE ${'%' + input.search + '%'} OR 
+                  loc.name ILIKE ${'%' + input.search + '%'}
+                )`
+              : Prisma.empty
+          };
+      `;
+
+      const total = Number(countResult[0]?.total ?? 0);
+
+      return {
+        items: rawItems.map((r) => ({
+          id: r.id,
+          name: r.name,
+          slug: r.slug,
+          verificationStatus: r.verificationStatus,
+          description: r.description,
+          location: r.location,
+          latitude: r.latitude,
+          longitude: r.longitude,
+          categoryId: r.categoryId ?? null,
+          distanceKm: Number(r.distance),
+        })),
+        total,
+        page: input.page,
+        limit: input.limit,
+      };
+    }
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.businessProfile.findMany({
@@ -197,17 +386,27 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           slug: true,
           verificationStatus: true,
           description: true,
-          location: true,
+          locationId: true,
           categoryId: true,
+          geoEntity: true,
         },
       }),
       this.prisma.businessProfile.count({ where }),
     ]);
 
+    const hydrated = await this.hydrate(items as unknown as PrismaBusinessProfileExtended[]);
+
     return {
-      items: items.map((r) => ({
-        ...r,
-        categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
+      items: hydrated.map((r) => ({
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        verificationStatus: r.verificationStatus,
+        description: r.description,
+        location: r.locationName,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        categoryId: r.categoryId ?? null,
       })),
       total,
       page: input.page,
