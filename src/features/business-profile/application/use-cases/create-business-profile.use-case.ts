@@ -1,7 +1,10 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import slugify from 'slugify';
 import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
-import { CreateBusinessProfileInput, BusinessProfileView } from '../../domain/types/business-profile.types.js';
+import {
+  CreateBusinessProfileInput,
+  BusinessProfileView,
+} from '../../domain/types/business-profile.types.js';
 
 @Injectable()
 export class CreateBusinessProfileUseCase {

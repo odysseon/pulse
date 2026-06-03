@@ -29,6 +29,12 @@ export class CreateBusinessProfileDto {
   @IsString()
   @MaxLength(200)
   location?: string;
+
+  @IsOptional()
+  latitude?: number;
+
+  @IsOptional()
+  longitude?: number;
 }
 
 export class UpdateBusinessProfileDto {
@@ -63,6 +69,12 @@ export class UpdateBusinessProfileDto {
   location?: string;
 
   @IsOptional()
+  latitude?: number;
+
+  @IsOptional()
+  longitude?: number;
+
+  @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
 }
@@ -80,4 +92,16 @@ export class GetBusinessesQueryDto {
   @IsOptional()
   @IsString()
   limit?: string;
+
+  @IsOptional()
+  @IsString()
+  lat?: string;
+
+  @IsOptional()
+  @IsString()
+  lng?: string;
+
+  @IsOptional()
+  @IsString()
+  radius?: string;
 }

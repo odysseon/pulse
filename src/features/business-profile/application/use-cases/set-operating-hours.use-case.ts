@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
 import { SetOperatingHoursInput } from '../../domain/types/operating-hours.types.js';
 
@@ -10,7 +15,12 @@ export class SetOperatingHoursUseCase {
    * Validates time format HH:mm and replaces operating hours for a business profile.
    * Only the business owner or an admin can update the hours.
    */
-  async execute(businessId: string, hours: SetOperatingHoursInput[], requesterId: string, isAdmin: boolean): Promise<void> {
+  async execute(
+    businessId: string,
+    hours: SetOperatingHoursInput[],
+    requesterId: string,
+    isAdmin: boolean,
+  ): Promise<void> {
     const business = await this.businessRepo.findById(businessId);
     if (!business) {
       throw new NotFoundException('Business profile not found.');
@@ -35,7 +45,9 @@ export class SetOperatingHoursUseCase {
     const daysSeen = new Set<string>();
     for (const item of hours) {
       if (daysSeen.has(item.day)) {
-        throw new BadRequestException(`Duplicate entry for day: ${item.day}. Provide at most one entry per day.`);
+        throw new BadRequestException(
+          `Duplicate entry for day: ${item.day}. Provide at most one entry per day.`,
+        );
       }
       daysSeen.add(item.day);
     }

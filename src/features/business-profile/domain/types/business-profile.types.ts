@@ -10,6 +10,8 @@ export interface CreateBusinessProfileInput {
   readonly whatsapp?: string;
   readonly email?: string;
   readonly location?: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
 }
 
 export interface UpdateBusinessProfileInput {
@@ -19,6 +21,8 @@ export interface UpdateBusinessProfileInput {
   readonly whatsapp?: string;
   readonly email?: string;
   readonly location?: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
   readonly isPublic?: boolean;
 }
 
@@ -34,6 +38,8 @@ export interface BusinessProfileView {
   readonly whatsapp: string | null;
   readonly email: string | null;
   readonly location: string | null;
+  readonly latitude: number | null;
+  readonly longitude: number | null;
   readonly categoryId: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -48,7 +54,10 @@ export interface BusinessSummary {
   readonly verificationStatus: VerificationStatus;
   readonly description: string | null;
   readonly location: string | null;
+  readonly latitude: number | null;
+  readonly longitude: number | null;
   readonly categoryId: string | null;
+  readonly distanceKm?: number; // Added dynamically during proximity queries
 }
 
 export interface DiscoverBusinessesInput {
@@ -58,6 +67,9 @@ export interface DiscoverBusinessesInput {
   readonly categoryId?: string;
   /** Filter by root category slug — returns all businesses in any leaf under that root */
   readonly rootSlug?: string;
+  readonly lat?: number;
+  readonly lng?: number;
+  readonly radiusInKm?: number;
   readonly page: number;
   readonly limit: number;
 }
