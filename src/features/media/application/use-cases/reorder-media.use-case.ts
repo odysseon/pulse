@@ -1,6 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { IMediaRepository } from '../../domain/ports/media.repository.port.js';
-import { MediaResourceType } from '../../domain/types/media-resource-type.enum.js';
+import { IMediaRepository, MediaOwnerKey } from '../../domain/ports/media.repository.port.js';
 import { MediaRole } from '../../domain/types/media-role.enum.js';
 import { Media } from '../../domain/types/media.entity.js';
 
@@ -9,12 +8,12 @@ export class ReorderMediaUseCase {
   constructor(private readonly mediaRepo: IMediaRepository) {}
 
   async execute(
-    resourceType: MediaResourceType,
-    resourceId: string,
+    ownerKey: MediaOwnerKey,
+    ownerId: string,
     orderedIds: string[],
   ): Promise<Media[]> {
     // Only GALLERY items are reorderable — singleton roles have no position
-    const existing = await this.mediaRepo.findByRole(resourceType, resourceId, MediaRole.GALLERY);
+    const existing = await this.mediaRepo.findByRole(ownerKey, ownerId, MediaRole.GALLERY);
 
     if (existing.length === 0) {
       throw new NotFoundException('No gallery items found for this resource.');
@@ -44,6 +43,6 @@ export class ReorderMediaUseCase {
       }
     }
 
-    return this.mediaRepo.reorder(resourceType, resourceId, { orderedIds });
+    return this.mediaRepo.reorder(ownerKey, ownerId, { orderedIds });
   }
 }

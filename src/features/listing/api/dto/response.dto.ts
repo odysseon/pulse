@@ -12,7 +12,7 @@ export class ListingResponseDto {
   status: ListingStatus;
   minPrice: string | null;
   maxPrice: string | null;
-  currency: Currency | null;
+  currencyCode: Currency | null;
   isNegotiable: boolean;
   createdAt: string;
   updatedAt: string;
@@ -26,7 +26,7 @@ export class ListingResponseDto {
     this.status = listing.status;
     this.minPrice = listing.price.minPrice?.toString() ?? null;
     this.maxPrice = listing.price.maxPrice?.toString() ?? null;
-    this.currency = listing.price.currency;
+    this.currencyCode = listing.price.currencyCode;
     this.isNegotiable = listing.price.isNegotiable;
     this.createdAt = listing.createdAt.toISOString();
     this.updatedAt = listing.updatedAt.toISOString();
@@ -45,7 +45,7 @@ export class ListingSummaryResponseDto {
   description: string | null;
   minPrice: string | null;
   maxPrice: string | null;
-  currency: Currency | null;
+  currencyCode: Currency | null;
   isNegotiable: boolean;
 
   private constructor(summary: ListingSummary) {
@@ -56,7 +56,7 @@ export class ListingSummaryResponseDto {
     this.description = summary.description;
     this.minPrice = summary.minPrice?.toString() ?? null;
     this.maxPrice = summary.maxPrice?.toString() ?? null;
-    this.currency = summary.currency;
+    this.currencyCode = summary.currencyCode;
     this.isNegotiable = summary.isNegotiable;
   }
 

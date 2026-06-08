@@ -27,7 +27,7 @@ function toDomain(raw: PrismaListingExtended): Listing {
     price: {
       minPrice: raw.minPrice !== null ? raw.minPrice.toNumber() : null,
       maxPrice: raw.maxPrice !== null ? raw.maxPrice.toNumber() : null,
-      currency: raw.currency,
+      currencyCode: raw.currencyCode as any,
       isNegotiable: raw.isNegotiable,
     },
     createdAt: raw.createdAt,
@@ -50,7 +50,7 @@ export class PrismaListingRepository extends IListingRepository {
         description: input.description ?? null,
         minPrice: input.price?.minPrice ?? null,
         maxPrice: input.price?.maxPrice ?? null,
-        currency: input.price?.currency ?? null,
+        currencyCode: input.price?.currencyCode ?? null,
         isNegotiable: input.price?.isNegotiable ?? false,
       },
     });
@@ -91,7 +91,7 @@ export class PrismaListingRepository extends IListingRepository {
         ...(input.price !== undefined && {
           minPrice: input.price.minPrice ?? null,
           maxPrice: input.price.maxPrice ?? null,
-          currency: input.price.currency ?? null,
+          currencyCode: input.price.currencyCode ?? null,
           isNegotiable: input.price.isNegotiable,
         }),
       },
@@ -115,7 +115,7 @@ export class PrismaListingRepository extends IListingRepository {
     const where: Prisma.ListingWhereInput = {
       status: input.status ?? ListingStatus.PUBLISHED,
       ...(input.businessProfileId && { businessProfileId: input.businessProfileId }),
-      ...(input.currency && { currency: input.currency }),
+      ...(input.currencyCode && { currencyCode: input.currencyCode }),
       ...(input.isNegotiable !== undefined && { isNegotiable: input.isNegotiable }),
       ...(input.minPrice !== undefined && { minPrice: { gte: input.minPrice } }),
       ...(input.maxPrice !== undefined && { maxPrice: { lte: input.maxPrice } }),
@@ -141,19 +141,6 @@ export class PrismaListingRepository extends IListingRepository {
         skip,
         take: input.limit,
         orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          businessProfileId: true,
-          title: true,
-          slug: true,
-          description: true,
-          minPrice: true,
-          maxPrice: true,
-          currency: true,
-          isNegotiable: true,
-          coverUrl: true,
-          categoryId: true,
-        },
       }),
       this.prisma.listing.count({ where }),
     ]);
@@ -163,6 +150,7 @@ export class PrismaListingRepository extends IListingRepository {
         ...r,
         minPrice: r.minPrice !== null ? r.minPrice.toNumber() : null,
         maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
+        currencyCode: r.currencyCode as any,
         categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
       })),
       total,

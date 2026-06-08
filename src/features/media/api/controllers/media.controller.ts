@@ -21,7 +21,7 @@ import { AddMediaUseCase } from '../../application/use-cases/add-media.use-case.
 import { DeleteMediaUseCase } from '../../application/use-cases/delete-media.use-case.js';
 import { ReorderMediaUseCase } from '../../application/use-cases/reorder-media.use-case.js';
 import { GetResourceMediaUseCase } from '../../application/use-cases/get-resource-media.use-case.js';
-import { MediaResourceType } from '../../domain/types/media-resource-type.enum.js';
+import { MediaOwnerKey } from '../../domain/ports/media.repository.port.js';
 import { MediaRole } from '../../domain/types/media-role.enum.js';
 import { MediaType } from '../../domain/types/media-type.enum.js';
 import {
@@ -66,7 +66,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, MediaResourceType.LISTING, resourceId, file, dto.role);
+    return this.handleAdd(identity, 'listingId', resourceId, file, dto.role);
   }
 
   /**
@@ -86,7 +86,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, MediaResourceType.BUSINESS_PROFILE, resourceId, file, dto.role);
+    return this.handleAdd(identity, 'businessProfileId', resourceId, file, dto.role);
   }
 
   /**
@@ -108,7 +108,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, MediaResourceType.REVIEW, resourceId, file, dto.role);
+    return this.handleAdd(identity, 'reviewId', resourceId, file, dto.role);
   }
 
   // ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ export class MediaController {
    */
   @Get('listings/:resourceId/media')
   async getListingMedia(@Param('resourceId') resourceId: string): Promise<ListingMediaDto> {
-    const items = await this.getResourceMedia.execute(MediaResourceType.LISTING, resourceId);
+    const items = await this.getResourceMedia.execute('listingId', resourceId);
     return ListingMediaDto.from(items);
   }
 
@@ -134,7 +134,7 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
   ): Promise<BusinessProfileMediaDto> {
     const items = await this.getResourceMedia.execute(
-      MediaResourceType.BUSINESS_PROFILE,
+      'businessProfileId',
       resourceId,
     );
     return BusinessProfileMediaDto.from(items);
@@ -146,7 +146,7 @@ export class MediaController {
    */
   @Get('reviews/:resourceId/media')
   async getReviewMedia(@Param('resourceId') resourceId: string): Promise<ReviewMediaDto> {
-    const items = await this.getResourceMedia.execute(MediaResourceType.REVIEW, resourceId);
+    const items = await this.getResourceMedia.execute('reviewId', resourceId);
     return ReviewMediaDto.from(items);
   }
 
@@ -178,9 +178,9 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership(MediaResourceType.LISTING, resourceId, identity.accountId);
+    await this.assertResourceOwnership('listingId', resourceId, identity.accountId);
     const items = await this.reorderMedia.execute(
-      MediaResourceType.LISTING,
+      'listingId',
       resourceId,
       dto.orderedIds,
     );
@@ -198,12 +198,12 @@ export class MediaController {
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
     await this.assertResourceOwnership(
-      MediaResourceType.BUSINESS_PROFILE,
+      'businessProfileId',
       resourceId,
       identity.accountId,
     );
     const items = await this.reorderMedia.execute(
-      MediaResourceType.BUSINESS_PROFILE,
+      'businessProfileId',
       resourceId,
       dto.orderedIds,
     );
@@ -221,9 +221,9 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership(MediaResourceType.REVIEW, resourceId, identity.accountId);
+    await this.assertResourceOwnership('reviewId', resourceId, identity.accountId);
     const items = await this.reorderMedia.execute(
-      MediaResourceType.REVIEW,
+      'reviewId',
       resourceId,
       dto.orderedIds,
     );
@@ -236,7 +236,7 @@ export class MediaController {
 
   private async handleAdd(
     identity: RequestIdentity,
-    resourceType: MediaResourceType,
+    ownerKey: MediaOwnerKey,
     resourceId: string,
     file: Express.Multer.File | undefined,
     role: MediaRole,
@@ -245,14 +245,14 @@ export class MediaController {
       throw new BadRequestException('No file uploaded.');
     }
 
-    await this.assertResourceOwnership(resourceType, resourceId, identity.accountId);
+    await this.assertResourceOwnership(ownerKey, resourceId, identity.accountId);
 
     const mediaType = this.detectMediaType(file.mimetype);
     const userId = await this.resolveUserId(identity.accountId);
 
     const media = await this.addMedia.execute({
-      resourceType,
-      resourceId,
+      ownerKey,
+      ownerId: resourceId,
       requesterId: userId,
       fileName: file.originalname,
       fileStream: Readable.from(file.buffer),
@@ -270,13 +270,13 @@ export class MediaController {
   }
 
   private async assertResourceOwnership(
-    resourceType: MediaResourceType,
+    ownerKey: MediaOwnerKey,
     resourceId: string,
     accountId: string,
   ): Promise<void> {
     const userId = await this.resolveUserId(accountId);
 
-    if (resourceType === MediaResourceType.LISTING) {
+    if (ownerKey === 'listingId') {
       const listing = await this.prisma.listing.findUnique({
         where: { id: resourceId },
         select: { businessProfile: { select: { ownerId: true } } },
@@ -287,7 +287,7 @@ export class MediaController {
       }
     }
 
-    if (resourceType === MediaResourceType.BUSINESS_PROFILE) {
+    if (ownerKey === 'businessProfileId') {
       const profile = await this.prisma.businessProfile.findUnique({
         where: { id: resourceId },
         select: { ownerId: true },
@@ -298,7 +298,7 @@ export class MediaController {
       }
     }
 
-    if (resourceType === MediaResourceType.REVIEW) {
+    if (ownerKey === 'reviewId') {
       const review = await this.prisma.review.findUnique({
         where: { id: resourceId },
         select: { reviewerId: true },
@@ -313,7 +313,27 @@ export class MediaController {
   private async assertMediaOwnership(id: string, accountId: string): Promise<void> {
     const media = await this.prisma.media.findUnique({ where: { id } });
     if (!media) throw new NotFoundException('Media item not found.');
-    await this.assertResourceOwnership(media.resourceType, media.resourceId, accountId);
+    let ownerKey: MediaOwnerKey | null = null;
+    let resourceId = '';
+    
+    if (media.businessProfileId) {
+      ownerKey = 'businessProfileId';
+      resourceId = media.businessProfileId;
+    } else if (media.listingId) {
+      ownerKey = 'listingId';
+      resourceId = media.listingId;
+    } else if (media.storeTourId) {
+      ownerKey = 'storeTourId';
+      resourceId = media.storeTourId;
+    } else if (media.reviewId) {
+      ownerKey = 'reviewId';
+      resourceId = media.reviewId;
+    }
+
+    if (!ownerKey) {
+      throw new BadRequestException('Media is orphaned');
+    }
+    await this.assertResourceOwnership(ownerKey, resourceId, accountId);
   }
 
   private async resolveUserId(accountId: string): Promise<string> {
