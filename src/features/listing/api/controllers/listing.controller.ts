@@ -51,7 +51,7 @@ export class ListingController {
         ? {
             minPrice: dto.price.minPrice,
             maxPrice: dto.price.maxPrice,
-            currency: dto.price.currency,
+            currencyCode: dto.price.currencyCode,
             isNegotiable: dto.price.isNegotiable,
           }
         : undefined,
@@ -75,7 +75,7 @@ export class ListingController {
         ? {
             minPrice: dto.price.minPrice,
             maxPrice: dto.price.maxPrice,
-            currency: dto.price.currency,
+            currencyCode: dto.price.currencyCode,
             isNegotiable: dto.price.isNegotiable,
           }
         : undefined,

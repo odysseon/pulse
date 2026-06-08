@@ -16,7 +16,7 @@ export class DiscoverListingsUseCase {
 
   async execute(raw: {
     businessProfileId?: string;
-    currency?: Currency;
+    currencyCode?: Currency;
     minPrice?: string;
     maxPrice?: string;
     isNegotiable?: string;
@@ -26,7 +26,7 @@ export class DiscoverListingsUseCase {
   }): Promise<PaginatedListingSummaries> {
     const input: DiscoverListingsInput = {
       businessProfileId: raw.businessProfileId,
-      currency: raw.currency,
+      currencyCode: raw.currencyCode,
       minPrice: this.parseNumber(raw.minPrice),
       maxPrice: this.parseNumber(raw.maxPrice),
       isNegotiable:

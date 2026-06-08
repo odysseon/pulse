@@ -36,6 +36,6 @@ import { Currency } from './currency.enum.js';
 export interface ListingPrice {
   readonly minPrice: number | null;
   readonly maxPrice: number | null;
-  readonly currency: Currency | null;
+  readonly currencyCode: Currency | null;
   readonly isNegotiable: boolean;
 }

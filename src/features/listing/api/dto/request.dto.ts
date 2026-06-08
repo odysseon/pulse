@@ -29,8 +29,7 @@ export class ListingPriceDto {
    * Currency is required when any price is set.
    */
   @ValidateIf((o: ListingPriceDto) => o.minPrice !== undefined || o.maxPrice !== undefined)
-  @IsEnum(Currency)
-  currency?: Currency;
+  currencyCode?: Currency;
 
   @IsBoolean()
   isNegotiable!: boolean;
@@ -78,8 +77,7 @@ export class TransitionListingStatusDto {
 
 export class GetListingsQueryDto {
   @IsOptional()
-  @IsEnum(Currency)
-  currency?: Currency;
+  currencyCode?: Currency;
 
   @IsOptional()
   @IsString()

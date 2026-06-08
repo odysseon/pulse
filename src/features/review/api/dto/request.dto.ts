@@ -15,13 +15,6 @@ export class CreateReviewDto {
   @IsString()
   @MaxLength(2000)
   comment?: string;
-
-  @ApiPropertyOptional({
-    description: 'Optional listing ID if this review is for a specific product/service',
-  })
-  @IsOptional()
-  @IsString()
-  listingId?: string;
 }
 
 export class UpdateReviewDto {
@@ -40,7 +33,7 @@ export class UpdateReviewDto {
   comment?: string | null;
 }
 
-export class GetBusinessReviewsQueryDto {
+export class GetListingReviewsQueryDto {
   @ApiPropertyOptional({ description: 'Pagination cursor (last received review ID)' })
   @IsOptional()
   @IsString()
@@ -53,9 +46,4 @@ export class GetBusinessReviewsQueryDto {
   @Max(50)
   @Type(() => Number)
   limit?: number;
-
-  @ApiPropertyOptional({ description: 'Optional listing ID to filter reviews by product/service' })
-  @IsOptional()
-  @IsString()
-  listingId?: string;
 }

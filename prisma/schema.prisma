@@ -108,8 +108,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  businessProfiles BusinessProfile[]
-  reviewsGiven     Review[]          @relation("ReviewsGiven")
+  businessProfiles  BusinessProfile[]
+  reviewsGiven      Review[]          @relation("ReviewsGiven")
+  storeToursCreated StoreTour[]
 
   @@index([accountId])
 }
@@ -150,7 +151,8 @@ model BusinessProfile {
 
   // Commercial identity — leaf category only (see Category constraints)
   categoryId String?
-  category   Category? @relation("BusinessProfileCategory", fields: [categoryId], references: [id])
+  category   Category?   @relation("BusinessProfileCategory", fields: [categoryId], references: [id])
+  storeTours StoreTour[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -158,8 +160,7 @@ model BusinessProfile {
   listings Listing[]
   hours    OperatingHours[]
   tags     BusinessProfileTag[]
-  reviews  Review[]
-  media    Media[]              @relation("BusinessProfileMedia")
+  media    Media[]
 
   @@index([ownerId])
   @@index([slug])
@@ -189,13 +190,6 @@ enum ListingStatus {
   ARCHIVED
 }
 
-enum Currency {
-  NGN
-  USD
-  GBP
-  EUR
-}
-
 model Listing {
   id String @id @default(cuid())
 
@@ -207,12 +201,13 @@ model Listing {
   description String?
 
   status ListingStatus @default(DRAFT)
+  media  Media[]
 
   // Prices stored as Decimal for monetary precision
-  minPrice     Decimal?  @db.Decimal(18, 2)
-  maxPrice     Decimal?  @db.Decimal(18, 2)
-  currency     Currency?
-  isNegotiable Boolean   @default(false)
+  minPrice     Decimal? @db.Decimal(18, 2)
+  maxPrice     Decimal? @db.Decimal(18, 2)
+  currencyCode String?
+  isNegotiable Boolean  @default(false)
 
   // Offering type — leaf category only (see Category constraints)
   categoryId String?
@@ -226,7 +221,7 @@ model Listing {
   @@unique([businessProfileId, slug])
   @@index([businessProfileId])
   @@index([status])
-  @@index([currency])
+  @@index([currencyCode])
   @@index([minPrice])
   @@index([maxPrice])
   @@index([isNegotiable])
@@ -243,12 +238,6 @@ enum MediaType {
   VIDEO
 }
 
-enum MediaResourceType {
-  LISTING
-  BUSINESS_PROFILE
-  REVIEW
-}
-
 enum MediaRole {
   /// BusinessProfile only — singleton
   LOGO
@@ -263,30 +252,31 @@ enum MediaRole {
 model Media {
   id String @id @default(cuid())
 
-  // Polymorphic ownership
-  resourceType MediaResourceType
-  resourceId   String
-
   url    String
   fileId String
 
   mediaType MediaType
+  role      MediaRole
 
-  // Semantic role — determines cardinality and display context
-  role MediaRole
-
-  // Display sequence — only meaningful for GALLERY role items
-  // null for singleton roles (LOGO, BANNER, COVER)
   order Int?
+
+  businessProfileId String?
+  businessProfile   BusinessProfile? @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  storeTourId String?
+  storeTour   StoreTour? @relation(fields: [storeTourId], references: [id], onDelete: Cascade)
+
+  reviewId String?
+  review   Review? @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  businessProfile BusinessProfile? @relation("BusinessProfileMedia", fields: [resourceId], references: [id], onDelete: Cascade, map: "media_business_profile_fk")
-  review          Review?          @relation("ReviewMedia", fields: [resourceId], references: [id], onDelete: Cascade, map: "media_review_fk")
-
-  @@index([resourceType, resourceId])
-  @@index([resourceType, resourceId, order])
-  @@index([resourceType, resourceId, role])
+  @@index([businessProfileId])
+  @@index([listingId])
+  @@index([storeTourId])
   @@map("media")
 }
 
@@ -333,11 +323,8 @@ model Category {
 model Review {
   id String @id @default(cuid())
 
-  businessProfileId String
-  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
-
-  listingId String?
-  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   reviewerId String
   reviewer   User   @relation("ReviewsGiven", fields: [reviewerId], references: [id])
@@ -349,14 +336,60 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  media Media[] @relation("ReviewMedia")
+  media Media[]
 
-  // One general review per business, OR one review per specific listing
-  @@unique([businessProfileId, reviewerId, listingId])
-  @@index([businessProfileId])
+  @@unique([listingId, reviewerId])
   @@index([reviewerId])
   @@index([listingId])
   @@map("reviews")
+}
+
+enum StoreTourStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model StoreTour {
+  id String @id @default(cuid())
+
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  title String
+
+  summary String?
+
+  visitDate DateTime
+
+  status StoreTourStatus @default(DRAFT)
+
+  publishedAt DateTime?
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  highlights StoreTourHighlight[]
+
+  media Media[]
+
+  @@index([businessProfileId])
+  @@index([status])
+  @@map("store_tours")
+}
+
+model StoreTourHighlight {
+  id String @id @default(cuid())
+
+  storeTourId String
+  storeTour   StoreTour @relation(fields: [storeTourId], references: [id], onDelete: Cascade)
+
+  value String
+
+  @@index([storeTourId])
+  @@map("store_tour_highlights")
 }
 
 // ============================================

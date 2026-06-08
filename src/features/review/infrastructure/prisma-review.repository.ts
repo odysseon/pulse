@@ -5,19 +5,16 @@ import { Review } from '../domain/types/review.entity.js';
 import {
   CreateReviewInput,
   UpdateReviewInput,
-  GetBusinessReviewsInput,
+  GetListingReviewsInput,
   ReviewPage,
   ReviewWithMedia,
   ReviewMediaItem,
 } from '../domain/types/review.types.js';
-import {
-  MediaResourceType as PrismaMediaResourceType,
-  MediaRole as PrismaMediaRole,
-} from '../../../../generated/prisma/client.js';
 import type {
   Review as PrismaReview,
   Media as PrismaMedia,
 } from '../../../../generated/prisma/client.js';
+import { MediaRole } from '../../media/domain/types/media-role.enum.js';
 
 // ---------------------------------------------------------------------------
 // Mappers
@@ -26,7 +23,6 @@ import type {
 function toDomain(raw: PrismaReview): Review {
   return {
     id: raw.id,
-    businessProfileId: raw.businessProfileId,
     listingId: raw.listingId,
     reviewerId: raw.reviewerId,
     rating: raw.rating,
@@ -67,7 +63,6 @@ export class PrismaReviewRepository extends IReviewRepository {
   async create(input: CreateReviewInput): Promise<Review> {
     const raw = await this.prisma.review.create({
       data: {
-        businessProfileId: input.businessProfileId,
         listingId: input.listingId,
         reviewerId: input.reviewerId,
         rating: input.rating,
@@ -88,8 +83,7 @@ export class PrismaReviewRepository extends IReviewRepository {
       include: {
         media: {
           where: {
-            resourceType: PrismaMediaResourceType.REVIEW,
-            role: PrismaMediaRole.GALLERY,
+            role: MediaRole.GALLERY,
           },
           orderBy: { order: 'asc' },
         },
@@ -98,30 +92,27 @@ export class PrismaReviewRepository extends IReviewRepository {
     return raw ? toWithMedia(raw) : null;
   }
 
-  async existsByBusinessAndReviewer(
-    businessProfileId: string,
+  async existsByListingAndReviewer(
+    listingId: string,
     reviewerId: string,
-    listingId: string | null = null,
   ): Promise<boolean> {
     const count = await this.prisma.review.count({
-      where: { businessProfileId, reviewerId, listingId },
+      where: { listingId, reviewerId },
     });
     return count > 0;
   }
 
-  async findByBusiness(input: GetBusinessReviewsInput): Promise<ReviewPage> {
+  async findByListing(input: GetListingReviewsInput): Promise<ReviewPage> {
     const limit = input.limit ?? 20;
 
     const rows = await this.prisma.review.findMany({
       where: {
-        businessProfileId: input.businessProfileId,
-        ...(input.listingId !== undefined ? { listingId: input.listingId } : {}),
+        listingId: input.listingId,
       },
       include: {
         media: {
           where: {
-            resourceType: PrismaMediaResourceType.REVIEW,
-            role: PrismaMediaRole.GALLERY,
+            role: MediaRole.GALLERY,
           },
           orderBy: { order: 'asc' },
         },

@@ -16,11 +16,11 @@ import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { CreateReviewUseCase } from '../../application/use-cases/create-review.use-case.js';
 import { UpdateReviewUseCase } from '../../application/use-cases/update-review.use-case.js';
 import { DeleteReviewUseCase } from '../../application/use-cases/delete-review.use-case.js';
-import { GetBusinessReviewsUseCase } from '../../application/use-cases/get-business-reviews.use-case.js';
+import { GetListingReviewsUseCase } from '../../application/use-cases/get-listing-reviews.use-case.js';
 import {
   CreateReviewDto,
   UpdateReviewDto,
-  GetBusinessReviewsQueryDto,
+  GetListingReviewsQueryDto,
 } from '../dto/request.dto.js';
 import { ReviewResponseDto, ReviewPageDto } from '../dto/response.dto.js';
 
@@ -32,22 +32,22 @@ export class ReviewController {
     private readonly createReview: CreateReviewUseCase,
     private readonly updateReview: UpdateReviewUseCase,
     private readonly deleteReview: DeleteReviewUseCase,
-    private readonly getBusinessReviews: GetBusinessReviewsUseCase,
+    private readonly getListingReviews: GetListingReviewsUseCase,
   ) {}
 
   /**
-   * POST /business-profiles/:businessProfileId/reviews
-   * Submit a review for a business profile.
+   * POST /listings/:listingId/reviews
+   * Submit a review for a listing.
    */
-  @Post('business-profiles/:businessProfileId/reviews')
+  @Post('listings/:listingId/reviews')
   async create(
     @CurrentIdentity() identity: RequestIdentity,
-    @Param('businessProfileId') businessProfileId: string,
+    @Param('listingId') listingId: string,
     @Body() dto: CreateReviewDto,
   ): Promise<ReviewResponseDto> {
     const reviewerId = await this.resolveUserId(identity.accountId);
     const review = await this.createReview.execute({
-      businessProfileId,
+      listingId,
       reviewerId,
       rating: dto.rating,
       comment: dto.comment,
@@ -56,16 +56,16 @@ export class ReviewController {
   }
 
   /**
-   * GET /business-profiles/:businessProfileId/reviews
+   * GET /listings/:listingId/reviews
    * Public — paginated list of reviews with embedded media.
    */
-  @Get('business-profiles/:businessProfileId/reviews')
-  async listByBusiness(
-    @Param('businessProfileId') businessProfileId: string,
-    @Query() query: GetBusinessReviewsQueryDto,
+  @Get('listings/:listingId/reviews')
+  async listByListing(
+    @Param('listingId') listingId: string,
+    @Query() query: GetListingReviewsQueryDto,
   ): Promise<ReviewPageDto> {
-    const page = await this.getBusinessReviews.execute({
-      businessProfileId,
+    const page = await this.getListingReviews.execute({
+      listingId,
       cursor: query.cursor,
       limit: query.limit,
     });
