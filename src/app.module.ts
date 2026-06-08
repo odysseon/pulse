@@ -11,6 +11,7 @@ import { ListingModule } from './features/listing/listing.module.js';
 import { MediaModule } from './features/media/media.module.js';
 import { CategoryModule } from './features/category/category.module.js';
 import { ReviewModule } from './features/review/review.module.js';
+import { StoreTourModule } from './features/store-tour/store-tour.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ReviewModule } from './features/review/review.module.js';
     MediaModule,
     CategoryModule,
     ReviewModule,
+    StoreTourModule,
   ],
   controllers: [HealthController],
 })
