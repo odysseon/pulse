@@ -1,4 +1,4 @@
-import { PrismaClient, PlatformRole } from "../generated/prisma/client.js";
+import { PrismaClient, PlatformRole, MediaType, MediaRole } from "../generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Argon2PasswordHasher } from "@odysseon/whoami-adapter-argon2";
 import "dotenv/config";
@@ -316,6 +316,24 @@ async function main() {
       status: "PUBLISHED",
       highlights: {
         create: [{ value: "MacBook display" }, { value: "Accessories wall" }],
+      },
+      media: {
+        create: [
+          {
+            url: "https://example.com/store-tour-video.mp4",
+            fileId: "file-tour-1",
+            mediaType: MediaType.VIDEO,
+            role: MediaRole.GALLERY,
+            order: 0,
+          },
+          {
+            url: "https://example.com/store-tour-photo.jpg",
+            fileId: "file-tour-2",
+            mediaType: MediaType.IMAGE,
+            role: MediaRole.GALLERY,
+            order: 1,
+          },
+        ],
       },
     },
   });

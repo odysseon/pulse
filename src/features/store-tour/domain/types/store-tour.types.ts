@@ -1,4 +1,4 @@
-import { StoreTourStatus, StoreTourHighlight } from './store-tour.entity.js';
+import { StoreTourStatus, StoreTourHighlight, StoreTourMediaItem } from './store-tour.entity.js';
 
 export interface CreateStoreTourInput {
   readonly businessProfileId: string;
@@ -29,7 +29,7 @@ export interface StoreTourView {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly highlights: StoreTourHighlight[];
-  // Optionally, embedded media
+  readonly media: StoreTourMediaItem[];
 }
 
 export interface DiscoverStoreToursInput {

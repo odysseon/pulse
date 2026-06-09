@@ -13,13 +13,16 @@ import {
   StoreTour as PrismaStoreTour,
   StoreTourHighlight as PrismaStoreTourHighlight,
   StoreTourStatus as PrismaStoreTourStatus,
+  Media as PrismaMedia,
 } from '../../../../generated/prisma/client.js';
 
-type PrismaStoreTourWithHighlights = PrismaStoreTour & {
+type PrismaStoreTourWithRelations = PrismaStoreTour & {
   highlights: PrismaStoreTourHighlight[];
+  media: PrismaMedia[];
 };
 
-function toDomain(raw: PrismaStoreTourWithHighlights): StoreTour {
+function toDomain(raw: PrismaStoreTourWithRelations): StoreTour {
+  const sortedMedia = [...(raw.media || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return {
     id: raw.id,
     businessProfileId: raw.businessProfileId,
@@ -32,10 +35,17 @@ function toDomain(raw: PrismaStoreTourWithHighlights): StoreTour {
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     highlights: raw.highlights.map((h) => ({ id: h.id, value: h.value })),
+    media: sortedMedia.map((m) => ({
+      id: m.id,
+      url: m.url,
+      mediaType: m.mediaType as 'IMAGE' | 'VIDEO',
+      order: m.order,
+      createdAt: m.createdAt,
+    })),
   };
 }
 
-function toView(raw: PrismaStoreTourWithHighlights): StoreTourView {
+function toView(raw: PrismaStoreTourWithRelations): StoreTourView {
   return toDomain(raw);
 }
 
@@ -60,9 +70,10 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
       },
       include: {
         highlights: true,
+        media: true,
       },
     });
-    return toDomain(raw);
+    return toDomain(raw as PrismaStoreTourWithRelations);
   }
 
   async findById(id: string): Promise<StoreTourView | null> {
@@ -70,9 +81,10 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
       where: { id },
       include: {
         highlights: true,
+        media: true,
       },
     });
-    return raw ? toView(raw) : null;
+    return raw ? toView(raw as PrismaStoreTourWithRelations) : null;
   }
 
   async update(id: string, input: UpdateStoreTourInput): Promise<StoreTour> {
@@ -103,11 +115,12 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
         },
         include: {
           highlights: true,
+          media: true,
         },
       });
     });
 
-    return toDomain(raw);
+    return toDomain(raw as PrismaStoreTourWithRelations);
   }
 
   async delete(id: string): Promise<void> {
@@ -132,13 +145,14 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
         orderBy: { createdAt: 'desc' },
         include: {
           highlights: true,
+          media: true,
         },
       }),
       this.prisma.storeTour.count({ where }),
     ]);
 
     return {
-      items: rows.map(toView),
+      items: rows.map((r) => toView(r as PrismaStoreTourWithRelations)),
       total,
       page: input.page,
       limit: input.limit,
