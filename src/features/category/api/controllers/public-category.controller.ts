@@ -1,4 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
+import { Public } from '@odysseon/whoami-adapter-nestjs';
 import { GetCategoryTreeUseCase } from '../../application/use-cases/get-category-tree.use-case.js';
 import { GetCategoryUseCase } from '../../application/use-cases/get-category.use-case.js';
 import { CategoryResponseDto, CategoryTreeNodeDto } from '../dto/response.dto.js';
@@ -9,6 +10,7 @@ import { CategoryResponseDto, CategoryTreeNodeDto } from '../dto/response.dto.js
  * GET /categories            — full taxonomy tree (active only)
  * GET /categories/:slug      — single category by slug
  */
+@Public()
 @Controller('categories')
 export class PublicCategoryController {
   constructor(

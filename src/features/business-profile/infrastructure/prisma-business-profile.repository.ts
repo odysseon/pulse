@@ -134,6 +134,13 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
       `;
       locationId = newLocId;
+    } else if (input.location !== undefined && input.location !== null) {
+      const newLocId = crypto.randomUUID();
+      await this.prisma.$executeRaw`
+        INSERT INTO "Location" (id, name, coordinates)
+        VALUES (${newLocId}, ${input.location}, ST_SetSRID(ST_MakePoint(0, 0), 4326))
+      `;
+      locationId = newLocId;
     }
 
     const raw = await this.prisma.businessProfile.create({
@@ -211,10 +218,19 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         `;
         locationId = newLocId;
       }
-    } else if (input.location !== undefined && locationId) {
-      await this.prisma.$executeRaw`
-        UPDATE "Location" SET name = ${input.location} WHERE id = ${locationId}
-      `;
+    } else if (input.location !== undefined && input.location !== null) {
+      if (locationId) {
+        await this.prisma.$executeRaw`
+          UPDATE "Location" SET name = ${input.location} WHERE id = ${locationId}
+        `;
+      } else {
+        const newLocId = crypto.randomUUID();
+        await this.prisma.$executeRaw`
+          INSERT INTO "Location" (id, name, coordinates)
+          VALUES (${newLocId}, ${input.location}, ST_SetSRID(ST_MakePoint(0, 0), 4326))
+        `;
+        locationId = newLocId;
+      }
     }
 
     const raw = await this.prisma.businessProfile.update({

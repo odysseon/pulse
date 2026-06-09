@@ -11,10 +11,11 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Readable } from 'stream';
-import { CurrentIdentity } from '@odysseon/whoami-adapter-nestjs';
+import { CurrentIdentity, Public } from '@odysseon/whoami-adapter-nestjs';
 import type { RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { AddMediaUseCase } from '../../application/use-cases/add-media.use-case.js';
@@ -144,6 +145,7 @@ export class MediaController {
    * GET /listings/:resourceId/media
    * Returns { cover, gallery } — structured for storefront rendering.
    */
+  @Public()
   @Get('listings/:resourceId/media')
   async getListingMedia(@Param('resourceId') resourceId: string): Promise<ListingMediaDto> {
     const items = await this.getResourceMedia.execute('listingId', resourceId);
@@ -154,6 +156,7 @@ export class MediaController {
    * GET /business-profiles/:resourceId/media
    * Returns { logo, banner, gallery } — structured for storefront rendering.
    */
+  @Public()
   @Get('business-profiles/:resourceId/media')
   async getBusinessProfileMedia(
     @Param('resourceId') resourceId: string,
@@ -169,6 +172,7 @@ export class MediaController {
    * GET /reviews/:resourceId/media
    * Returns { gallery } — raw user photos, gallery-ordered.
    */
+  @Public()
   @Get('reviews/:resourceId/media')
   async getReviewMedia(@Param('resourceId') resourceId: string): Promise<ReviewMediaDto> {
     const items = await this.getResourceMedia.execute('reviewId', resourceId);
@@ -179,6 +183,7 @@ export class MediaController {
    * GET /store-tours/:resourceId/media
    * Returns { gallery } — raw user photos, gallery-ordered.
    */
+  @Public()
   @Get('store-tours/:resourceId/media')
   async getStoreTourMedia(@Param('resourceId') resourceId: string): Promise<StoreTourMediaDto> {
     const items = await this.getResourceMedia.execute('storeTourId', resourceId);
@@ -190,6 +195,7 @@ export class MediaController {
   // ---------------------------------------------------------------------------
 
   /** DELETE /media/:id */
+  @HttpCode(204)
   @Delete('media/:id')
   async delete(
     @CurrentIdentity() identity: RequestIdentity,

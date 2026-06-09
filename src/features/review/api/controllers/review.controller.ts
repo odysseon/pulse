@@ -8,9 +8,11 @@ import {
   Body,
   Query,
   NotFoundException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CurrentIdentity } from '@odysseon/whoami-adapter-nestjs';
+import { CurrentIdentity, Public } from '@odysseon/whoami-adapter-nestjs';
 import type { RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { CreateReviewUseCase } from '../../application/use-cases/create-review.use-case.js';
@@ -59,6 +61,7 @@ export class ReviewController {
    * GET /listings/:listingId/reviews
    * Public — paginated list of reviews with embedded media.
    */
+  @Public()
   @Get('listings/:listingId/reviews')
   async listByListing(
     @Param('listingId') listingId: string,
@@ -95,6 +98,7 @@ export class ReviewController {
    * Reviewer or ADMIN can delete.
    */
   @Delete('reviews/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('id') id: string,

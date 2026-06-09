@@ -1,4 +1,4 @@
-import { Currency } from './currency.enum.js';
+
 import { ListingStatus } from './listing-status.enum.js';
 
 // ---------------------------------------------------------------------------
@@ -8,7 +8,7 @@ import { ListingStatus } from './listing-status.enum.js';
 export interface ListingPriceInput {
   readonly minPrice?: number;
   readonly maxPrice?: number;
-  readonly currencyCode?: Currency;
+  readonly currencyCode?: string;
   readonly isNegotiable: boolean;
 }
 
@@ -65,7 +65,7 @@ export interface ListingView {
   readonly status: ListingStatus;
   readonly minPrice: number | null;
   readonly maxPrice: number | null;
-  readonly currencyCode: Currency | null;
+  readonly currencyCode: string | null;
   readonly categoryId: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -90,7 +90,7 @@ export interface ListingSummary {
   readonly description: string | null;
   readonly minPrice: number | null;
   readonly maxPrice: number | null;
-  readonly currencyCode: Currency | null;
+  readonly currencyCode: string | null;
   readonly isNegotiable: boolean;
   readonly categoryId: string | null;
 }
@@ -101,7 +101,7 @@ export interface ListingSummary {
 
 export interface DiscoverListingsInput {
   readonly businessProfileId?: string;
-  readonly currencyCode?: Currency;
+  readonly currencyCode?: string;
   readonly minPrice?: number;
   readonly maxPrice?: number;
   readonly isNegotiable?: boolean;

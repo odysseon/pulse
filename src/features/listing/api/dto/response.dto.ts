@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Currency } from '../../domain/types/currency.enum.js';
+
 import { ListingStatus } from '../../domain/types/listing-status.enum.js';
 import { Listing } from '../../domain/types/listing.entity.js';
 import { ListingSummary, PaginatedListingSummaries } from '../../domain/types/listing.types.js';
@@ -13,7 +13,7 @@ export class ListingResponseDto {
   status: ListingStatus;
   minPrice: string | null;
   maxPrice: string | null;
-  currencyCode: Currency | null;
+  currencyCode: string | null;
   isNegotiable: boolean;
   @ApiPropertyOptional({ nullable: true }) categoryId: string | null;
   @ApiProperty() createdAt: string;
@@ -53,7 +53,7 @@ export class ListingSummaryResponseDto {
   description: string | null;
   minPrice: string | null;
   maxPrice: string | null;
-  currencyCode: Currency | null;
+  currencyCode: string | null;
   categoryId: string | null;
   isNegotiable: boolean;
 

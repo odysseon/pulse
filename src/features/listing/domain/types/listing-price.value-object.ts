@@ -1,4 +1,4 @@
-import { Currency } from './currency.enum.js';
+
 
 /**
  * Represents the commercial price signal of a listing.
@@ -36,6 +36,6 @@ import { Currency } from './currency.enum.js';
 export interface ListingPrice {
   readonly minPrice: number | null;
   readonly maxPrice: number | null;
-  readonly currencyCode: Currency | null;
+  readonly currencyCode: string | null;
   readonly isNegotiable: boolean;
 }
