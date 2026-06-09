@@ -1,7 +1,7 @@
 services:
   # ── Database ────────────────────────────────────────────────────────────────
   db:
-    image: postgres:16-alpine
+    image: postgis/postgis:18-3.6
     container_name: pulse_db
     restart: unless-stopped
     environment:
@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-app_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports:
       - '5432:5432'
     healthcheck:
