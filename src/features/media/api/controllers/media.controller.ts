@@ -161,10 +161,7 @@ export class MediaController {
   async getBusinessProfileMedia(
     @Param('resourceId') resourceId: string,
   ): Promise<BusinessProfileMediaDto> {
-    const items = await this.getResourceMedia.execute(
-      'businessProfileId',
-      resourceId,
-    );
+    const items = await this.getResourceMedia.execute('businessProfileId', resourceId);
     return BusinessProfileMediaDto.from(items);
   }
 
@@ -220,11 +217,7 @@ export class MediaController {
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
     await this.assertResourceOwnership('listingId', resourceId, identity.accountId);
-    const items = await this.reorderMedia.execute(
-      'listingId',
-      resourceId,
-      dto.orderedIds,
-    );
+    const items = await this.reorderMedia.execute('listingId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
 
@@ -238,16 +231,8 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership(
-      'businessProfileId',
-      resourceId,
-      identity.accountId,
-    );
-    const items = await this.reorderMedia.execute(
-      'businessProfileId',
-      resourceId,
-      dto.orderedIds,
-    );
+    await this.assertResourceOwnership('businessProfileId', resourceId, identity.accountId);
+    const items = await this.reorderMedia.execute('businessProfileId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
 
@@ -263,11 +248,7 @@ export class MediaController {
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
     await this.assertResourceOwnership('reviewId', resourceId, identity.accountId);
-    const items = await this.reorderMedia.execute(
-      'reviewId',
-      resourceId,
-      dto.orderedIds,
-    );
+    const items = await this.reorderMedia.execute('reviewId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
 
@@ -284,11 +265,7 @@ export class MediaController {
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
     await this.assertResourceOwnership('storeTourId', resourceId, identity.accountId);
-    const items = await this.reorderMedia.execute(
-      'storeTourId',
-      resourceId,
-      dto.orderedIds,
-    );
+    const items = await this.reorderMedia.execute('storeTourId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
 
@@ -388,7 +365,7 @@ export class MediaController {
     if (!media) throw new NotFoundException('Media item not found.');
     let ownerKey: MediaOwnerKey | null = null;
     let resourceId = '';
-    
+
     if (media.businessProfileId) {
       ownerKey = 'businessProfileId';
       resourceId = media.businessProfileId;

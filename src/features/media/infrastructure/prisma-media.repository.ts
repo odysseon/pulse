@@ -15,8 +15,8 @@ function toDomain(raw: PrismaMedia): Media {
     reviewId: raw.reviewId,
     url: raw.url,
     fileId: raw.fileId,
-    mediaType: raw.mediaType as any,
-    role: raw.role as any,
+    mediaType: raw.mediaType,
+    role: raw.role,
     order: raw.order,
     createdAt: raw.createdAt,
   };
@@ -45,11 +45,7 @@ export class PrismaMediaRepository extends IMediaRepository {
     return rows.map(toDomain);
   }
 
-  async findByRole(
-    ownerKey: MediaOwnerKey,
-    ownerId: string,
-    role: MediaRole,
-  ): Promise<Media[]> {
+  async findByRole(ownerKey: MediaOwnerKey, ownerId: string, role: MediaRole): Promise<Media[]> {
     const rows = await this.prisma.media.findMany({
       where: { [ownerKey]: ownerId, role },
       orderBy: { order: 'asc' },
@@ -106,11 +102,7 @@ export class PrismaMediaRepository extends IMediaRepository {
     return this.prisma.media.count({ where: { [ownerKey]: ownerId } });
   }
 
-  async countByRole(
-    ownerKey: MediaOwnerKey,
-    ownerId: string,
-    role: MediaRole,
-  ): Promise<number> {
+  async countByRole(ownerKey: MediaOwnerKey, ownerId: string, role: MediaRole): Promise<number> {
     return this.prisma.media.count({ where: { [ownerKey]: ownerId, role } });
   }
 }

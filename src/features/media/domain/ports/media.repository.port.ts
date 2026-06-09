@@ -19,11 +19,7 @@ export abstract class IMediaRepository {
    * For singleton roles (LOGO, BANNER, COVER) this returns 0 or 1 items.
    * For GALLERY this returns all gallery items ordered by order ASC.
    */
-  abstract findByRole(
-    ownerKey: MediaOwnerKey,
-    ownerId: string,
-    role: MediaRole,
-  ): Promise<Media[]>;
+  abstract findByRole(ownerKey: MediaOwnerKey, ownerId: string, role: MediaRole): Promise<Media[]>;
 
   /**
    * Reorder GALLERY items for a resource.
@@ -58,9 +54,5 @@ export abstract class IMediaRepository {
    * Count media items for a specific role within a resource.
    * Used to enforce singleton and per-role cardinality at the application layer.
    */
-  abstract countByRole(
-    ownerKey: MediaOwnerKey,
-    ownerId: string,
-    role: MediaRole,
-  ): Promise<number>;
+  abstract countByRole(ownerKey: MediaOwnerKey, ownerId: string, role: MediaRole): Promise<number>;
 }

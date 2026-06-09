@@ -4,8 +4,5 @@ import { Roles } from './roles.decorator.js';
 import { RolesGuard } from '../guards/roles.guard.js';
 
 export function ModeratorOrAdminGuard() {
-  return applyDecorators(
-    Roles(PlatformRole.MODERATOR, PlatformRole.ADMIN),
-    UseGuards(RolesGuard),
-  );
+  return applyDecorators(Roles(PlatformRole.MODERATOR, PlatformRole.ADMIN), UseGuards(RolesGuard));
 }

@@ -15,7 +15,9 @@ export class UpdateStoreTourUseCase {
 
     if (input.status === StoreTourStatus.PUBLISHED) {
       if (!existing.media || existing.media.length === 0) {
-        throw new BadRequestException('Cannot publish a store tour without at least one media item.');
+        throw new BadRequestException(
+          'Cannot publish a store tour without at least one media item.',
+        );
       }
     }
 

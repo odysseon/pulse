@@ -34,7 +34,7 @@ export class ListingResponseDto {
     this.categoryId = listing.categoryId;
     this.createdAt = listing.createdAt.toISOString();
     this.updatedAt = listing.updatedAt.toISOString();
-    this.reviews = listing.reviews?.map(r => ({
+    this.reviews = listing.reviews?.map((r) => ({
       ...r,
       createdAt: r.createdAt.toISOString(),
     }));
