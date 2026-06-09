@@ -16,9 +16,9 @@ business_id: jsonpath "$.id"
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 Authorization: Bearer {{owner_token}}
 [Multipart]
-file: file,{{fixtures_dir}}/1000058559.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: LOGO
-HTTP 200
+HTTP 201
 [Captures]
 logo_media_id: jsonpath "$.id"
 [Asserts]
@@ -32,9 +32,9 @@ jsonpath "$.order" == null
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 Authorization: Bearer {{owner_token}}
 [Multipart]
-file: file,{{fixtures_dir}}/1000106287.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: BANNER
-HTTP 200
+HTTP 201
 [Captures]
 banner_media_id: jsonpath "$.id"
 [Asserts]
@@ -45,9 +45,9 @@ jsonpath "$.order" == null
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 Authorization: Bearer {{owner_token}}
 [Multipart]
-file: file,{{fixtures_dir}}/1000106287.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: LOGO
-HTTP 200
+HTTP 201
 [Captures]
 new_logo_id: jsonpath "$.id"
 [Asserts]
@@ -57,9 +57,9 @@ jsonpath "$.id" != "{{logo_media_id}}"
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 Authorization: Bearer {{owner_token}}
 [Multipart]
-file: file,{{fixtures_dir}}/1000058559.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: GALLERY
-HTTP 200
+HTTP 201
 [Captures]
 gallery_item_id: jsonpath "$.id"
 [Asserts]
@@ -70,8 +70,8 @@ jsonpath "$.order" isInteger
 GET {{api_url}}/api/business-profiles/{{business_id}}/media
 HTTP 200
 [Asserts]
-jsonpath "$.logo" isString       # logo.url present
-jsonpath "$.banner" isString     # banner.url present
+jsonpath "$.logo.url" isString       # logo.url present
+jsonpath "$.banner.url" isString     # banner.url present
 jsonpath "$.gallery" isCollection
 jsonpath "$.gallery" count >= 1
 
@@ -79,14 +79,14 @@ jsonpath "$.gallery" count >= 1
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 Authorization: Bearer {{intruder_token}}
 [Multipart]
-file: file,{{fixtures_dir}}/1000058559.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: LOGO
 HTTP 403
 
 # --- Unauthenticated cannot upload ---
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 [Multipart]
-file: file,{{fixtures_dir}}/1000058559.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: LOGO
 HTTP 401
 
@@ -101,7 +101,7 @@ HTTP 400
 POST {{api_url}}/api/business-profiles/{{business_id}}/media
 Authorization: Bearer {{owner_token}}
 [Multipart]
-file: file,{{fixtures_dir}}/1000058559.jpg; image/jpeg
+file: file,/home/tgenericx/Pictures/sharp.png; image/png
 role: COVER
 HTTP 400
 

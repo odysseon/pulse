@@ -8,9 +8,11 @@ import {
   Body,
   Query,
   NotFoundException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CurrentIdentity } from '@odysseon/whoami-adapter-nestjs';
+import { CurrentIdentity, Public } from '@odysseon/whoami-adapter-nestjs';
 import type { RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { CreateStoreTourUseCase } from '../../application/use-cases/create-store-tour.use-case.js';
@@ -55,6 +57,7 @@ export class StoreTourController {
     return StoreTourResponseDto.from(tour);
   }
 
+  @Public()
   @Get('business-profiles/:businessProfileId/store-tours')
   async listByBusiness(
     @Param('businessProfileId') businessProfileId: string,
@@ -73,6 +76,7 @@ export class StoreTourController {
     return PaginatedStoreToursResponseDto.from(paginated);
   }
 
+  @Public()
   @Get('store-tours/:id')
   async get(@Param('id') id: string): Promise<StoreTourResponseDto> {
     const tour = await this.getStoreTour.execute(id);
@@ -97,6 +101,7 @@ export class StoreTourController {
 
   @Delete('store-tours/:id')
   @ModeratorOrAdminGuard()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
     await this.deleteStoreTour.execute(id);
   }

@@ -13,6 +13,6 @@ export class UpdateTagUseCase {
       throw new NotFoundException(`Tag with ID '${id}' not found.`);
     }
 
-    return this.tagRepo.update(id, input);
+    return this.tagRepo.update(id, { name: input.name.toLowerCase() });
   }
 }

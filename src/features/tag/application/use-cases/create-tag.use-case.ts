@@ -18,6 +18,9 @@ export class CreateTagUseCase {
       throw new ConflictException(`Tag with slug '${slug}' already exists.`);
     }
 
-    return this.tagRepo.create(input, slug);
+    return this.tagRepo.create(
+      { ...input, name: input.name.toLowerCase() },
+      slug,
+    );
   }
 }

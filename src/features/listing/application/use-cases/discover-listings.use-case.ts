@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IListingRepository } from '../../domain/ports/listing.repository.port.js';
-import { Currency } from '../../domain/types/currency.enum.js';
+
 import {
   DiscoverListingsInput,
   PaginatedListingSummaries,
@@ -16,7 +16,7 @@ export class DiscoverListingsUseCase {
 
   async execute(raw: {
     businessProfileId?: string;
-    currencyCode?: Currency;
+    currencyCode?: string;
     minPrice?: string;
     maxPrice?: string;
     isNegotiable?: string;

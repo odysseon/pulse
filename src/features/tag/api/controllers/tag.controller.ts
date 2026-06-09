@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Public } from '@odysseon/whoami-adapter-nestjs';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AdminGuard } from '../../../../shared/decorators/admin-guard.decorator.js';
 import { CreateTagUseCase } from '../../application/use-cases/create-tag.use-case.js';
@@ -33,6 +34,7 @@ export class TagController {
   ) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'List or search tags' })
   @ApiResponse({ status: 200, type: PaginatedTagsResponseDto })
   async listTags(
@@ -48,6 +50,7 @@ export class TagController {
   }
 
   @Get(':idOrSlug')
+  @Public()
   @ApiOperation({ summary: 'Get a tag by ID or slug' })
   @ApiResponse({ status: 200, type: TagResponseDto })
   async getTag(@Param('idOrSlug') idOrSlug: string): Promise<TagResponseDto> {

@@ -11,7 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Currency } from '../../domain/types/currency.enum.js';
+
 import { ListingStatus } from '../../domain/types/listing-status.enum.js';
 
 export class ListingPriceDto {
@@ -29,7 +29,8 @@ export class ListingPriceDto {
    * Currency is required when any price is set.
    */
   @ValidateIf((o: ListingPriceDto) => o.minPrice !== undefined || o.maxPrice !== undefined)
-  currencyCode?: Currency;
+  @IsString()
+  currencyCode?: string;
 
   @IsBoolean()
   isNegotiable!: boolean;
@@ -77,7 +78,7 @@ export class TransitionListingStatusDto {
 
 export class GetListingsQueryDto {
   @IsOptional()
-  currencyCode?: Currency;
+  currencyCode?: string;
 
   @IsOptional()
   @IsString()
