@@ -8,6 +8,14 @@ export interface StoreTourHighlight {
   readonly value: string;
 }
 
+export interface StoreTourMediaItem {
+  readonly id: string;
+  readonly url: string;
+  readonly mediaType: 'IMAGE' | 'VIDEO';
+  readonly order: number | null;
+  readonly createdAt: Date;
+}
+
 export interface StoreTour {
   readonly id: string;
   readonly businessProfileId: string;
@@ -21,4 +29,5 @@ export interface StoreTour {
   readonly updatedAt: Date;
 
   readonly highlights: StoreTourHighlight[];
+  readonly media: StoreTourMediaItem[];
 }

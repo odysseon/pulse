@@ -22,6 +22,8 @@ import { CreateStoreTourDto, UpdateStoreTourDto } from '../dto/request.dto.js';
 import { StoreTourResponseDto, PaginatedStoreToursResponseDto } from '../dto/response.dto.js';
 import { StoreTourStatus } from '../../domain/types/store-tour.entity.js';
 
+import { ModeratorOrAdminGuard } from '../../../../shared/decorators/moderator-or-admin-guard.decorator.js';
+
 @ApiTags('Store Tours')
 @Controller()
 export class StoreTourController {
@@ -35,6 +37,7 @@ export class StoreTourController {
   ) {}
 
   @Post('business-profiles/:businessProfileId/store-tours')
+  @ModeratorOrAdminGuard()
   async create(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('businessProfileId') businessProfileId: string,
@@ -77,6 +80,7 @@ export class StoreTourController {
   }
 
   @Patch('store-tours/:id')
+  @ModeratorOrAdminGuard()
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateStoreTourDto,
@@ -92,6 +96,7 @@ export class StoreTourController {
   }
 
   @Delete('store-tours/:id')
+  @ModeratorOrAdminGuard()
   async delete(@Param('id') id: string): Promise<void> {
     await this.deleteStoreTour.execute(id);
   }

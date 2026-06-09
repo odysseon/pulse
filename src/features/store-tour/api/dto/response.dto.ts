@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StoreTourStatus } from '../../domain/types/store-tour.entity.js';
+import { StoreTourStatus, StoreTourMediaItem } from '../../domain/types/store-tour.entity.js';
 import { PaginatedStoreTours, StoreTourView } from '../../domain/types/store-tour.types.js';
 
 export class StoreTourHighlightDto {
@@ -16,6 +16,26 @@ export class StoreTourHighlightDto {
   }
 }
 
+export class StoreTourMediaItemDto {
+  @ApiProperty() id: string;
+  @ApiProperty() url: string;
+  @ApiProperty() mediaType: string;
+  @ApiPropertyOptional({ nullable: true }) order: number | null;
+  @ApiProperty() createdAt: string;
+
+  private constructor(m: StoreTourMediaItem) {
+    this.id = m.id;
+    this.url = m.url;
+    this.mediaType = m.mediaType;
+    this.order = m.order;
+    this.createdAt = m.createdAt.toISOString();
+  }
+
+  static from(m: StoreTourMediaItem): StoreTourMediaItemDto {
+    return new StoreTourMediaItemDto(m);
+  }
+}
+
 export class StoreTourResponseDto {
   @ApiProperty() id: string;
   @ApiProperty() businessProfileId: string;
@@ -28,6 +48,7 @@ export class StoreTourResponseDto {
   @ApiProperty() createdAt: string;
   @ApiProperty() updatedAt: string;
   @ApiProperty({ type: [StoreTourHighlightDto] }) highlights: StoreTourHighlightDto[];
+  @ApiProperty({ type: [StoreTourMediaItemDto] }) media: StoreTourMediaItemDto[];
 
   private constructor(tour: StoreTourView) {
     this.id = tour.id;
@@ -41,6 +62,7 @@ export class StoreTourResponseDto {
     this.createdAt = tour.createdAt.toISOString();
     this.updatedAt = tour.updatedAt.toISOString();
     this.highlights = tour.highlights.map(StoreTourHighlightDto.from);
+    this.media = tour.media.map(StoreTourMediaItemDto.from);
   }
 
   static from(tour: StoreTourView): StoreTourResponseDto {

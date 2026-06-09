@@ -24,6 +24,7 @@ import { GetResourceMediaUseCase } from '../../application/use-cases/get-resourc
 import { MediaOwnerKey } from '../../domain/ports/media.repository.port.js';
 import { MediaRole } from '../../domain/types/media-role.enum.js';
 import { MediaType } from '../../domain/types/media-type.enum.js';
+import { ModeratorOrAdminGuard } from '../../../../shared/decorators/moderator-or-admin-guard.decorator.js';
 import {
   MediaResponseDto,
   ReorderMediaDto,
@@ -31,6 +32,7 @@ import {
   BusinessProfileMediaDto,
   ListingMediaDto,
   ReviewMediaDto,
+  StoreTourMediaDto,
 } from '../dto/media.dto.js';
 import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
@@ -111,6 +113,29 @@ export class MediaController {
     return this.handleAdd(identity, 'reviewId', resourceId, file, dto.role);
   }
 
+  /**
+   * POST /store-tours/:resourceId/media
+   *
+   * Accepts multipart/form-data with:
+   *   - file: the image or video file
+   *   - role: "GALLERY" (only valid role for store tours)
+   *
+   * Only the creator who created the store tour may upload media.
+   */
+  @Post('store-tours/:resourceId/media')
+  @ModeratorOrAdminGuard()
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UploadMediaDto })
+  async addStoreTourMedia(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('resourceId') resourceId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Body() dto: UploadMediaDto,
+  ): Promise<MediaResponseDto> {
+    return this.handleAdd(identity, 'storeTourId', resourceId, file, dto.role);
+  }
+
   // ---------------------------------------------------------------------------
   // Fetch (grouped by role)
   // ---------------------------------------------------------------------------
@@ -148,6 +173,16 @@ export class MediaController {
   async getReviewMedia(@Param('resourceId') resourceId: string): Promise<ReviewMediaDto> {
     const items = await this.getResourceMedia.execute('reviewId', resourceId);
     return ReviewMediaDto.from(items);
+  }
+
+  /**
+   * GET /store-tours/:resourceId/media
+   * Returns { gallery } — raw user photos, gallery-ordered.
+   */
+  @Get('store-tours/:resourceId/media')
+  async getStoreTourMedia(@Param('resourceId') resourceId: string): Promise<StoreTourMediaDto> {
+    const items = await this.getResourceMedia.execute('storeTourId', resourceId);
+    return StoreTourMediaDto.from(items);
   }
 
   // ---------------------------------------------------------------------------
@@ -230,6 +265,27 @@ export class MediaController {
     return items.map((m) => MediaResponseDto.from(m));
   }
 
+  /**
+   * PATCH /store-tours/:resourceId/media/reorder
+   * orderedIds must include all GALLERY item IDs for this store tour.
+   * Only the creator may reorder their own store tour media.
+   */
+  @Patch('store-tours/:resourceId/media/reorder')
+  @ModeratorOrAdminGuard()
+  async reorderStoreTourMedia(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('resourceId') resourceId: string,
+    @Body() dto: ReorderMediaDto,
+  ): Promise<MediaResponseDto[]> {
+    await this.assertResourceOwnership('storeTourId', resourceId, identity.accountId);
+    const items = await this.reorderMedia.execute(
+      'storeTourId',
+      resourceId,
+      dto.orderedIds,
+    );
+    return items.map((m) => MediaResponseDto.from(m));
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
@@ -306,6 +362,17 @@ export class MediaController {
       if (!review) throw new NotFoundException('Review not found.');
       if (review.reviewerId !== userId) {
         throw new ForbiddenException('You can only manage media on your own reviews.');
+      }
+    }
+
+    if (ownerKey === 'storeTourId') {
+      const tour = await this.prisma.storeTour.findUnique({
+        where: { id: resourceId },
+        select: { createdById: true },
+      });
+      if (!tour) throw new NotFoundException('Store tour not found.');
+      if (tour.createdById !== userId) {
+        throw new ForbiddenException('You can only manage media on your own store tours.');
       }
     }
   }
