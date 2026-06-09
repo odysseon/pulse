@@ -19,11 +19,7 @@ import { CreateReviewUseCase } from '../../application/use-cases/create-review.u
 import { UpdateReviewUseCase } from '../../application/use-cases/update-review.use-case.js';
 import { DeleteReviewUseCase } from '../../application/use-cases/delete-review.use-case.js';
 import { GetListingReviewsUseCase } from '../../application/use-cases/get-listing-reviews.use-case.js';
-import {
-  CreateReviewDto,
-  UpdateReviewDto,
-  GetListingReviewsQueryDto,
-} from '../dto/request.dto.js';
+import { CreateReviewDto, UpdateReviewDto, GetListingReviewsQueryDto } from '../dto/request.dto.js';
 import { ReviewResponseDto, ReviewPageDto } from '../dto/response.dto.js';
 
 @ApiTags('Reviews')

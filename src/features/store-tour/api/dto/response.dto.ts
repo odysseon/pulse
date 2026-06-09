@@ -61,8 +61,8 @@ export class StoreTourResponseDto {
     this.createdById = tour.createdById;
     this.createdAt = tour.createdAt.toISOString();
     this.updatedAt = tour.updatedAt.toISOString();
-    this.highlights = tour.highlights.map(StoreTourHighlightDto.from);
-    this.media = tour.media.map(StoreTourMediaItemDto.from);
+    this.highlights = tour.highlights.map((h) => StoreTourHighlightDto.from(h));
+    this.media = tour.media.map((m) => StoreTourMediaItemDto.from(m));
   }
 
   static from(tour: StoreTourView): StoreTourResponseDto {

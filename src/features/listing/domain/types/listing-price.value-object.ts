@@ -1,5 +1,3 @@
-
-
 /**
  * Represents the commercial price signal of a listing.
  *

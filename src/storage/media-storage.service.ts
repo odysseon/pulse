@@ -68,7 +68,10 @@ import { PassThrough } from 'stream';
  * It returns the `head` buffer for inspection, and a `newStream` that combines the peeked
  * data and the rest of the stream safely without using `unshift` on potentially ended streams.
  */
-async function peekStream(stream: Readable, n: number): Promise<{ head: Buffer; newStream: Readable }> {
+async function peekStream(
+  stream: Readable,
+  n: number,
+): Promise<{ head: Buffer; newStream: Readable }> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let totalLength = 0;
@@ -99,13 +102,13 @@ async function peekStream(stream: Readable, n: number): Promise<{ head: Buffer; 
         const fullBuffer = Buffer.concat(chunks);
         const head = fullBuffer.subarray(0, n);
         const remainder = fullBuffer.subarray(n);
-        
+
         cleanup();
         const pt = new PassThrough();
         pt.write(head);
         if (remainder.length > 0) pt.write(remainder);
         stream.pipe(pt);
-        
+
         resolve({ head, newStream: pt });
       }
     };

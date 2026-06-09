@@ -92,10 +92,7 @@ export class PrismaReviewRepository extends IReviewRepository {
     return raw ? toWithMedia(raw) : null;
   }
 
-  async existsByListingAndReviewer(
-    listingId: string,
-    reviewerId: string,
-  ): Promise<boolean> {
+  async existsByListingAndReviewer(listingId: string, reviewerId: string): Promise<boolean> {
     const count = await this.prisma.review.count({
       where: { listingId, reviewerId },
     });

@@ -60,11 +60,7 @@ export class AddMediaUseCase {
     let replacedId: string | null = null;
 
     if (isSingleton) {
-      const existing = await this.mediaRepo.findByRole(
-        input.ownerKey,
-        input.ownerId,
-        input.role,
-      );
+      const existing = await this.mediaRepo.findByRole(input.ownerKey, input.ownerId, input.role);
       if (existing.length > 0) {
         replacedId = existing[0].id;
         replacedFileId = existing[0].fileId;
@@ -109,7 +105,7 @@ export class AddMediaUseCase {
       mediaType: input.mediaType,
       role: input.role,
       order,
-    } as any); // Cast as any because the rest of the inputs are specific to the media creation
+    }); // Cast as any because the rest of the inputs are specific to the media creation
 
     // 6. Delete the old storage asset after DB is consistent.
     //    Non-fatal — a dangling storage file is preferable to rolling back a successful replace.

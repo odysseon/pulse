@@ -9,10 +9,9 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { Public } from '@odysseon/whoami-adapter-nestjs';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AdminGuard } from '../../../../shared/decorators/admin-guard.decorator.js';
 import { CreateTagUseCase } from '../../application/use-cases/create-tag.use-case.js';
 import { DeleteTagUseCase } from '../../application/use-cases/delete-tag.use-case.js';

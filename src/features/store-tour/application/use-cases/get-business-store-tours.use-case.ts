@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { IStoreTourRepository } from '../../domain/ports/store-tour.repository.port.js';
-import { DiscoverStoreToursInput, PaginatedStoreTours } from '../../domain/types/store-tour.types.js';
+import {
+  DiscoverStoreToursInput,
+  PaginatedStoreTours,
+} from '../../domain/types/store-tour.types.js';
 
 @Injectable()
 export class GetBusinessStoreToursUseCase {

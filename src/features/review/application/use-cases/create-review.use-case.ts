@@ -38,9 +38,7 @@ export class CreateReviewUseCase {
       input.reviewerId,
     );
     if (alreadyReviewed) {
-      throw new ConflictException(
-        'You have already submitted a review for this listing.',
-      );
+      throw new ConflictException('You have already submitted a review for this listing.');
     }
 
     try {

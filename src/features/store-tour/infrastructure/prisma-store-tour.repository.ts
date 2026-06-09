@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service.js';
 import { IStoreTourRepository } from '../domain/ports/store-tour.repository.port.js';
-import { StoreTour, StoreTourStatus, StoreTourHighlight } from '../domain/types/store-tour.entity.js';
+import { StoreTour, StoreTourStatus } from '../domain/types/store-tour.entity.js';
 import {
   CreateStoreTourInput,
   DiscoverStoreToursInput,
@@ -38,7 +38,7 @@ function toDomain(raw: PrismaStoreTourWithRelations): StoreTour {
     media: sortedMedia.map((m) => ({
       id: m.id,
       url: m.url,
-      mediaType: m.mediaType as 'IMAGE' | 'VIDEO',
+      mediaType: m.mediaType,
       order: m.order,
       createdAt: m.createdAt,
     })),
@@ -73,7 +73,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
         media: true,
       },
     });
-    return toDomain(raw as PrismaStoreTourWithRelations);
+    return toDomain(raw);
   }
 
   async findById(id: string): Promise<StoreTourView | null> {
@@ -84,7 +84,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
         media: true,
       },
     });
-    return raw ? toView(raw as PrismaStoreTourWithRelations) : null;
+    return raw ? toView(raw) : null;
   }
 
   async update(id: string, input: UpdateStoreTourInput): Promise<StoreTour> {
@@ -120,7 +120,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
       });
     });
 
-    return toDomain(raw as PrismaStoreTourWithRelations);
+    return toDomain(raw);
   }
 
   async delete(id: string): Promise<void> {
@@ -152,7 +152,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
     ]);
 
     return {
-      items: rows.map((r) => toView(r as PrismaStoreTourWithRelations)),
+      items: rows.map((r) => toView(r)),
       total,
       page: input.page,
       limit: input.limit,

@@ -7,11 +7,7 @@ import { Media } from '../../domain/types/media.entity.js';
 export class ReorderMediaUseCase {
   constructor(private readonly mediaRepo: IMediaRepository) {}
 
-  async execute(
-    ownerKey: MediaOwnerKey,
-    ownerId: string,
-    orderedIds: string[],
-  ): Promise<Media[]> {
+  async execute(ownerKey: MediaOwnerKey, ownerId: string, orderedIds: string[]): Promise<Media[]> {
     // Only GALLERY items are reorderable — singleton roles have no position
     const existing = await this.mediaRepo.findByRole(ownerKey, ownerId, MediaRole.GALLERY);
 

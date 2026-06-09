@@ -12,7 +12,7 @@ import {
   UpdateListingInput,
 } from '../domain/types/listing.types.js';
 
-type PrismaListingExtended = PrismaListing & { 
+type PrismaListingExtended = PrismaListing & {
   categoryId?: string | null;
   reviews?: {
     id: string;
@@ -35,12 +35,12 @@ function toDomain(raw: PrismaListingExtended): Listing {
     price: {
       minPrice: raw.minPrice !== null ? raw.minPrice.toNumber() : null,
       maxPrice: raw.maxPrice !== null ? raw.maxPrice.toNumber() : null,
-      currencyCode: raw.currencyCode as any,
+      currencyCode: raw.currencyCode,
       isNegotiable: raw.isNegotiable,
     },
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
-    reviews: raw.reviews?.map(r => ({
+    reviews: raw.reviews?.map((r) => ({
       id: r.id,
       reviewerId: r.reviewerId,
       rating: r.rating,
@@ -73,17 +73,17 @@ export class PrismaListingRepository extends IListingRepository {
   }
 
   async findById(id: string): Promise<Listing | null> {
-    const raw = await this.prisma.listing.findUnique({ 
+    const raw = await this.prisma.listing.findUnique({
       where: { id },
-      include: { reviews: true } 
+      include: { reviews: true },
     });
     return raw ? toDomain(raw) : null;
   }
 
   async findBySlug(slug: string): Promise<Listing | null> {
-    const raw = await this.prisma.listing.findFirst({ 
+    const raw = await this.prisma.listing.findFirst({
       where: { slug },
-      include: { reviews: true }
+      include: { reviews: true },
     });
     return raw ? toDomain(raw) : null;
   }
@@ -173,7 +173,7 @@ export class PrismaListingRepository extends IListingRepository {
         ...r,
         minPrice: r.minPrice !== null ? r.minPrice.toNumber() : null,
         maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
-        currencyCode: r.currencyCode as any,
+        currencyCode: r.currencyCode ?? null,
         categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
       })),
       total,
