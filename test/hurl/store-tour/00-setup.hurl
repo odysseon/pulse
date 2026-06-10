@@ -8,7 +8,11 @@ Authorization: Bearer {{owner_token}}
 Content-Type: application/json
 {
   "name": "Store Tour Setup BP {{run_id}}",
-  "description": "Store Tour Setup test profile"
+  "description": "Store Tour Setup test profile",
+  "businessType": "PHYSICAL",
+  "phoneNumber": "+2348000000000",
+  "whatsapp": "+2348000000000",
+  "email": "test@business.com"
 }
 HTTP 201
 [Captures]

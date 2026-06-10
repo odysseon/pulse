@@ -1,14 +1,17 @@
 import { VerificationStatus } from './verification-status.enum.js';
 import { OperatingHours } from './operating-hours.types.js';
 import { Tag } from './tag.types.js';
+import { BusinessType } from '../../../../../generated/prisma/client.js';
 
 export interface CreateBusinessProfileInput {
   readonly ownerId: string;
   readonly name: string;
+  readonly businessType: BusinessType;
+  readonly phoneNumber: string;
+  readonly whatsapp: string;
+  readonly email: string;
   readonly description?: string;
-  readonly phoneNumber?: string;
-  readonly whatsapp?: string;
-  readonly email?: string;
+  readonly websiteUrl?: string;
   readonly location?: string;
   readonly latitude?: number;
   readonly longitude?: number;
@@ -16,7 +19,9 @@ export interface CreateBusinessProfileInput {
 
 export interface UpdateBusinessProfileInput {
   readonly name?: string;
+  readonly businessType?: BusinessType;
   readonly description?: string;
+  readonly websiteUrl?: string;
   readonly phoneNumber?: string;
   readonly whatsapp?: string;
   readonly email?: string;
@@ -33,10 +38,14 @@ export interface BusinessProfileView {
   readonly slug: string;
   readonly isPublic: boolean;
   readonly verificationStatus: VerificationStatus;
+  readonly businessType: BusinessType;
+  readonly isEmailVerified: boolean;
+  readonly isPhoneVerified: boolean;
   readonly description: string | null;
-  readonly phoneNumber: string | null;
-  readonly whatsapp: string | null;
-  readonly email: string | null;
+  readonly phoneNumber: string;
+  readonly whatsapp: string;
+  readonly email: string;
+  readonly websiteUrl: string | null;
   readonly locationId: string | null;
   readonly location: string | null;
   readonly latitude: number | null;
@@ -53,6 +62,7 @@ export interface BusinessSummary {
   readonly name: string;
   readonly slug: string;
   readonly verificationStatus: VerificationStatus;
+  readonly businessType: BusinessType;
   readonly description: string | null;
   readonly location: string | null;
   readonly latitude: number | null;
