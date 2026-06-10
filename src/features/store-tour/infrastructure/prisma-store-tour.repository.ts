@@ -22,7 +22,7 @@ type PrismaStoreTourWithRelations = PrismaStoreTour & {
 };
 
 function toDomain(raw: PrismaStoreTourWithRelations): StoreTour {
-  const sortedMedia = [...(raw.media || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const sortedMedia = (raw.media ?? []).toSorted((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return {
     id: raw.id,
     businessProfileId: raw.businessProfileId,

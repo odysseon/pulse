@@ -45,7 +45,7 @@ export class StorageModule {
     // The ImageStorageService is always required
     const providers: Provider[] = [MediaStorageService];
 
-    logger.log(`📦 Bootstrapping Storage Module. Active Provider: ${activeProvider || 'UNSET'}`);
+    logger.log(`📦 Bootstrapping Storage Module. Active Provider: ${activeProvider ?? 'UNSET'}`);
 
     if (activeProvider === 'cloudinary') {
       providers.push(CloudinaryProvider, CloudinaryStorageProvider, {
