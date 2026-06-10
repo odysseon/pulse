@@ -23,8 +23,8 @@ export class DiscoverBusinessesUseCase {
   }): Promise<PaginatedBusinessSummaries> {
     const input: DiscoverBusinessesInput = {
       search: raw.search,
-      page: this.parsePage(raw.page),
-      limit: this.parseLimit(raw.limit),
+      page: this.#parsePage(raw.page),
+      limit: this.#parseLimit(raw.limit),
       lat: raw.lat ? parseFloat(raw.lat) : undefined,
       lng: raw.lng ? parseFloat(raw.lng) : undefined,
       radiusInKm: raw.radius ? parseFloat(raw.radius) : undefined,
@@ -33,12 +33,12 @@ export class DiscoverBusinessesUseCase {
     return this.repo.discover(input);
   }
 
-  private parsePage(raw: string | undefined): number {
+  #parsePage(raw: string | undefined): number {
     const n = parseInt(raw ?? '', 10);
     return Number.isFinite(n) && n > 0 ? n : DEFAULT_PAGE;
   }
 
-  private parseLimit(raw: string | undefined): number {
+  #parseLimit(raw: string | undefined): number {
     const n = parseInt(raw ?? '', 10);
     if (!Number.isFinite(n) || n < 1) return DEFAULT_LIMIT;
     return Math.min(n, MAX_LIMIT);

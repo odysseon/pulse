@@ -9,7 +9,7 @@ export class CreateTagUseCase {
   constructor(private readonly tagRepo: ITagRepository) {}
 
   async execute(input: CreateTagInput): Promise<Tag> {
-    const slug = input.slug || slugify(input.name, { lower: true, strict: true, trim: true });
+    const slug = input.slug ?? slugify(input.name, { lower: true, strict: true, trim: true });
 
     const isTaken = await this.tagRepo.isSlugTaken(slug);
     if (isTaken) {

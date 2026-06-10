@@ -69,7 +69,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, 'listingId', resourceId, file, dto.role);
+    return this.#handleAdd(identity, 'listingId', resourceId, file, dto.role);
   }
 
   /**
@@ -89,7 +89,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, 'businessProfileId', resourceId, file, dto.role);
+    return this.#handleAdd(identity, 'businessProfileId', resourceId, file, dto.role);
   }
 
   /**
@@ -111,7 +111,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, 'reviewId', resourceId, file, dto.role);
+    return this.#handleAdd(identity, 'reviewId', resourceId, file, dto.role);
   }
 
   /**
@@ -134,7 +134,7 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.handleAdd(identity, 'storeTourId', resourceId, file, dto.role);
+    return this.#handleAdd(identity, 'storeTourId', resourceId, file, dto.role);
   }
 
   // ---------------------------------------------------------------------------
@@ -198,7 +198,7 @@ export class MediaController {
     @CurrentIdentity() identity: RequestIdentity,
     @Param('id') id: string,
   ): Promise<void> {
-    await this.assertMediaOwnership(id, identity.accountId);
+    await this.#assertMediaOwnership(id, identity.accountId);
     await this.deleteMedia.execute(id);
   }
 
@@ -216,7 +216,7 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership('listingId', resourceId, identity.accountId);
+    await this.#assertResourceOwnership('listingId', resourceId, identity.accountId);
     const items = await this.reorderMedia.execute('listingId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
@@ -231,7 +231,7 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership('businessProfileId', resourceId, identity.accountId);
+    await this.#assertResourceOwnership('businessProfileId', resourceId, identity.accountId);
     const items = await this.reorderMedia.execute('businessProfileId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
@@ -247,7 +247,7 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership('reviewId', resourceId, identity.accountId);
+    await this.#assertResourceOwnership('reviewId', resourceId, identity.accountId);
     const items = await this.reorderMedia.execute('reviewId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
@@ -264,7 +264,7 @@ export class MediaController {
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.assertResourceOwnership('storeTourId', resourceId, identity.accountId);
+    await this.#assertResourceOwnership('storeTourId', resourceId, identity.accountId);
     const items = await this.reorderMedia.execute('storeTourId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
@@ -273,7 +273,7 @@ export class MediaController {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  private async handleAdd(
+  async #handleAdd(
     identity: RequestIdentity,
     ownerKey: MediaOwnerKey,
     resourceId: string,
@@ -284,10 +284,10 @@ export class MediaController {
       throw new BadRequestException('No file uploaded.');
     }
 
-    await this.assertResourceOwnership(ownerKey, resourceId, identity.accountId);
+    await this.#assertResourceOwnership(ownerKey, resourceId, identity.accountId);
 
-    const mediaType = this.detectMediaType(file.mimetype);
-    const userId = await this.resolveUserId(identity.accountId);
+    const mediaType = this.#detectMediaType(file.mimetype);
+    const userId = await this.#resolveUserId(identity.accountId);
 
     const media = await this.addMedia.execute({
       ownerKey,
@@ -302,18 +302,18 @@ export class MediaController {
     return MediaResponseDto.from(media);
   }
 
-  private detectMediaType(mimetype: string): MediaType {
+  #detectMediaType(mimetype: string): MediaType {
     if (mimetype.startsWith('image/')) return MediaType.IMAGE;
     if (mimetype.startsWith('video/')) return MediaType.VIDEO;
     throw new BadRequestException(`Unsupported media type: ${mimetype}`);
   }
 
-  private async assertResourceOwnership(
+  async #assertResourceOwnership(
     ownerKey: MediaOwnerKey,
     resourceId: string,
     accountId: string,
   ): Promise<void> {
-    const userId = await this.resolveUserId(accountId);
+    const userId = await this.#resolveUserId(accountId);
 
     if (ownerKey === 'listingId') {
       const listing = await this.prisma.listing.findUnique({
@@ -360,7 +360,7 @@ export class MediaController {
     }
   }
 
-  private async assertMediaOwnership(id: string, accountId: string): Promise<void> {
+  async #assertMediaOwnership(id: string, accountId: string): Promise<void> {
     const media = await this.prisma.media.findUnique({ where: { id } });
     if (!media) throw new NotFoundException('Media item not found.');
     let ownerKey: MediaOwnerKey | null = null;
@@ -383,10 +383,10 @@ export class MediaController {
     if (!ownerKey) {
       throw new BadRequestException('Media is orphaned');
     }
-    await this.assertResourceOwnership(ownerKey, resourceId, accountId);
+    await this.#assertResourceOwnership(ownerKey, resourceId, accountId);
   }
 
-  private async resolveUserId(accountId: string): Promise<string> {
+  async #resolveUserId(accountId: string): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: { accountId },
       select: { id: true },

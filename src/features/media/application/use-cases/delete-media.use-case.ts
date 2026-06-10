@@ -23,7 +23,7 @@ export class DeleteMediaUseCase {
 
     // Only renormalize order for GALLERY items — singletons have no position to renormalize
     if (media.role === MediaRole.GALLERY) {
-      const owner = this.getOwner(media);
+      const owner = this.#getOwner(media);
       if (owner) {
         await this.mediaRepo.renormalize(owner.key, owner.id);
       }
@@ -33,7 +33,7 @@ export class DeleteMediaUseCase {
     await this.storage.deleteMedia(media.fileId);
   }
 
-  private getOwner(media: Media): { key: MediaOwnerKey; id: string } | null {
+  #getOwner(media: Media): { key: MediaOwnerKey; id: string } | null {
     if (media.businessProfileId) return { key: 'businessProfileId', id: media.businessProfileId };
     if (media.listingId) return { key: 'listingId', id: media.listingId };
     if (media.storeTourId) return { key: 'storeTourId', id: media.storeTourId };
