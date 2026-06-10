@@ -10,6 +10,13 @@ export const configSchema = z
     // ── Receipt Secret ────────────────────────────────────────────────────
     RECEIPT_SECRET: z.string().min(32),
 
+    // ── Mailer ────────────────────────────────────────────────────────────
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().optional(),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
+    SMTP_FROM: z.string().optional(),
+
     // ── Swagger ───────────────────────────────────────────────────────────
     SWAGGER_ENABLED: z.coerce.boolean().default(false),
     SWAGGER_USER: z.string().optional(),
