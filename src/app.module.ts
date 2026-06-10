@@ -14,6 +14,7 @@ import { MediaModule } from './features/media/media.module.js';
 import { CategoryModule } from './features/category/category.module.js';
 import { ReviewModule } from './features/review/review.module.js';
 import { StoreTourModule } from './features/store-tour/store-tour.module.js';
+import { MailModule } from './mail/mail.module.js';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { StoreTourModule } from './features/store-tour/store-tour.module.js';
 
     ReviewModule,
     StoreTourModule,
+    MailModule,
   ],
   controllers: [HealthController],
 })
