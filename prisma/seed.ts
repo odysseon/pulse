@@ -250,8 +250,8 @@ async function main() {
   // 1. Location (Using PostGIS raw query since Prisma doesn't natively support geometry create)
   const locationId = "test-location-1";
   await prisma.$executeRaw`
-    INSERT INTO "Location" ("id", "name", "coordinates")
-    VALUES (${locationId}, 'Lagos Tech Hub', ST_SetSRID(ST_MakePoint(3.3792, 6.5244), 4326))
+    INSERT INTO "Location" ("id", "name", "formattedAddress", "coordinates")
+    VALUES (${locationId}, 'Lagos Tech Hub', 'Yaba, Lagos, Nigeria', ST_SetSRID(ST_MakePoint(3.3792, 6.5244), 4326))
     ON CONFLICT ("id") DO NOTHING;
   `;
 
@@ -265,6 +265,10 @@ async function main() {
       slug: "sample-tech-store",
       isPublic: true,
       description: "A great tech store",
+      businessType: "PHYSICAL",
+      phoneNumber: "+2348012345678",
+      whatsapp: "+2348012345678",
+      email: "contact@sampletechstore.com",
       locationId,
       hours: {
         create: [

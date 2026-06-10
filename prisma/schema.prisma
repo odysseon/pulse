@@ -109,7 +109,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   businessProfiles  BusinessProfile[]
-  reviewsGiven      Review[]          @relation("ReviewsGiven")
+  businessDrafts    BusinessProfileDraft[]
+  reviewsGiven      Review[]               @relation("ReviewsGiven")
   storeToursCreated StoreTour[]
 
   @@index([accountId])
@@ -126,6 +127,12 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum BusinessType {
+  ONLINE
+  PHYSICAL
+  HYBRID
+}
+
 model BusinessProfile {
   id String @id @default(cuid())
 
@@ -138,13 +145,18 @@ model BusinessProfile {
   // Trust signal — not a permission or role
   verificationStatus VerificationStatus @default(UNVERIFIED)
 
-  isPublic    Boolean @default(false)
-  description String?
+  isPublic     Boolean      @default(false)
+  description  String?
+  businessType BusinessType
+  websiteUrl   String?
+
+  isEmailVerified Boolean @default(false)
+  isPhoneVerified Boolean @default(false)
 
   // External contact — Pulse does not execute commerce
-  phoneNumber String?
-  whatsapp    String?
-  email       String?
+  phoneNumber String
+  whatsapp    String
+  email       String
   // Physical location using PostGIS
   locationId  String?
   geoEntity   Location? @relation(fields: [locationId], references: [id])
@@ -172,11 +184,28 @@ model BusinessProfile {
 }
 
 model Location {
-  id          String                               @id @default(cuid())
-  name        String
-  coordinates Unsupported("geometry(Point, 4326)")
+  id               String                               @id @default(cuid())
+  name             String
+  formattedAddress String
+  placeId          String?
+  city             String?
+  state            String?
+  country          String?
+  coordinates      Unsupported("geometry(Point, 4326)")
 
   businessProfiles BusinessProfile[]
+}
+
+model BusinessProfileDraft {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@map("business_profile_drafts")
 }
 
 // ============================================

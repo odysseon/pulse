@@ -20,10 +20,14 @@ type PrismaBusinessProfileExtended = {
   slug: string;
   verificationStatus: BusinessProfile['verificationStatus'];
   isPublic: boolean;
+  businessType: BusinessProfile['businessType'];
+  websiteUrl: string | null;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
   description: string | null;
-  phoneNumber: string | null;
-  whatsapp: string | null;
-  email: string | null;
+  phoneNumber: string;
+  whatsapp: string;
+  email: string;
   locationId: string | null;
   categoryId?: string | null;
   createdAt: Date;
@@ -62,11 +66,15 @@ function toDomain(raw: HydratedProfile): BusinessProfileView {
     name: raw.name,
     slug: raw.slug,
     verificationStatus: raw.verificationStatus,
+    businessType: raw.businessType,
     isPublic: raw.isPublic,
+    isEmailVerified: raw.isEmailVerified,
+    isPhoneVerified: raw.isPhoneVerified,
     description: raw.description,
     phoneNumber: raw.phoneNumber,
     whatsapp: raw.whatsapp,
     email: raw.email,
+    websiteUrl: raw.websiteUrl,
     locationId: raw.locationId,
     location: raw.locationName,
     latitude: raw.latitude,
@@ -130,15 +138,15 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     if (input.latitude !== undefined && input.longitude !== undefined) {
       const newLocId = crypto.randomUUID();
       await this.prisma.$executeRaw`
-        INSERT INTO "Location" (id, name, coordinates)
-        VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
+        INSERT INTO "Location" (id, name, "formattedAddress", coordinates)
+        VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
       `;
       locationId = newLocId;
     } else if (input.location !== undefined && input.location !== null) {
       const newLocId = crypto.randomUUID();
       await this.prisma.$executeRaw`
-        INSERT INTO "Location" (id, name, coordinates)
-        VALUES (${newLocId}, ${input.location}, ST_SetSRID(ST_MakePoint(0, 0), 4326))
+        INSERT INTO "Location" (id, name, "formattedAddress", coordinates)
+        VALUES (${newLocId}, ${input.location}, ${input.location}, ST_SetSRID(ST_MakePoint(0, 0), 4326))
       `;
       locationId = newLocId;
     }
@@ -148,7 +156,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ownerId: input.ownerId,
         name: input.name,
         slug,
+        businessType: input.businessType,
         description: input.description,
+        websiteUrl: input.websiteUrl,
         phoneNumber: input.phoneNumber,
         whatsapp: input.whatsapp,
         email: input.email,
@@ -207,27 +217,28 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         await this.prisma.$executeRaw`
           UPDATE "Location"
           SET coordinates = ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326),
-              name = COALESCE(${input.location ?? null}, name)
+              name = COALESCE(${input.location ?? null}, name),
+              "formattedAddress" = COALESCE(${input.location ?? null}, "formattedAddress")
           WHERE id = ${locationId}
         `;
       } else {
         const newLocId = crypto.randomUUID();
         await this.prisma.$executeRaw`
-          INSERT INTO "Location" (id, name, coordinates)
-          VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
+          INSERT INTO "Location" (id, name, "formattedAddress", coordinates)
+          VALUES (${newLocId}, ${input.location ?? 'Business Location'}, ${input.location ?? 'Business Location'}, ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326))
         `;
         locationId = newLocId;
       }
     } else if (input.location !== undefined && input.location !== null) {
       if (locationId) {
         await this.prisma.$executeRaw`
-          UPDATE "Location" SET name = ${input.location} WHERE id = ${locationId}
+          UPDATE "Location" SET name = ${input.location}, "formattedAddress" = ${input.location} WHERE id = ${locationId}
         `;
       } else {
         const newLocId = crypto.randomUUID();
         await this.prisma.$executeRaw`
-          INSERT INTO "Location" (id, name, coordinates)
-          VALUES (${newLocId}, ${input.location}, ST_SetSRID(ST_MakePoint(0, 0), 4326))
+          INSERT INTO "Location" (id, name, "formattedAddress", coordinates)
+          VALUES (${newLocId}, ${input.location}, ${input.location}, ST_SetSRID(ST_MakePoint(0, 0), 4326))
         `;
         locationId = newLocId;
       }
@@ -237,7 +248,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       where: { id },
       data: {
         ...(input.name !== undefined && { name: input.name }),
+        ...(input.businessType !== undefined && { businessType: input.businessType }),
         ...(input.description !== undefined && { description: input.description }),
+        ...(input.websiteUrl !== undefined && { websiteUrl: input.websiteUrl }),
         ...(input.phoneNumber !== undefined && { phoneNumber: input.phoneNumber }),
         ...(input.whatsapp !== undefined && { whatsapp: input.whatsapp }),
         ...(input.email !== undefined && { email: input.email }),
@@ -320,6 +333,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           name: string;
           slug: string;
           verificationStatus: BusinessProfile['verificationStatus'];
+          businessType: BusinessProfile['businessType'];
           description: string | null;
           location: string | null;
           latitude: number;
@@ -328,7 +342,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           distance: number;
         }[]
       >`
-        SELECT bp.id, bp.name, bp.slug, bp."verificationStatus", bp.description, loc.name as location, 
+        SELECT bp.id, bp.name, bp.slug, bp."verificationStatus", bp."businessType", bp.description, loc.name as location, 
                ST_Y(loc.coordinates::geometry) as latitude, ST_X(loc.coordinates::geometry) as longitude, bp."categoryId",
                (ST_Distance(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography) / 1000) AS distance
         FROM "business_profiles" bp
@@ -378,6 +392,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           name: r.name,
           slug: r.slug,
           verificationStatus: r.verificationStatus,
+          businessType: r.businessType,
           description: r.description,
           location: r.location,
           latitude: r.latitude,
@@ -402,6 +417,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           name: true,
           slug: true,
           verificationStatus: true,
+          businessType: true,
           description: true,
           locationId: true,
           categoryId: true,
@@ -419,6 +435,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         name: r.name,
         slug: r.slug,
         verificationStatus: r.verificationStatus,
+        businessType: r.businessType,
         description: r.description,
         location: r.locationName,
         latitude: r.latitude,
