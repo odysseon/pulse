@@ -143,6 +143,28 @@ export class PrismaListingRepository extends IListingRepository {
   }
 
   async discover(input: DiscoverListingsInput): Promise<PaginatedListingSummaries> {
+    const attributeFilters: Prisma.ListingWhereInput[] = input.attributes
+      ? Object.entries(input.attributes).map(([key, value]) => ({
+          attributes: {
+            path: [key],
+            equals: value !== null ? value : Prisma.DbNull,
+          } as any,
+        }))
+      : [];
+
+    const searchFilters: Prisma.ListingWhereInput[] = input.search
+      ? [
+          {
+            OR: [
+              { title: { contains: input.search, mode: 'insensitive' } },
+              { description: { contains: input.search, mode: 'insensitive' } },
+            ],
+          },
+        ]
+      : [];
+
+    const andConditions = [...attributeFilters, ...searchFilters];
+
     const where: Prisma.ListingWhereInput = {
       status: input.status ?? ListingStatus.PUBLISHED,
       ...(input.businessProfileId && { businessProfileId: input.businessProfileId }),
@@ -156,12 +178,7 @@ export class PrismaListingRepository extends IListingRepository {
         !input.categoryId && {
           category: { parent: { slug: input.rootSlug } },
         }),
-      ...(input.search && {
-        OR: [
-          { title: { contains: input.search, mode: 'insensitive' } },
-          { description: { contains: input.search, mode: 'insensitive' } },
-        ],
-      }),
+      ...(andConditions.length > 0 && { AND: andConditions }),
     };
 
     const skip = (input.page - 1) * input.limit;

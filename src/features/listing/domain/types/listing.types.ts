@@ -117,6 +117,7 @@ export interface DiscoverListingsInput {
   readonly categoryId?: string;
   /** Filter by root category slug — returns all listings in any leaf under that root */
   readonly rootSlug?: string;
+  readonly attributes?: Record<string, unknown>;
   readonly page: number;
   readonly limit: number;
 }

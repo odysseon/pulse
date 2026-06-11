@@ -23,10 +23,25 @@ export class DiscoverListingsUseCase {
     search?: string;
     page?: string;
     limit?: string;
+    attributes?: string;
   }): Promise<PaginatedListingSummaries> {
     const minPrice = this.#parseNumber(raw.minPrice);
     const maxPrice = this.#parseNumber(raw.maxPrice);
     const isNegotiable = raw.isNegotiable === 'true' ? true : raw.isNegotiable === 'false' ? false : undefined;
+
+    let parsedAttributes: Record<string, unknown> | undefined = undefined;
+    if (raw.attributes) {
+      try {
+        const parsed = JSON.parse(raw.attributes);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+          parsedAttributes = parsed as Record<string, unknown>;
+        }
+      } catch (e) {
+        // Ignore invalid JSON parsing or throw BadRequest?
+        // It's a query parameter, so silently ignoring or throwing are both options.
+        // We'll just ignore invalid formats to prevent crashing or just return empty filters.
+      }
+    }
 
     const input: DiscoverListingsInput = {
       page: this.#parsePage(raw.page),
@@ -37,6 +52,7 @@ export class DiscoverListingsUseCase {
       ...(maxPrice !== undefined && { maxPrice }),
       ...(isNegotiable !== undefined && { isNegotiable }),
       ...(raw.search !== undefined && { search: raw.search }),
+      ...(parsedAttributes !== undefined && { attributes: parsedAttributes }),
     };
 
     return this.repo.discover(input);

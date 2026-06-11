@@ -120,4 +120,11 @@ export class GetListingsQueryDto {
   @IsOptional()
   @IsString()
   limit?: string;
+
+  /**
+   * JSON stringified attributes filter (e.g., {"brand":"Samsung"})
+   */
+  @IsOptional()
+  @IsString()
+  attributes?: string;
 }
