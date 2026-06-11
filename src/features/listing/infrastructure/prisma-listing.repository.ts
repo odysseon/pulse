@@ -61,6 +61,7 @@ export class PrismaListingRepository extends IListingRepository {
       data: {
         businessProfileId: input.businessProfileId,
         title: input.title,
+        categoryId: input.categoryId,
         slug,
         description: input.description ?? null,
         minPrice: input.price?.minPrice ?? null,
@@ -110,6 +111,7 @@ export class PrismaListingRepository extends IListingRepository {
       data: {
         ...(input.title !== undefined && { title: input.title }),
         ...(input.description !== undefined && { description: input.description }),
+        ...(input.categoryId !== undefined && { categoryId: input.categoryId }),
         ...(input.price !== undefined && {
           minPrice: input.price.minPrice ?? null,
           maxPrice: input.price.maxPrice ?? null,
@@ -162,7 +164,14 @@ export class PrismaListingRepository extends IListingRepository {
         where,
         skip,
         take: input.limit,
-        include: { reviews: true },
+        include: { 
+          reviews: true,
+          media: {
+            where: { role: 'COVER' },
+            take: 1,
+            select: { url: true }
+          }
+        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.listing.count({ where }),
@@ -175,6 +184,7 @@ export class PrismaListingRepository extends IListingRepository {
         maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
         currencyCode: r.currencyCode ?? null,
         categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
+        coverUrl: (r as any).media?.[0]?.url ?? undefined,
       })),
       total,
       page: input.page,

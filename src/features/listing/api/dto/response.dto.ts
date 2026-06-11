@@ -56,6 +56,7 @@ export class ListingSummaryResponseDto {
   currencyCode: string | null;
   categoryId: string | null;
   isNegotiable: boolean;
+  @ApiPropertyOptional() coverUrl?: string;
 
   private constructor(summary: ListingSummary) {
     this.id = summary.id;
@@ -68,6 +69,7 @@ export class ListingSummaryResponseDto {
     this.currencyCode = summary.currencyCode;
     this.categoryId = summary.categoryId;
     this.isNegotiable = summary.isNegotiable;
+    this.coverUrl = summary.coverUrl;
   }
 
   static from(summary: ListingSummary): ListingSummaryResponseDto {
