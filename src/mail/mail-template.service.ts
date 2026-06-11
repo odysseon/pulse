@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as handlebars from 'handlebars';
+import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

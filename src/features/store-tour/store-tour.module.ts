@@ -8,9 +8,10 @@ import { GetStoreTourUseCase } from './application/use-cases/get-store-tour.use-
 import { GetBusinessStoreToursUseCase } from './application/use-cases/get-business-store-tours.use-case.js';
 import { StoreTourController } from './api/controllers/store-tour.controller.js';
 import { StorageModule } from '../../storage/storage.module.js';
+import { MailModule } from '../../mail/mail.module.js';
 
 @Module({
-  imports: [StorageModule],
+  imports: [StorageModule, MailModule],
   controllers: [StoreTourController],
   providers: [
     {

@@ -14,13 +14,15 @@ export class CreateStoreTourUseCase {
   async execute(input: CreateStoreTourInput): Promise<StoreTour> {
     const business = await this.prisma.businessProfile.findUnique({
       where: { id: input.businessProfileId },
-      select: { id: true },
+      select: { id: true, name: true, email: true },
     });
 
     if (!business) {
       throw new NotFoundException('Business profile not found.');
     }
 
-    return this.storeTourRepo.create(input);
+    const tour = await this.storeTourRepo.create(input);
+
+    return tour;
   }
 }
