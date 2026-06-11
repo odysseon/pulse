@@ -47,6 +47,7 @@ export class ListingController {
       businessProfileId,
       title: dto.title,
       description: dto.description,
+      categoryId: dto.categoryId,
       price: dto.price
         ? {
             minPrice: dto.price.minPrice,
@@ -71,6 +72,7 @@ export class ListingController {
     const listing = await this.updateListing.execute(id, userId, {
       title: dto.title,
       description: dto.description,
+      categoryId: dto.categoryId,
       price: dto.price
         ? {
             minPrice: dto.price.minPrice,

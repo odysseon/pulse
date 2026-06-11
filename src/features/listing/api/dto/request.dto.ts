@@ -30,7 +30,7 @@ export class ListingPriceDto {
    */
   @ValidateIf((o: ListingPriceDto) => o.minPrice !== undefined || o.maxPrice !== undefined)
   @IsString()
-  currencyCode?: string;
+  currencyCode?: string = 'NGN';
 
   @IsBoolean()
   isNegotiable!: boolean;
@@ -46,6 +46,9 @@ export class CreateListingDto {
   @IsString()
   @MaxLength(5000)
   description?: string;
+
+  @IsString()
+  categoryId!: string;
 
   @IsOptional()
   @ValidateNested()
@@ -64,6 +67,10 @@ export class UpdateListingDto {
   @IsString()
   @MaxLength(5000)
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 
   @IsOptional()
   @ValidateNested()

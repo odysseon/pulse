@@ -23,6 +23,7 @@ export interface ListingPriceInput {
 export interface CreateListingInput {
   readonly businessProfileId: string;
   readonly title: string;
+  readonly categoryId: string;
   readonly description?: string;
   readonly price?: ListingPriceInput;
 }
@@ -34,6 +35,7 @@ export interface CreateListingInput {
  */
 export interface UpdateListingInput {
   readonly title?: string;
+  readonly categoryId?: string;
   readonly description?: string;
   readonly price?: ListingPriceInput;
 }
@@ -92,6 +94,7 @@ export interface ListingSummary {
   readonly currencyCode: string | null;
   readonly isNegotiable: boolean;
   readonly categoryId: string | null;
+  readonly coverUrl?: string;
 }
 
 // ---------------------------------------------------------------------------
