@@ -20,8 +20,9 @@ import { RequestDraftVerificationUseCase } from '../../application/use-cases/req
 import { VerifyDraftAndPublishUseCase } from '../../application/use-cases/verify-draft-and-publish.use-case.js';
 import { SetOperatingHoursUseCase } from '../../application/use-cases/set-operating-hours.use-case.js';
 import { SetBusinessTagsUseCase } from '../../application/use-cases/set-business-tags.use-case.js';
+import { GetDashboardStatsUseCase } from '../../application/use-cases/get-dashboard-stats.use-case.js';
 import { CreateBusinessProfileDto, UpdateBusinessProfileDto } from '../dto/request.dto.js';
-import { BusinessProfileResponseDto } from '../dto/response.dto.js';
+import { BusinessProfileResponseDto, DashboardStatsResponseDto } from '../dto/response.dto.js';
 import { SetOperatingHoursDto } from '../dto/operating-hours.dto.js';
 import { SetTagsDto } from '../dto/tag.dto.js';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
@@ -40,6 +41,7 @@ export class BusinessProfileController {
     private readonly getMyBusinessProfiles: GetMyBusinessProfilesUseCase,
     private readonly setOperatingHours: SetOperatingHoursUseCase,
     private readonly setBusinessTags: SetBusinessTagsUseCase,
+    private readonly getDashboardStats: GetDashboardStatsUseCase,
   ) {}
 
   @Post('businesses/drafts')
@@ -105,6 +107,16 @@ export class BusinessProfileController {
     const { id: userId } = await this.resolveUser(identity.accountId);
     const profiles = await this.getMyBusinessProfiles.execute(userId);
     return profiles.map((p) => BusinessProfileResponseDto.from(p));
+  }
+
+  @Get('businesses/:id/dashboard-stats')
+  async getStats(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') id: string,
+  ): Promise<DashboardStatsResponseDto> {
+    const { id: userId } = await this.resolveUser(identity.accountId);
+    const stats = await this.getDashboardStats.execute(id, userId);
+    return stats;
   }
 
   @Put('businesses/:id/hours')

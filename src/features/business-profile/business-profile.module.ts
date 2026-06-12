@@ -11,6 +11,7 @@ import { UpdateBusinessProfileUseCase } from './application/use-cases/update-bus
 import { SetOperatingHoursUseCase } from './application/use-cases/set-operating-hours.use-case.js';
 import { SetBusinessTagsUseCase } from './application/use-cases/set-business-tags.use-case.js';
 import { GetTagsUseCase } from './application/use-cases/get-tags.use-case.js';
+import { GetDashboardStatsUseCase } from './application/use-cases/get-dashboard-stats.use-case.js';
 import { BusinessProfileController } from './api/controllers/business-profile.controller.js';
 import { PublicBusinessProfileController } from './api/controllers/public-business-profile.controller.js';
 import { IBusinessProfileRepository } from './domain/ports/business-profile.repository.port.js';
@@ -38,6 +39,7 @@ import { MailModule } from '../../mail/mail.module.js';
     SetOperatingHoursUseCase,
     SetBusinessTagsUseCase,
     GetTagsUseCase,
+    GetDashboardStatsUseCase,
   ],
 })
 export class BusinessProfileModule {}
