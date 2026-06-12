@@ -114,6 +114,8 @@ model User {
   storeToursCreated StoreTour[]
   inquiries         Inquiry[]              @relation("UserInquiries")
   messagesSent      InquiryMessage[]       @relation("MessageSender")
+  savedListings     SavedListing[]         @relation("SavedListings")
+  savedBusinesses   SavedBusiness[]        @relation("SavedBusinesses")
 
   @@index([accountId])
 }
@@ -171,11 +173,12 @@ model BusinessProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  listings Listing[]
-  hours    OperatingHours[]
-  tags     BusinessProfileTag[]
-  media    Media[]
-  inquiries Inquiry[]
+  listings     Listing[]
+  hours        OperatingHours[]
+  tags         BusinessProfileTag[]
+  media        Media[]
+  inquiries    Inquiry[]
+  savedByUsers SavedBusiness[]      @relation("SavedByUsers")
 
   @@index([ownerId])
   @@index([slug])
@@ -242,7 +245,7 @@ model Listing {
   isNegotiable Boolean  @default(false)
 
   // Dynamic attributes corresponding to CategoryAttribute schema
-  attributes   Json?    @db.JsonB
+  attributes Json? @db.JsonB
 
   // Offering type — leaf category only (see Category constraints)
   categoryId String?
@@ -251,8 +254,9 @@ model Listing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  reviews Review[]
-  inquiries Inquiry[]
+  reviews      Review[]
+  inquiries    Inquiry[]
+  savedByUsers SavedListing[] @relation("SavedByUsers")
 
   @@unique([businessProfileId, slug])
   @@index([businessProfileId])
@@ -343,8 +347,8 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  businessProfiles BusinessProfile[] @relation("BusinessProfileCategory")
-  listings         Listing[]         @relation("ListingCategory")
+  businessProfiles BusinessProfile[]   @relation("BusinessProfileCategory")
+  listings         Listing[]           @relation("ListingCategory")
   attributes       CategoryAttribute[]
 
   @@index([parentId])
@@ -369,14 +373,14 @@ model CategoryAttribute {
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  key          String        // e.g., "capacity", "condition"
-  label        String        // e.g., "Guest Capacity", "Item Condition"
+  key          String // e.g., "capacity", "condition"
+  label        String // e.g., "Guest Capacity", "Item Condition"
   type         AttributeType
   isRequired   Boolean       @default(false)
   displayOrder Int           @default(0)
 
   // For SELECT: flat array e.g., ["New", "Used", "Refurbished"]
-  options      Json?
+  options Json?
 
   @@unique([categoryId, key])
   @@index([categoryId])
@@ -526,20 +530,20 @@ enum InquiryStatus {
 }
 
 model Inquiry {
-  id                String   @id @default(cuid())
+  id                String          @id @default(cuid())
   businessProfileId String
   businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
-  
-  userId            String
-  user              User     @relation("UserInquiries", fields: [userId], references: [id], onDelete: Cascade)
-  
-  listingId         String?
-  listing           Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
-  subject           String?
-  status            InquiryStatus @default(UNREAD)
+  userId String
+  user   User   @relation("UserInquiries", fields: [userId], references: [id], onDelete: Cascade)
 
-  messages          InquiryMessage[]
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  subject String?
+  status  InquiryStatus @default(UNREAD)
+
+  messages InquiryMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -551,14 +555,14 @@ model Inquiry {
 }
 
 model InquiryMessage {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   inquiryId String
-  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  inquiry   Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
 
-  senderId  String
-  sender    User     @relation("MessageSender", fields: [senderId], references: [id])
+  senderId String
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id])
 
-  content   String   @db.Text
+  content String @db.Text
 
   createdAt DateTime @default(now())
 
@@ -567,3 +571,34 @@ model InquiryMessage {
   @@map("inquiry_messages")
 }
 
+// ============================================
+// Saves / Favorites
+// ============================================
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("SavedListings", fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation("SavedByUsers", fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+  @@map("saved_listings")
+}
+
+model SavedBusiness {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation("SavedBusinesses", fields: [userId], references: [id], onDelete: Cascade)
+  businessProfileId String
+  businessProfile   BusinessProfile @relation("SavedByUsers", fields: [businessProfileId], references: [id], onDelete: Cascade)
+  createdAt         DateTime        @default(now())
+
+  @@unique([userId, businessProfileId])
+  @@index([userId])
+  @@index([businessProfileId])
+  @@map("saved_businesses")
+}
