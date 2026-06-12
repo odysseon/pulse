@@ -15,6 +15,7 @@ import { MediaModule } from './features/media/media.module.js';
 import { CategoryModule } from './features/category/category.module.js';
 import { ReviewModule } from './features/review/review.module.js';
 import { StoreTourModule } from './features/store-tour/store-tour.module.js';
+import { InquiryModule } from './features/inquiry/inquiry.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { RedisModule } from './shared/redis/redis.module.js';
 
@@ -53,6 +54,7 @@ import { RedisModule } from './shared/redis/redis.module.js';
 
     ReviewModule,
     StoreTourModule,
+    InquiryModule,
     MailModule,
     RedisModule,
   ],

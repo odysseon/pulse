@@ -112,6 +112,8 @@ model User {
   businessDrafts    BusinessProfileDraft[]
   reviewsGiven      Review[]               @relation("ReviewsGiven")
   storeToursCreated StoreTour[]
+  inquiries         Inquiry[]              @relation("UserInquiries")
+  messagesSent      InquiryMessage[]       @relation("MessageSender")
 
   @@index([accountId])
 }
@@ -173,6 +175,7 @@ model BusinessProfile {
   hours    OperatingHours[]
   tags     BusinessProfileTag[]
   media    Media[]
+  inquiries Inquiry[]
 
   @@index([ownerId])
   @@index([slug])
@@ -249,6 +252,7 @@ model Listing {
   updatedAt DateTime @updatedAt
 
   reviews Review[]
+  inquiries Inquiry[]
 
   @@unique([businessProfileId, slug])
   @@index([businessProfileId])
@@ -509,3 +513,57 @@ model OperatingHours {
   @@index([businessProfileId])
   @@map("operating_hours")
 }
+
+// ============================================
+// Inquiry
+// ============================================
+
+enum InquiryStatus {
+  UNREAD
+  READ
+  RESPONDED
+  CLOSED
+}
+
+model Inquiry {
+  id                String   @id @default(cuid())
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  
+  userId            String
+  user              User     @relation("UserInquiries", fields: [userId], references: [id], onDelete: Cascade)
+  
+  listingId         String?
+  listing           Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  subject           String?
+  status            InquiryStatus @default(UNREAD)
+
+  messages          InquiryMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessProfileId])
+  @@index([userId])
+  @@index([status])
+  @@map("inquiries")
+}
+
+model InquiryMessage {
+  id        String   @id @default(cuid())
+  inquiryId String
+  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+
+  senderId  String
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id])
+
+  content   String   @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([inquiryId])
+  @@index([senderId])
+  @@map("inquiry_messages")
+}
+
