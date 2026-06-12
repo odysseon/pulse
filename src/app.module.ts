@@ -17,6 +17,7 @@ import { ReviewModule } from './features/review/review.module.js';
 import { StoreTourModule } from './features/store-tour/store-tour.module.js';
 import { InquiryModule } from './features/inquiry/inquiry.module.js';
 import { SavesModule } from './features/saves/saves.module.js';
+import { AnalyticsModule } from './features/analytics/analytics.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { RedisModule } from './shared/redis/redis.module.js';
 
@@ -57,6 +58,7 @@ import { RedisModule } from './shared/redis/redis.module.js';
     StoreTourModule,
     InquiryModule,
     SavesModule,
+    AnalyticsModule,
     MailModule,
     RedisModule,
   ],

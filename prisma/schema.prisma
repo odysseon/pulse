@@ -173,12 +173,13 @@ model BusinessProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  listings     Listing[]
-  hours        OperatingHours[]
-  tags         BusinessProfileTag[]
-  media        Media[]
-  inquiries    Inquiry[]
-  savedByUsers SavedBusiness[]      @relation("SavedByUsers")
+  listings        Listing[]
+  hours           OperatingHours[]
+  tags            BusinessProfileTag[]
+  media           Media[]
+  inquiries       Inquiry[]
+  savedByUsers    SavedBusiness[]      @relation("SavedByUsers")
+  analyticsEvents AnalyticsEvent[]
 
   @@index([ownerId])
   @@index([slug])
@@ -601,4 +602,33 @@ model SavedBusiness {
   @@index([userId])
   @@index([businessProfileId])
   @@map("saved_businesses")
+}
+
+// ============================================
+// Analytics
+// ============================================
+
+enum AnalyticsEventType {
+  PROFILE_VIEW
+  LISTING_VIEW
+  PHONE_CLICK
+  WEBSITE_CLICK
+  DIRECTIONS_CLICK
+}
+
+model AnalyticsEvent {
+  id                String          @id @default(cuid())
+  businessProfileId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  eventType AnalyticsEventType
+  listingId String? // If the event is specific to a listing
+  userId    String? // Track authenticated users (optional)
+
+  createdAt DateTime @default(now())
+
+  @@index([businessProfileId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
 }
