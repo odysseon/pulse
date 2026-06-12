@@ -109,3 +109,11 @@ export class PaginatedBusinessesResponseDto {
     return new PaginatedBusinessesResponseDto(paginated);
   }
 }
+
+export class DashboardStatsResponseDto {
+  @ApiProperty()
+  totalListings!: number;
+
+  @ApiProperty()
+  profileViews!: number;
+}
