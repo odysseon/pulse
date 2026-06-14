@@ -13,12 +13,16 @@ export class MailProcessor extends WorkerHost {
   }
 
   async process(job: Job<SendMailOptions>): Promise<void> {
-    this.logger.debug(`Processing mail job ${job.id} for ${job.data.to}`);
+    const toStr = Array.isArray(job.data.to) ? job.data.to.join(', ') : job.data.to;
+    this.logger.debug(`Processing mail job ${job.id ?? ''} for ${toStr}`);
     try {
       await this.mailService.sendMail(job.data);
       this.logger.debug(`Mail job ${job.id} completed successfully.`);
     } catch (error) {
-      this.logger.error(`Failed to process mail job ${job.id}`, error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        `Failed to process mail job ${job.id}`,
+        error instanceof Error ? error.stack : String(error),
+      );
       throw error;
     }
   }

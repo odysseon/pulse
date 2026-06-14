@@ -47,11 +47,18 @@ export abstract class ICategoryRepository {
   // Category Attributes
   // ---------------------------------------------------------------------------
 
-  abstract findAttributesByCategoryId(categoryId: string): Promise<import('../types/category-attribute.entity.js').CategoryAttribute[]>;
+  abstract findAttributesByCategoryId(
+    categoryId: string,
+  ): Promise<import('../types/category-attribute.entity.js').CategoryAttribute[]>;
 
-  abstract createAttribute(input: import('../types/category.types.js').CreateCategoryAttributeInput): Promise<import('../types/category-attribute.entity.js').CategoryAttribute>;
+  abstract createAttribute(
+    input: import('../types/category.types.js').CreateCategoryAttributeInput,
+  ): Promise<import('../types/category-attribute.entity.js').CategoryAttribute>;
 
-  abstract updateAttribute(id: string, input: import('../types/category.types.js').UpdateCategoryAttributeInput): Promise<import('../types/category-attribute.entity.js').CategoryAttribute>;
+  abstract updateAttribute(
+    id: string,
+    input: import('../types/category.types.js').UpdateCategoryAttributeInput,
+  ): Promise<import('../types/category-attribute.entity.js').CategoryAttribute>;
 
   abstract deleteAttribute(id: string): Promise<void>;
 }

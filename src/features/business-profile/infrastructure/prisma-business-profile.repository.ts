@@ -183,7 +183,12 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findById(id: string): Promise<BusinessProfileView | null> {
     const raw = await this.prisma.businessProfile.findUnique({
       where: { id },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
+      include: {
+        hours: true,
+        tags: { include: { tag: true } },
+        geoEntity: true,
+        categories: { select: { id: true } },
+      },
     });
     if (!raw) return null;
     const hydratedArray = await this.hydrate([raw]);
@@ -193,7 +198,12 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findBySlug(slug: string): Promise<BusinessProfileView | null> {
     const raw = await this.prisma.businessProfile.findUnique({
       where: { slug },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
+      include: {
+        hours: true,
+        tags: { include: { tag: true } },
+        geoEntity: true,
+        categories: { select: { id: true } },
+      },
     });
     if (!raw) return null;
     const hydratedArray = await this.hydrate([raw]);
@@ -208,7 +218,12 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findByOwner(ownerId: string): Promise<BusinessProfileView[]> {
     const rows = await this.prisma.businessProfile.findMany({
       where: { ownerId },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
+      include: {
+        hours: true,
+        tags: { include: { tag: true } },
+        geoEntity: true,
+        categories: { select: { id: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
     const hydrated = await this.hydrate(rows);
@@ -271,7 +286,12 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           },
         }),
       },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
+      include: {
+        hours: true,
+        tags: { include: { tag: true } },
+        geoEntity: true,
+        categories: { select: { id: true } },
+      },
     });
 
     const hydratedArray = await this.hydrate([raw]);

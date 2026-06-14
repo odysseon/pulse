@@ -25,11 +25,13 @@ export class RequestDraftVerificationUseCase {
       throw new NotFoundException('Business draft not found.'); // Hide existence
     }
 
-    const draftData = draft.data as Record<string, any>;
+    const draftData = draft.data as Record<string, unknown>;
     const email = draftData['email'];
 
     if (!email || typeof email !== 'string') {
-      throw new BadRequestException('An email address must be provided in the draft data to request verification.');
+      throw new BadRequestException(
+        'An email address must be provided in the draft data to request verification.',
+      );
     }
 
     // Generate a secure 6-digit OTP

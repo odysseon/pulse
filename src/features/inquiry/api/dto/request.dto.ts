@@ -33,6 +33,6 @@ export class SendMessageDto {
 
 export class UpdateInquiryStatusDto {
   @ApiProperty({ enum: ['UNREAD', 'READ', 'RESPONDED', 'CLOSED'] })
-  @IsEnum(['UNREAD', 'READ', 'RESPONDED', 'CLOSED'] as any)
+  @IsEnum(['UNREAD', 'READ', 'RESPONDED', 'CLOSED'])
   status!: InquiryStatus;
 }

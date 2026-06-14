@@ -43,7 +43,9 @@ export class PublicInquiryController {
 
   @Get()
   @ApiOperation({ summary: 'Get my inquiries' })
-  async getMyInquiries(@CurrentIdentity() identity: RequestIdentity): Promise<InquiryResponseDto[]> {
+  async getMyInquiries(
+    @CurrentIdentity() identity: RequestIdentity,
+  ): Promise<InquiryResponseDto[]> {
     const userId = await this.resolveUserId(identity.accountId);
     const inquiries = await this.getUserInquiriesUseCase.execute(userId);
     return inquiries.map((inq) => InquiryResponseDto.from(inq));
@@ -51,9 +53,7 @@ export class PublicInquiryController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get inquiry details and messages' })
-  async getInquiryDetails(
-    @Param('id') id: string,
-  ): Promise<InquiryResponseDto> {
+  async getInquiryDetails(@Param('id') id: string): Promise<InquiryResponseDto> {
     const { inquiry, messages } = await this.getInquiryDetailsUseCase.execute(id);
     return InquiryResponseDto.from(inquiry, messages);
   }

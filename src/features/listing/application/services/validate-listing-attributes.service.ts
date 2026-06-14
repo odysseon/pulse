@@ -51,7 +51,9 @@ export class ValidateListingAttributesService {
             throw new BadRequestException(`Attribute '${key}' must be a string.`);
           }
           if (!attrSchema.options?.includes(value)) {
-            throw new BadRequestException(`Attribute '${key}' must be one of: ${attrSchema.options?.join(', ')}`);
+            throw new BadRequestException(
+              `Attribute '${key}' must be one of: ${attrSchema.options?.join(', ')}`,
+            );
           }
           break;
       }

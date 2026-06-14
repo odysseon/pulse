@@ -19,7 +19,7 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Track an analytics event' })
   async trackEvent(
     @Body() dto: TrackEventRequestDto,
-    @CurrentIdentity() identity: RequestIdentity | undefined
+    @CurrentIdentity() identity: RequestIdentity | undefined,
   ) {
     const payload: TrackEventDto = {
       businessProfileId: dto.businessProfileId,

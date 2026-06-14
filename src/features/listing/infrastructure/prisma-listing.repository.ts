@@ -71,7 +71,9 @@ export class PrismaListingRepository extends IListingRepository {
         ...(input.price?.maxPrice !== undefined && { maxPrice: input.price.maxPrice }),
         ...(input.price?.currencyCode !== undefined && { currencyCode: input.price.currencyCode }),
         ...(input.price?.isNegotiable !== undefined && { isNegotiable: input.price.isNegotiable }),
-        ...(input.attributes !== undefined && { attributes: input.attributes as Prisma.InputJsonValue }),
+        ...(input.attributes !== undefined && {
+          attributes: input.attributes as Prisma.InputJsonValue,
+        }),
       },
     });
     return toDomain(raw);
@@ -123,7 +125,8 @@ export class PrismaListingRepository extends IListingRepository {
           isNegotiable: input.price.isNegotiable,
         }),
         ...(input.attributes !== undefined && {
-          attributes: input.attributes === null ? Prisma.DbNull : (input.attributes as Prisma.InputJsonValue),
+          attributes:
+            input.attributes === null ? Prisma.DbNull : (input.attributes as Prisma.InputJsonValue),
         }),
       },
     });
@@ -147,8 +150,8 @@ export class PrismaListingRepository extends IListingRepository {
       ? Object.entries(input.attributes).map(([key, value]) => ({
           attributes: {
             path: [key],
-            equals: value !== null ? value : Prisma.DbNull,
-          } as any,
+            equals: value !== null ? (value as Prisma.InputJsonValue) : Prisma.DbNull,
+          } as unknown as Prisma.ListingWhereInput,
         }))
       : [];
 
@@ -188,13 +191,13 @@ export class PrismaListingRepository extends IListingRepository {
         where,
         skip,
         take: input.limit,
-        include: { 
+        include: {
           reviews: true,
           media: {
             where: { role: 'COVER' },
             take: 1,
-            select: { url: true }
-          }
+            select: { url: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -208,7 +211,7 @@ export class PrismaListingRepository extends IListingRepository {
         maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
         currencyCode: r.currencyCode ?? null,
         categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
-        coverUrl: (r as any).media?.[0]?.url ?? undefined,
+        coverUrl: r.media?.[0]?.url ?? undefined,
         attributes: r.attributes ? (r.attributes as Record<string, unknown>) : null,
       })),
       total,

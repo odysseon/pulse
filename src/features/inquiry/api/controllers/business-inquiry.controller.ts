@@ -29,9 +29,7 @@ export class BusinessInquiryController {
 
   @Get()
   @ApiOperation({ summary: 'Get all inquiries for a business' })
-  async getInquiries(
-    @Param('businessId') businessId: string,
-  ): Promise<InquiryResponseDto[]> {
+  async getInquiries(@Param('businessId') businessId: string): Promise<InquiryResponseDto[]> {
     // Real implementation should verify ownerId
     const inquiries = await this.getBusinessInquiriesUseCase.execute(businessId);
     return inquiries.map((inq) => InquiryResponseDto.from(inq));
@@ -39,9 +37,7 @@ export class BusinessInquiryController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get inquiry details' })
-  async getInquiryDetails(
-    @Param('id') id: string,
-  ): Promise<InquiryResponseDto> {
+  async getInquiryDetails(@Param('id') id: string): Promise<InquiryResponseDto> {
     const { inquiry, messages } = await this.getInquiryDetailsUseCase.execute(id);
     return InquiryResponseDto.from(inquiry, messages);
   }
@@ -59,10 +55,10 @@ export class BusinessInquiryController {
       senderId: userId,
       content: dto.content,
     });
-    
+
     // Automatically update status to RESPONDED if the business replies
     await this.updateInquiryStatusUseCase.execute(id, 'RESPONDED');
-    
+
     return InquiryMessageResponseDto.from(message);
   }
 

@@ -169,13 +169,15 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   // Category Attributes
   // ---------------------------------------------------------------------------
 
-  async findAttributesByCategoryId(categoryId: string): Promise<import('../domain/types/category-attribute.entity.js').CategoryAttribute[]> {
+  async findAttributesByCategoryId(
+    categoryId: string,
+  ): Promise<import('../domain/types/category-attribute.entity.js').CategoryAttribute[]> {
     const rows = await this.prisma.categoryAttribute.findMany({
       where: { categoryId },
       orderBy: { displayOrder: 'asc' },
     });
-    
-    return rows.map(r => ({
+
+    return rows.map((r) => ({
       ...r,
       type: r.type as import('../domain/types/category-attribute.entity.js').AttributeType,
       options: r.options ? (r.options as string[]) : null,
@@ -183,7 +185,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   }
 
   async createAttribute(
-    input: import('../domain/types/category.types.js').CreateCategoryAttributeInput & { categoryId: string }
+    input: import('../domain/types/category.types.js').CreateCategoryAttributeInput & {
+      categoryId: string;
+    },
   ): Promise<import('../domain/types/category-attribute.entity.js').CategoryAttribute> {
     const raw = await this.prisma.categoryAttribute.create({
       data: {
@@ -206,7 +210,7 @@ export class PrismaCategoryRepository implements ICategoryRepository {
 
   async updateAttribute(
     id: string,
-    input: import('../domain/types/category.types.js').UpdateCategoryAttributeInput
+    input: import('../domain/types/category.types.js').UpdateCategoryAttributeInput,
   ): Promise<import('../domain/types/category-attribute.entity.js').CategoryAttribute> {
     const raw = await this.prisma.categoryAttribute.update({
       where: { id },
@@ -214,7 +218,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         ...(input.label !== undefined && { label: input.label }),
         ...(input.isRequired !== undefined && { isRequired: input.isRequired }),
         ...(input.displayOrder !== undefined && { displayOrder: input.displayOrder }),
-        ...(input.options !== undefined && { options: input.options === null ? Prisma.DbNull : input.options }),
+        ...(input.options !== undefined && {
+          options: input.options === null ? Prisma.DbNull : input.options,
+        }),
       },
     });
 

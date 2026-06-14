@@ -43,11 +43,11 @@ export class PublicListingController {
 
   private async resolveBusinessSlug(slug: string): Promise<string> {
     const profile = await this.businessRepo.findBySlug(slug);
-    
+
     if (!profile) {
       throw new NotFoundException('Business profile not found.');
     }
-    
+
     return profile.id;
   }
 

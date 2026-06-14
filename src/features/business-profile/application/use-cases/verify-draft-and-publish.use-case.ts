@@ -40,7 +40,7 @@ export class VerifyDraftAndPublishUseCase {
 
     // Validate draft data against CreateBusinessProfileDto
     const draftData = draft.data as Record<string, any>;
-    const dto = plainToInstance(CreateBusinessProfileDto, draftData) as CreateBusinessProfileDto;
+    const dto = plainToInstance(CreateBusinessProfileDto, draftData);
     const errors = await validate(dto);
 
     if (errors.length > 0) {
@@ -69,12 +69,14 @@ export class VerifyDraftAndPublishUseCase {
     await this.prisma.businessProfileDraft.delete({
       where: { id: draftId },
     });
-    
+
     // Clear OTP
     await redisClient.del(redisKey);
 
     // Get frontend URL configuration
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'https://pulse.app').replace(/\/$/, '');
+    const frontendUrl = this.configService
+      .get<string>('FRONTEND_URL', 'https://pulse.app')
+      .replace(/\/$/, '');
 
     // Send "Next Steps" email urging them to list offers
     await this.mailQueueService.enqueueMail({
