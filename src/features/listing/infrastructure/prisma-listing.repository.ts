@@ -151,7 +151,7 @@ export class PrismaListingRepository extends IListingRepository {
           attributes: {
             path: [key],
             equals: value !== null ? (value as Prisma.InputJsonValue) : Prisma.DbNull,
-          } as unknown as Prisma.ListingWhereInput,
+          },
         }))
       : [];
 
@@ -205,15 +205,23 @@ export class PrismaListingRepository extends IListingRepository {
     ]);
 
     return {
-      items: rows.map((r) => ({
-        ...r,
-        minPrice: r.minPrice !== null ? r.minPrice.toNumber() : null,
-        maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
-        currencyCode: r.currencyCode ?? null,
-        categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
-        coverUrl: r.media?.[0]?.url ?? undefined,
-        attributes: r.attributes ? (r.attributes as Record<string, unknown>) : null,
-      })),
+      items: rows.map((r) => {
+        const coverUrl = r.media?.[0]?.url;
+        return {
+          id: r.id,
+          businessProfileId: r.businessProfileId,
+          title: r.title,
+          slug: r.slug,
+          description: r.description,
+          minPrice: r.minPrice !== null ? r.minPrice.toNumber() : null,
+          maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
+          currencyCode: r.currencyCode ?? null,
+          isNegotiable: r.isNegotiable,
+          categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
+          attributes: r.attributes ? (r.attributes as Record<string, unknown>) : null,
+          ...(coverUrl !== undefined && { coverUrl }),
+        };
+      }),
       total,
       page: input.page,
       limit: input.limit,
