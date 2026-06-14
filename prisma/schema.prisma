@@ -140,7 +140,7 @@ enum BusinessType {
 model BusinessProfile {
   id String @id @default(cuid())
 
-  ownerId String
+  ownerId String @unique
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   name String
@@ -165,9 +165,8 @@ model BusinessProfile {
   locationId  String?
   geoEntity   Location? @relation(fields: [locationId], references: [id])
 
-  // Commercial identity — leaf category only (see Category constraints)
-  categoryId String?
-  category   Category?   @relation("BusinessProfileCategory", fields: [categoryId], references: [id])
+  // Commercial identity — many-to-many relations with Category
+  categories Category[] @relation("BusinessCategories")
   storeTours StoreTour[]
 
   createdAt DateTime @default(now())
@@ -181,11 +180,9 @@ model BusinessProfile {
   savedByUsers    SavedBusiness[]      @relation("SavedByUsers")
   analyticsEvents AnalyticsEvent[]
 
-  @@index([ownerId])
   @@index([slug])
   @@index([verificationStatus])
   @@index([isPublic])
-  @@index([categoryId])
   @@index([locationId])
   @@map("business_profiles")
 }
@@ -348,7 +345,7 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  businessProfiles BusinessProfile[]   @relation("BusinessProfileCategory")
+  businessProfiles BusinessProfile[]   @relation("BusinessCategories")
   listings         Listing[]           @relation("ListingCategory")
   attributes       CategoryAttribute[]
 

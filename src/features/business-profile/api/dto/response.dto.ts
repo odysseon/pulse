@@ -22,7 +22,7 @@ export class BusinessProfileResponseDto {
   @ApiPropertyOptional({ nullable: true }) location: string | null;
   @ApiPropertyOptional({ nullable: true }) latitude: number | null;
   @ApiPropertyOptional({ nullable: true }) longitude: number | null;
-  @ApiPropertyOptional({ nullable: true }) categoryId: string | null;
+  @ApiProperty({ type: [String] }) categoryIds: string[];
   @ApiProperty() createdAt: string;
   @ApiProperty() updatedAt: string;
 
@@ -43,7 +43,7 @@ export class BusinessProfileResponseDto {
     this.location = r.location;
     this.latitude = r.latitude;
     this.longitude = r.longitude;
-    this.categoryId = r.categoryId;
+    this.categoryIds = r.categoryIds;
     this.createdAt = r.createdAt.toISOString();
     this.updatedAt = r.updatedAt.toISOString();
 
@@ -69,7 +69,7 @@ export class BusinessSummaryResponseDto {
   location: string | null;
   latitude: number | null;
   longitude: number | null;
-  categoryId: string | null;
+  categoryIds: string[];
   distanceKm?: number;
 
   private constructor(summary: BusinessSummary) {
@@ -81,7 +81,7 @@ export class BusinessSummaryResponseDto {
     this.location = summary.location;
     this.latitude = summary.latitude;
     this.longitude = summary.longitude;
-    this.categoryId = summary.categoryId;
+    this.categoryIds = summary.categoryIds;
     if (summary.distanceKm !== undefined) {
       this.distanceKm = summary.distanceKm;
     }

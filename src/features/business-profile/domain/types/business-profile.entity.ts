@@ -30,7 +30,7 @@ export interface BusinessProfile {
   readonly email: string;
   readonly locationId: string | null;
   readonly location: string | null;
-  readonly categoryId: string | null;
+  readonly categoryIds: string[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }

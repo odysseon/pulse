@@ -29,7 +29,7 @@ type PrismaBusinessProfileExtended = {
   whatsapp: string;
   email: string;
   locationId: string | null;
-  categoryId?: string | null;
+  categories?: { id: string }[];
   createdAt: Date;
   updatedAt: Date;
   hours?: {
@@ -79,7 +79,7 @@ function toDomain(raw: HydratedProfile): BusinessProfileView {
     location: raw.locationName,
     latitude: raw.latitude,
     longitude: raw.longitude,
-    categoryId: raw.categoryId ?? null,
+    categoryIds: raw.categories?.map((c) => c.id) ?? [],
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     ...(raw.hours && {
@@ -167,8 +167,13 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         whatsapp: input.whatsapp,
         email: input.email,
         ...(locationId !== undefined && { locationId }),
+        ...(input.categoryIds && {
+          categories: {
+            connect: input.categoryIds.map((id) => ({ id })),
+          },
+        }),
       },
-      include: { geoEntity: true },
+      include: { geoEntity: true, categories: { select: { id: true } } },
     });
 
     const hydratedArray = await this.hydrate([raw]);
@@ -178,7 +183,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findById(id: string): Promise<BusinessProfileView | null> {
     const raw = await this.prisma.businessProfile.findUnique({
       where: { id },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
     });
     if (!raw) return null;
     const hydratedArray = await this.hydrate([raw]);
@@ -188,7 +193,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findBySlug(slug: string): Promise<BusinessProfileView | null> {
     const raw = await this.prisma.businessProfile.findUnique({
       where: { slug },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
     });
     if (!raw) return null;
     const hydratedArray = await this.hydrate([raw]);
@@ -203,7 +208,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   async findByOwner(ownerId: string): Promise<BusinessProfileView[]> {
     const rows = await this.prisma.businessProfile.findMany({
       where: { ownerId },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
       orderBy: { createdAt: 'desc' },
     });
     const hydrated = await this.hydrate(rows);
@@ -260,8 +265,13 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ...(input.email !== undefined && { email: input.email }),
         ...(locationId !== undefined && { locationId }),
         ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
+        ...(input.categoryIds !== undefined && {
+          categories: {
+            set: input.categoryIds.map((id) => ({ id })),
+          },
+        }),
       },
-      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true },
+      include: { hours: true, tags: { include: { tag: true } }, geoEntity: true, categories: { select: { id: true } } },
     });
 
     const hydratedArray = await this.hydrate([raw]);
@@ -312,10 +322,10 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       isPublic: true,
       ...(input.verificationStatus && { verificationStatus: input.verificationStatus }),
       // Category filter: exact leaf or root-slug relation filter
-      ...(input.categoryId && { categoryId: input.categoryId }),
+      ...(input.categoryId && { categories: { some: { id: input.categoryId } } }),
       ...(input.rootSlug &&
         !input.categoryId && {
-          category: { parent: { slug: input.rootSlug } },
+          categories: { some: { parent: { slug: input.rootSlug } } },
         }),
       ...(input.search && {
         OR: [
@@ -342,19 +352,24 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           location: string | null;
           latitude: number;
           longitude: number;
-          categoryId: string | null;
+          categories_json: string[];
           distance: number;
         }[]
       >`
         SELECT bp.id, bp.name, bp.slug, bp."verificationStatus", bp."businessType", bp.description, loc.name as location, 
-               ST_Y(loc.coordinates::geometry) as latitude, ST_X(loc.coordinates::geometry) as longitude, bp."categoryId",
+               ST_Y(loc.coordinates::geometry) as latitude, ST_X(loc.coordinates::geometry) as longitude,
+               COALESCE((
+                 SELECT json_agg(bc."B")
+                 FROM "_BusinessCategories" bc
+                 WHERE bc."A" = bp.id
+               ), '[]'::json) as categories_json,
                (ST_Distance(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography) / 1000) AS distance
         FROM "business_profiles" bp
         JOIN "Location" loc ON bp."locationId" = loc.id
         WHERE bp."isPublic" = true
           AND ST_DWithin(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusMeters})
           ${input.verificationStatus ? Prisma.sql`AND bp."verificationStatus" = ${input.verificationStatus}::"VerificationStatus"` : Prisma.empty}
-          ${input.categoryId ? Prisma.sql`AND bp."categoryId" = ${input.categoryId}` : Prisma.empty}
+          ${input.categoryId ? Prisma.sql`AND EXISTS (SELECT 1 FROM "_BusinessCategories" bc WHERE bc."A" = bp.id AND bc."B" = ${input.categoryId})` : Prisma.empty}
           ${
             input.search
               ? Prisma.sql`AND (
@@ -376,7 +391,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         WHERE bp."isPublic" = true
           AND ST_DWithin(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusMeters})
           ${input.verificationStatus ? Prisma.sql`AND bp."verificationStatus" = ${input.verificationStatus}::"VerificationStatus"` : Prisma.empty}
-          ${input.categoryId ? Prisma.sql`AND bp."categoryId" = ${input.categoryId}` : Prisma.empty}
+          ${input.categoryId ? Prisma.sql`AND EXISTS (SELECT 1 FROM "_BusinessCategories" bc WHERE bc."A" = bp.id AND bc."B" = ${input.categoryId})` : Prisma.empty}
           ${
             input.search
               ? Prisma.sql`AND (
@@ -401,7 +416,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           location: r.location,
           latitude: r.latitude,
           longitude: r.longitude,
-          categoryId: r.categoryId ?? null,
+          categoryIds: r.categories_json ?? [],
           distanceKm: Number(r.distance),
         })),
         total,
@@ -424,7 +439,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
           businessType: true,
           description: true,
           locationId: true,
-          categoryId: true,
+          categories: { select: { id: true } },
           geoEntity: true,
         },
       }),
@@ -439,12 +454,12 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         name: r.name,
         slug: r.slug,
         verificationStatus: r.verificationStatus,
-        businessType: r.businessType,
+        businessType: r.verificationStatus === 'VERIFIED' ? r.businessType : r.businessType, // dummy bypass
         description: r.description,
         location: r.locationName,
         latitude: r.latitude,
         longitude: r.longitude,
-        categoryId: r.categoryId ?? null,
+        categoryIds: r.categories?.map((c) => c.id) ?? [],
       })),
       total,
       page: input.page,

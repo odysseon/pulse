@@ -1,3 +1,205 @@
+# Pulse Backend
+
+Pulse helps businesses and individuals become discoverable through digital storefronts, structured
+listings, and trust-first commercial visibility.
+
+> Discovery-first commercial infrastructure.
+
+## Overview
+
+Pulse is designed to help businesses and individuals become discoverable.
+
+The backend provides the foundation for:
+
+- Identity
+- Business Profiles
+- Storefronts
+- Listings
+- Categories
+- Discovery
+
+It intentionally avoids becoming an ERP or ecommerce platform in its initial stages.
+
+---
+
+## Product Philosophy
+
+Pulse is not trying to own commerce.
+
+Pulse helps people connect for commerce.
+
+Typical flow:
+
+```
+Business
+      ↓
+
+Create Profile
+      ↓
+
+Launch Storefront
+      ↓
+
+Publish Listings
+      ↓
+
+Become Discoverable
+      ↓
+
+Customer Makes Contact
+```
+
+Transactions happen outside the platform unless future product direction changes.
+
+---
+
+## Core Domain
+
+```
+Account
+    ↓
+
+User
+    ↓
+
+Business Profile
+    ↓
+
+Listings
+```
+
+Business Profiles represent commercial identities.
+
+Listings represent commercial offerings.
+
+Listings may represent:
+
+- Products
+- Services
+- Opportunities
+
+The system intentionally avoids industry-specific models.
+
+There are no:
+
+- CarDealer
+- PhoneSeller
+- LogisticsCompany
+- EventCentre
+
+Business is business.
+
+Categories and listings provide specialization.
+
+---
+
+## Backend Design Principles
+
+- Composition over specialization
+- Keep the schema generic
+- Prefer explicit domain boundaries
+- Resource-specific endpoints
+- Avoid premature abstraction
+- Build for discoverability first
+
+---
+
+## Media Philosophy
+
+Media uploads are resource-specific.
+
+Examples:
+
+```
+POST /users/me/avatar
+
+POST /business-profiles/:id/logo
+
+POST /business-profiles/:id/banner
+
+POST /listings/:id/cover
+
+POST /listings/:id/gallery
+```
+
+The server determines:
+
+- destination
+- ownership
+- permissions
+- constraints
+
+Clients should never choose storage destinations.
+
+---
+
+## Layering
+
+Transport DTOs are not domain models.
+
+Internal types are not API responses.
+
+Recommended separation:
+
+```
+HTTP DTOs
+        ↓
+
+Use Cases
+
+        ↓
+
+Domain Types
+
+        ↓
+
+Persistence
+
+        ↓
+
+Database
+```
+
+Each layer owns its own contracts.
+
+Types should not leak across boundaries.
+
+---
+
+## Current MVP
+
+Wave 1 includes:
+
+- Authentication
+- User profile
+- Business profile
+- Storefront creation
+- Listing management
+- Categories
+- Discovery
+- Search
+
+Deferred:
+
+- Payments
+- Orders
+- Checkout
+- Messaging
+- Logistics execution
+- Recommendations
+
+---
+
+## Development Principle
+
+The backend should continuously optimize for one question:
+
+> Can a real business create a storefront and become discoverable?
+
+Every new feature should justify itself against that objective.
+
+Complexity should only be introduced when required by demonstrated product needs.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
