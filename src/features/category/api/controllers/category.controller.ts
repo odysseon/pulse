@@ -16,7 +16,12 @@ import { DeactivateCategoryUseCase } from '../../application/use-cases/deactivat
 import { GetCategoryUseCase } from '../../application/use-cases/get-category.use-case.js';
 import { GetCategoryTreeUseCase } from '../../application/use-cases/get-category-tree.use-case.js';
 import { ICategoryRepository } from '../../domain/ports/category.repository.port.js';
-import { CreateCategoryDto, UpdateCategoryDto, CreateCategoryAttributeDto, UpdateCategoryAttributeDto } from '../dto/request.dto.js';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  CreateCategoryAttributeDto,
+  UpdateCategoryAttributeDto,
+} from '../dto/request.dto.js';
 import { CategoryResponseDto, CategoryTreeNodeDto } from '../dto/response.dto.js';
 import { toCategoryView } from '../../domain/types/category.types.js';
 import { CreateCategoryAttributeUseCase } from '../../application/use-cases/create-category-attribute.use-case.js';
@@ -124,10 +129,7 @@ export class CategoryController {
   // ---------------------------------------------------------------------------
 
   @Post(':id/attributes')
-  async addAttribute(
-    @Param('id') id: string,
-    @Body() dto: CreateCategoryAttributeDto,
-  ) {
+  async addAttribute(@Param('id') id: string, @Body() dto: CreateCategoryAttributeDto) {
     return this.createAttribute.execute(id, dto);
   }
 
@@ -141,10 +143,7 @@ export class CategoryController {
   }
 
   @Delete(':id/attributes/:attrId')
-  async removeAttribute(
-    @Param('id') id: string,
-    @Param('attrId') attrId: string,
-  ) {
+  async removeAttribute(@Param('id') id: string, @Param('attrId') attrId: string) {
     await this.deleteAttribute.execute(id, attrId);
     return { deleted: true };
   }

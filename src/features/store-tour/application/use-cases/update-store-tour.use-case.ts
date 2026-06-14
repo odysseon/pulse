@@ -29,7 +29,10 @@ export class UpdateStoreTourUseCase {
 
     const updatedTour = await this.storeTourRepo.update(id, input);
 
-    if (input.status === StoreTourStatus.PUBLISHED && existing.status !== StoreTourStatus.PUBLISHED) {
+    if (
+      input.status === StoreTourStatus.PUBLISHED &&
+      existing.status !== StoreTourStatus.PUBLISHED
+    ) {
       const business = await this.prisma.businessProfile.findUnique({
         where: { id: existing.businessProfileId },
         select: { email: true, name: true },

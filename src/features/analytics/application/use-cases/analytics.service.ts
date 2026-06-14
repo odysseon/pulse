@@ -37,7 +37,7 @@ export class AnalyticsService {
     const savedBusinesses = await this.prisma.savedBusiness.count({
       where: { businessProfileId: businessId },
     });
-    
+
     // Also include listings saves
     const listingsSaves = await this.prisma.savedListing.count({
       where: { listing: { businessProfileId: businessId } },
@@ -65,11 +65,14 @@ export class AnalyticsService {
     });
 
     // Group by day (YYYY-MM-DD)
-    const grouped = events.reduce((acc: Record<string, number>, ev) => {
-      const dateStr = ev.createdAt.toISOString().substring(0, 10);
-      acc[dateStr] = (acc[dateStr] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const grouped = events.reduce(
+      (acc: Record<string, number>, ev) => {
+        const dateStr = ev.createdAt.toISOString().substring(0, 10);
+        acc[dateStr] = (acc[dateStr] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     // Ensure all 30 days have a value, even if 0
     const chartData = [];

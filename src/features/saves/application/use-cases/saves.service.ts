@@ -4,9 +4,7 @@ import type { ISavesRepository } from '../../domain/ports/saves.repository.js';
 
 @Injectable()
 export class SavesService {
-  constructor(
-    @Inject(SAVES_REPOSITORY) private readonly savesRepository: ISavesRepository,
-  ) {}
+  constructor(@Inject(SAVES_REPOSITORY) private readonly savesRepository: ISavesRepository) {}
 
   async toggleListingSave(userId: string, listingId: string) {
     return this.savesRepository.toggleListingSave(userId, listingId);

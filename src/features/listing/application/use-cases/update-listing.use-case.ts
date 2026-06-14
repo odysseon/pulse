@@ -1,4 +1,9 @@
-import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { IListingRepository } from '../../domain/ports/listing.repository.port.js';
 import { UpdateListingInput } from '../../domain/types/listing.types.js';
 import { Listing } from '../../domain/types/listing.entity.js';
@@ -36,7 +41,9 @@ export class UpdateListingUseCase {
       }
 
       if (!category.parentId) {
-        throw new BadRequestException('Listings must be assigned to a specific leaf category, not a root category.');
+        throw new BadRequestException(
+          'Listings must be assigned to a specific leaf category, not a root category.',
+        );
       }
     }
 

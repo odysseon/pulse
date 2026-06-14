@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import slugify from 'slugify';
 import { IListingRepository } from '../../domain/ports/listing.repository.port.js';
 import { CreateListingInput } from '../../domain/types/listing.types.js';
@@ -26,7 +31,9 @@ export class CreateListingUseCase {
     }
 
     if (!category.parentId) {
-      throw new BadRequestException('Listings must be assigned to a specific leaf category, not a root category.');
+      throw new BadRequestException(
+        'Listings must be assigned to a specific leaf category, not a root category.',
+      );
     }
 
     if (input.attributes) {

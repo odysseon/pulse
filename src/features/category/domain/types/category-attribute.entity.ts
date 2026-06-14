@@ -17,9 +17,9 @@ export interface CategoryAttribute {
   readonly type: AttributeType;
   readonly isRequired: boolean;
   readonly displayOrder: number;
-  
-  /** 
-   * Flat array of strings for SELECT type. 
+
+  /**
+   * Flat array of strings for SELECT type.
    * Example: ['New', 'Used', 'Refurbished']
    */
   readonly options: string[] | null;

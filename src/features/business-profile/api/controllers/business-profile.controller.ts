@@ -50,15 +50,15 @@ export class BusinessProfileController {
     @Body() dto: CreateBusinessProfileDto,
   ) {
     const { id: userId } = await this.resolveUser(identity.accountId);
-    return await this.createBusinessDraft.execute(userId, dto as any);
+    return await this.createBusinessDraft.execute(
+      userId,
+      dto as unknown as Record<string, unknown>,
+    );
   }
 
   @Post('businesses/drafts/:id/request-verification')
   @HttpCode(HttpStatus.OK)
-  async requestVerification(
-    @CurrentIdentity() identity: RequestIdentity,
-    @Param('id') id: string,
-  ) {
+  async requestVerification(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
     const { id: userId } = await this.resolveUser(identity.accountId);
     return await this.requestDraftVerification.execute(id, userId);
   }

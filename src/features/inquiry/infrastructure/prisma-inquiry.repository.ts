@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { IInquiryRepository } from '../domain/ports/inquiry.repository.port.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
-import { InquiryView, InquiryMessageView, CreateInquiryInput, SendMessageInput, InquiryStatus } from '../domain/types/inquiry.types.js';
+import {
+  InquiryView,
+  InquiryMessageView,
+  CreateInquiryInput,
+  SendMessageInput,
+  InquiryStatus,
+} from '../domain/types/inquiry.types.js';
 
 @Injectable()
 export class PrismaInquiryRepository implements IInquiryRepository {
@@ -23,7 +29,7 @@ export class PrismaInquiryRepository implements IInquiryRepository {
       },
     });
 
-    return inquiry as InquiryView;
+    return inquiry;
   }
 
   async addMessage(input: SendMessageInput): Promise<InquiryMessageView> {
@@ -42,14 +48,14 @@ export class PrismaInquiryRepository implements IInquiryRepository {
       data: { updatedAt: new Date() },
     });
 
-    return message as InquiryMessageView;
+    return message;
   }
 
   async findById(id: string): Promise<InquiryView | null> {
     const inquiry = await this.prisma.inquiry.findUnique({
       where: { id },
     });
-    return inquiry as InquiryView | null;
+    return inquiry;
   }
 
   async findByBusinessProfile(businessProfileId: string): Promise<InquiryView[]> {
@@ -57,7 +63,7 @@ export class PrismaInquiryRepository implements IInquiryRepository {
       where: { businessProfileId },
       orderBy: { updatedAt: 'desc' },
     });
-    return inquiries as InquiryView[];
+    return inquiries;
   }
 
   async findByUser(userId: string): Promise<InquiryView[]> {
@@ -65,7 +71,7 @@ export class PrismaInquiryRepository implements IInquiryRepository {
       where: { userId },
       orderBy: { updatedAt: 'desc' },
     });
-    return inquiries as InquiryView[];
+    return inquiries;
   }
 
   async getMessages(inquiryId: string): Promise<InquiryMessageView[]> {
@@ -73,7 +79,7 @@ export class PrismaInquiryRepository implements IInquiryRepository {
       where: { inquiryId },
       orderBy: { createdAt: 'asc' },
     });
-    return messages as InquiryMessageView[];
+    return messages;
   }
 
   async updateStatus(id: string, status: InquiryStatus): Promise<InquiryView> {
@@ -81,6 +87,6 @@ export class PrismaInquiryRepository implements IInquiryRepository {
       where: { id },
       data: { status },
     });
-    return inquiry as InquiryView;
+    return inquiry;
   }
 }

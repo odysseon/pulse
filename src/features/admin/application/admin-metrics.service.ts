@@ -59,10 +59,10 @@ export class AdminMetricsService {
       // Analytics
       this.prisma.analyticsEvent.count(),
       this.prisma.analyticsEvent.count({
-        where: { eventType: 'PROFILE_VIEW', createdAt: { gte: thirtyDaysAgo } }
+        where: { eventType: 'PROFILE_VIEW', createdAt: { gte: thirtyDaysAgo } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { eventType: 'LISTING_VIEW', createdAt: { gte: thirtyDaysAgo } }
+        where: { eventType: 'LISTING_VIEW', createdAt: { gte: thirtyDaysAgo } },
       }),
     ]);
 
@@ -72,7 +72,7 @@ export class AdminMetricsService {
       select: { createdAt: true },
     });
 
-    const accountsChart = this.buildDailyChart(recentAccounts.map(a => a.createdAt));
+    const accountsChart = this.buildDailyChart(recentAccounts.map((a) => a.createdAt));
 
     return {
       accounts: {

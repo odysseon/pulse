@@ -1,4 +1,10 @@
-import { InquiryView, InquiryMessageView, CreateInquiryInput, SendMessageInput, InquiryStatus } from '../types/inquiry.types.js';
+import {
+  InquiryView,
+  InquiryMessageView,
+  CreateInquiryInput,
+  SendMessageInput,
+  InquiryStatus,
+} from '../types/inquiry.types.js';
 
 export abstract class IInquiryRepository {
   abstract create(input: CreateInquiryInput): Promise<InquiryView>;

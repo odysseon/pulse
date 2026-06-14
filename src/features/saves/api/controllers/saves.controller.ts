@@ -35,7 +35,10 @@ export class SavesController {
 
   @Delete('listings/:id')
   @ApiOperation({ summary: 'Unsave listing (alias for toggle)' })
-  async unsaveListing(@CurrentIdentity() identity: RequestIdentity, @Param('id') listingId: string) {
+  async unsaveListing(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') listingId: string,
+  ) {
     const userId = await this.resolveUserId(identity.accountId);
     return this.savesService.toggleListingSave(userId, listingId);
   }
@@ -49,14 +52,20 @@ export class SavesController {
 
   @Post('businesses/:id')
   @ApiOperation({ summary: 'Toggle business save state' })
-  async saveBusiness(@CurrentIdentity() identity: RequestIdentity, @Param('id') businessId: string) {
+  async saveBusiness(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') businessId: string,
+  ) {
     const userId = await this.resolveUserId(identity.accountId);
     return this.savesService.toggleBusinessSave(userId, businessId);
   }
 
   @Delete('businesses/:id')
   @ApiOperation({ summary: 'Unsave business (alias for toggle)' })
-  async unsaveBusiness(@CurrentIdentity() identity: RequestIdentity, @Param('id') businessId: string) {
+  async unsaveBusiness(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') businessId: string,
+  ) {
     const userId = await this.resolveUserId(identity.accountId);
     return this.savesService.toggleBusinessSave(userId, businessId);
   }
@@ -66,10 +75,10 @@ export class SavesController {
   async checkSaves(
     @CurrentIdentity() identity: RequestIdentity,
     @Query('listingId') listingId?: string,
-    @Query('businessId') businessId?: string
+    @Query('businessId') businessId?: string,
   ) {
     const userId = await this.resolveUserId(identity.accountId);
-    const result: any = {};
+    const result: { listingSaved?: boolean; businessSaved?: boolean } = {};
     if (listingId) {
       const map = await this.savesService.checkSavedListings(userId, [listingId]);
       result.listingSaved = !!map[listingId];
