@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
+import { Prisma } from '../../../../../generated/prisma/client.js';
 
 @Injectable()
 export class CreateBusinessDraftUseCase {
@@ -9,7 +10,7 @@ export class CreateBusinessDraftUseCase {
     return this.prisma.businessProfileDraft.create({
       data: {
         ownerId,
-        data,
+        data: data as Prisma.InputJsonValue,
       },
     });
   }
