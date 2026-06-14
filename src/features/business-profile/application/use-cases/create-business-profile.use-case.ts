@@ -11,6 +11,11 @@ export class CreateBusinessProfileUseCase {
   constructor(private readonly repo: IBusinessProfileRepository) {}
 
   async execute(input: CreateBusinessProfileInput): Promise<BusinessProfileView> {
+    const existing = await this.repo.findByOwner(input.ownerId);
+    if (existing.length > 0) {
+      throw new ConflictException('A user can only own at most one business profile.');
+    }
+
     const slug = await this.deriveUniqueSlug(input.name);
 
     return this.repo.create(input, slug);

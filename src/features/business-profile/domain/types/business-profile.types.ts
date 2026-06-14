@@ -15,6 +15,7 @@ export interface CreateBusinessProfileInput {
   readonly location?: string;
   readonly latitude?: number;
   readonly longitude?: number;
+  readonly categoryIds?: string[];
 }
 
 export interface UpdateBusinessProfileInput {
@@ -29,6 +30,7 @@ export interface UpdateBusinessProfileInput {
   readonly latitude?: number;
   readonly longitude?: number;
   readonly isPublic?: boolean;
+  readonly categoryIds?: string[];
 }
 
 export interface BusinessProfileView {
@@ -50,7 +52,7 @@ export interface BusinessProfileView {
   readonly location: string | null;
   readonly latitude: number | null;
   readonly longitude: number | null;
-  readonly categoryId: string | null;
+  readonly categoryIds: string[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly operatingHours?: OperatingHours[];
@@ -67,14 +69,14 @@ export interface BusinessSummary {
   readonly location: string | null;
   readonly latitude: number | null;
   readonly longitude: number | null;
-  readonly categoryId: string | null;
+  readonly categoryIds: string[];
   readonly distanceKm?: number; // Added dynamically during proximity queries
 }
 
 export interface DiscoverBusinessesInput {
   readonly verificationStatus?: VerificationStatus;
   readonly search?: string;
-  /** Filter by an exact leaf categoryId */
+  /** Filter by an exact categoryId */
   readonly categoryId?: string;
   /** Filter by root category slug — returns all businesses in any leaf under that root */
   readonly rootSlug?: string;
