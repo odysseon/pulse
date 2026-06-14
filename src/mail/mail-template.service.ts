@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 @Injectable()
 export class MailTemplateService {
@@ -13,7 +14,8 @@ export class MailTemplateService {
       let templateDelegate = this.templatesCache.get(templateName);
 
       if (!templateDelegate) {
-        const templatesDir = path.join(process.cwd(), 'src', 'mail', 'templates');
+        const currentDir = path.dirname(fileURLToPath(import.meta.url));
+        const templatesDir = path.join(currentDir, 'templates');
         const templatePath = path.join(templatesDir, `${templateName}.hbs`);
 
         const templateContent = await fs.readFile(templatePath, 'utf8');
