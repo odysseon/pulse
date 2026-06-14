@@ -256,6 +256,10 @@ async function main() {
   `;
 
   // 2. Business Profile
+  const electronicsCategory = await prisma.category.findUnique({
+    where: { slug: "electronics" },
+  });
+
   const business = await prisma.businessProfile.upsert({
     where: { slug: "sample-tech-store" },
     update: {},
@@ -276,6 +280,9 @@ async function main() {
           { day: "TUE", openTime: "09:00", closeTime: "17:00" },
         ],
       },
+      categories: {
+        connect: electronicsCategory ? [{ id: electronicsCategory.id }] : [],
+      },
     },
   });
 
@@ -291,6 +298,7 @@ async function main() {
       status: "PUBLISHED",
       minPrice: 2000,
       currencyCode: "USD",
+      categoryId: electronicsCategory?.id || null,
     },
   });
 
