@@ -17,7 +17,9 @@ export class NodemailerAdapter implements MailAdapter {
     const pass = this.configService.get<string>('SMTP_PASS');
     this.from = this.configService.get<string>('SMTP_FROM') || 'noreply@example.com';
 
-    if (host && port) {
+    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+
+    if (isProduction && host && port) {
       this.transporter = nodemailer.createTransport({
         host,
         port: typeof port === 'string' ? Number.parseInt(port, 10) : port,
@@ -25,7 +27,11 @@ export class NodemailerAdapter implements MailAdapter {
       });
       this.logger.log(`Nodemailer adapter initialized with host ${host}:${port.toString()}`);
     } else {
-      this.logger.warn('SMTP configuration is missing. Emails will be logged instead of sent.');
+      if (isProduction) {
+        this.logger.warn('SMTP configuration is missing in production. Emails will be logged instead of sent.');
+      } else {
+        this.logger.log('Development environment detected. Emails will be logged instead of sent.');
+      }
       this.transporter = nodemailer.createTransport({
         streamTransport: true,
         newline: 'unix',
