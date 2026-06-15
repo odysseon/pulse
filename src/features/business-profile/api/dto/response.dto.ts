@@ -23,6 +23,8 @@ export class BusinessProfileResponseDto {
   @ApiPropertyOptional({ nullable: true }) latitude: number | null;
   @ApiPropertyOptional({ nullable: true }) longitude: number | null;
   @ApiProperty({ type: [String] }) categoryIds: string[];
+  @ApiProperty() isEmailVerified: boolean;
+  @ApiProperty() isPhoneVerified: boolean;
   @ApiProperty() createdAt: string;
   @ApiProperty() updatedAt: string;
 
@@ -44,6 +46,8 @@ export class BusinessProfileResponseDto {
     this.latitude = r.latitude;
     this.longitude = r.longitude;
     this.categoryIds = r.categoryIds;
+    this.isEmailVerified = r.isEmailVerified;
+    this.isPhoneVerified = r.isPhoneVerified;
     this.createdAt = r.createdAt.toISOString();
     this.updatedAt = r.updatedAt.toISOString();
 
