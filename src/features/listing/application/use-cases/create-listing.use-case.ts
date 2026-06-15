@@ -9,6 +9,7 @@ import { IListingRepository } from '../../domain/ports/listing.repository.port.j
 import { CreateListingInput } from '../../domain/types/listing.types.js';
 import { Listing } from '../../domain/types/listing.entity.js';
 import { ICategoryRepository } from '../../../category/domain/ports/category.repository.port.js';
+import { IBusinessProfileRepository } from '../../../business-profile/domain/ports/business-profile.repository.port.js';
 import { ValidateListingAttributesService } from '../services/validate-listing-attributes.service.js';
 
 @Injectable()
@@ -17,9 +18,22 @@ export class CreateListingUseCase {
     private readonly repo: IListingRepository,
     private readonly categoryRepo: ICategoryRepository,
     private readonly attributeValidator: ValidateListingAttributesService,
+    private readonly businessProfileRepo: IBusinessProfileRepository,
   ) {}
 
   async execute(input: CreateListingInput): Promise<Listing> {
+    const businessProfile = await this.businessProfileRepo.findById(input.businessProfileId);
+    if (!businessProfile) {
+      throw new NotFoundException('Business profile not found.');
+    }
+
+    if (businessProfile.verificationStatus === 'UNVERIFIED') {
+      const existingListings = await this.repo.findByBusinessProfile(input.businessProfileId);
+      if (existingListings.length >= 1) {
+        throw new BadRequestException('Unverified businesses can only create one listing. Please complete your profile verification to create more.');
+      }
+    }
+
     const category = await this.categoryRepo.findById(input.categoryId);
 
     if (!category) {

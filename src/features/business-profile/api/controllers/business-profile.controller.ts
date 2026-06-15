@@ -15,13 +15,13 @@ import { CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-
 import { DeleteBusinessProfileUseCase } from '../../application/use-cases/delete-business-profile.use-case.js';
 import { GetMyBusinessProfilesUseCase } from '../../application/use-cases/get-my-business-profiles.use-case.js';
 import { UpdateBusinessProfileUseCase } from '../../application/use-cases/update-business-profile.use-case.js';
-import { CreateBusinessDraftUseCase } from '../../application/use-cases/create-business-draft.use-case.js';
-import { RequestDraftVerificationUseCase } from '../../application/use-cases/request-draft-verification.use-case.js';
-import { VerifyDraftAndPublishUseCase } from '../../application/use-cases/verify-draft-and-publish.use-case.js';
+import { CreateBusinessProfileUseCase } from '../../application/use-cases/create-business-profile.use-case.js';
 import { SetOperatingHoursUseCase } from '../../application/use-cases/set-operating-hours.use-case.js';
 import { SetBusinessTagsUseCase } from '../../application/use-cases/set-business-tags.use-case.js';
 import { GetDashboardStatsUseCase } from '../../application/use-cases/get-dashboard-stats.use-case.js';
-import { CreateBusinessProfileDto, UpdateBusinessProfileDto } from '../dto/request.dto.js';
+import { RequestContactVerificationUseCase } from '../../application/use-cases/request-contact-verification.use-case.js';
+import { VerifyContactOtpUseCase } from '../../application/use-cases/verify-contact-otp.use-case.js';
+import { CreateBusinessProfileDto, UpdateBusinessProfileDto, RequestContactVerificationDto, VerifyContactOtpDto } from '../dto/request.dto.js';
 import { BusinessProfileResponseDto, DashboardStatsResponseDto } from '../dto/response.dto.js';
 import { SetOperatingHoursDto } from '../dto/operating-hours.dto.js';
 import { SetTagsDto } from '../dto/tag.dto.js';
@@ -33,9 +33,9 @@ import { ApiTags } from '@nestjs/swagger';
 export class BusinessProfileController {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly createBusinessDraft: CreateBusinessDraftUseCase,
-    private readonly requestDraftVerification: RequestDraftVerificationUseCase,
-    private readonly verifyDraftAndPublish: VerifyDraftAndPublishUseCase,
+    private readonly createBusinessProfile: CreateBusinessProfileUseCase,
+    private readonly requestContactVerification: RequestContactVerificationUseCase,
+    private readonly verifyContactOtp: VerifyContactOtpUseCase,
     private readonly updateBusinessProfile: UpdateBusinessProfileUseCase,
     private readonly deleteBusinessProfile: DeleteBusinessProfileUseCase,
     private readonly getMyBusinessProfiles: GetMyBusinessProfilesUseCase,
@@ -44,34 +44,39 @@ export class BusinessProfileController {
     private readonly getDashboardStats: GetDashboardStatsUseCase,
   ) {}
 
-  @Post('businesses/drafts')
-  async createDraft(
+  @Post('businesses')
+  async createProfile(
     @CurrentIdentity() identity: RequestIdentity,
     @Body() dto: CreateBusinessProfileDto,
-  ) {
-    const { id: userId } = await this.resolveUser(identity.accountId);
-    return await this.createBusinessDraft.execute(
-      userId,
-      dto as unknown as Record<string, unknown>,
-    );
-  }
-
-  @Post('businesses/drafts/:id/request-verification')
-  @HttpCode(HttpStatus.OK)
-  async requestVerification(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
-    const { id: userId } = await this.resolveUser(identity.accountId);
-    return await this.requestDraftVerification.execute(id, userId);
-  }
-
-  @Post('businesses/drafts/:id/verify')
-  @HttpCode(HttpStatus.OK)
-  async verifyDraft(
-    @CurrentIdentity() identity: RequestIdentity,
-    @Param('id') id: string,
-    @Body('otp') otp: string,
   ): Promise<BusinessProfileResponseDto> {
     const { id: userId } = await this.resolveUser(identity.accountId);
-    const profile = await this.verifyDraftAndPublish.execute(id, userId, otp);
+    const profile = await this.createBusinessProfile.execute({
+      ownerId: userId,
+      ...dto,
+    });
+    return BusinessProfileResponseDto.from(profile);
+  }
+
+  @Post('businesses/:id/contacts/request-verification')
+  @HttpCode(HttpStatus.OK)
+  async requestContactVerificationEndpoint(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') id: string,
+    @Body() dto: RequestContactVerificationDto,
+  ): Promise<void> {
+    const { id: userId } = await this.resolveUser(identity.accountId);
+    await this.requestContactVerification.execute(id, userId, dto.method);
+  }
+
+  @Post('businesses/:id/contacts/verify')
+  @HttpCode(HttpStatus.OK)
+  async verifyContactOtpEndpoint(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') id: string,
+    @Body() dto: VerifyContactOtpDto,
+  ): Promise<BusinessProfileResponseDto> {
+    const { id: userId } = await this.resolveUser(identity.accountId);
+    const profile = await this.verifyContactOtp.execute(id, userId, dto.method, dto.otp);
     return BusinessProfileResponseDto.from(profile);
   }
 

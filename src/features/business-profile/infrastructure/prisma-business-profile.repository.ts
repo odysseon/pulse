@@ -25,9 +25,9 @@ type PrismaBusinessProfileExtended = {
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   description: string | null;
-  phoneNumber: string;
-  whatsapp: string;
-  email: string;
+  phoneNumber: string | null;
+  whatsapp: string | null;
+  email: string | null;
   locationId: string | null;
   categories?: { id: string }[];
   createdAt: Date;
@@ -160,12 +160,12 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ownerId: input.ownerId,
         name: input.name,
         slug,
-        businessType: input.businessType,
+        ...(input.businessType !== undefined && { businessType: input.businessType }),
         ...(input.description !== undefined && { description: input.description }),
         ...(input.websiteUrl !== undefined && { websiteUrl: input.websiteUrl }),
-        phoneNumber: input.phoneNumber,
-        whatsapp: input.whatsapp,
-        email: input.email,
+        ...(input.phoneNumber !== undefined && { phoneNumber: input.phoneNumber }),
+        ...(input.whatsapp !== undefined && { whatsapp: input.whatsapp }),
+        ...(input.email !== undefined && { email: input.email }),
         ...(locationId !== undefined && { locationId }),
         ...(input.categoryIds && {
           categories: {

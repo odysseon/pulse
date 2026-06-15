@@ -6,10 +6,10 @@ import { BusinessType } from '../../../../../generated/prisma/client.js';
 export interface CreateBusinessProfileInput {
   readonly ownerId: string;
   readonly name: string;
-  readonly businessType: BusinessType;
-  readonly phoneNumber: string;
-  readonly whatsapp: string;
-  readonly email: string;
+  readonly businessType?: BusinessType;
+  readonly phoneNumber?: string;
+  readonly whatsapp?: string;
+  readonly email?: string;
   readonly description?: string;
   readonly websiteUrl?: string;
   readonly location?: string;
@@ -44,9 +44,9 @@ export interface BusinessProfileView {
   readonly isEmailVerified: boolean;
   readonly isPhoneVerified: boolean;
   readonly description: string | null;
-  readonly phoneNumber: string;
-  readonly whatsapp: string;
-  readonly email: string;
+  readonly phoneNumber: string | null;
+  readonly whatsapp: string | null;
+  readonly email: string | null;
   readonly websiteUrl: string | null;
   readonly locationId: string | null;
   readonly location: string | null;
