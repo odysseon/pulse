@@ -38,7 +38,7 @@ export class UpdateStoreTourUseCase {
         select: { email: true, name: true },
       });
 
-      if (business) {
+      if (business && business.email) {
         await this.mailQueueService.enqueueMail({
           to: business.email,
           subject: 'Your Store Tour is Live on Pulse!',

@@ -20,19 +20,23 @@ export class CreateBusinessProfileDto {
   @MaxLength(1000)
   description?: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(30)
-  phoneNumber!: string;
+  phoneNumber?: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(30)
-  whatsapp!: string;
+  whatsapp?: string;
 
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
 
+  @IsOptional()
   @IsEnum(BusinessType)
-  businessType!: BusinessType;
+  businessType?: BusinessType;
 
   @IsOptional()
   @IsString()
@@ -124,7 +128,27 @@ export class GetBusinessesQueryDto {
   @IsString()
   lng?: string;
 
-  @IsOptional()
   @IsString()
   radius?: string;
+}
+
+export enum ContactMethod {
+  EMAIL = 'EMAIL',
+  PHONE = 'PHONE',
+  WHATSAPP = 'WHATSAPP',
+}
+
+export class RequestContactVerificationDto {
+  @IsEnum(ContactMethod)
+  method!: ContactMethod;
+}
+
+export class VerifyContactOtpDto {
+  @IsEnum(ContactMethod)
+  method!: ContactMethod;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(6)
+  otp!: string;
 }

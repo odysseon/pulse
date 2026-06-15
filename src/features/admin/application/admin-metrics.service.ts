@@ -15,7 +15,6 @@ export class AdminMetricsService {
       totalUsers,
       totalBusinessProfiles,
       publishedBusinesses,
-      draftBusinesses,
       verifiedBusinesses,
       totalListings,
       publishedListings,
@@ -40,7 +39,6 @@ export class AdminMetricsService {
       // Business Profiles
       this.prisma.businessProfile.count(),
       this.prisma.businessProfile.count({ where: { isPublic: true } }),
-      this.prisma.businessProfileDraft.count(),
       this.prisma.businessProfile.count({ where: { verificationStatus: 'VERIFIED' } }),
 
       // Listings
@@ -86,7 +84,6 @@ export class AdminMetricsService {
       businesses: {
         total: totalBusinessProfiles,
         published: publishedBusinesses,
-        drafts: draftBusinesses,
         verified: verifiedBusinesses,
         unpublished: totalBusinessProfiles - publishedBusinesses,
       },
