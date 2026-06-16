@@ -52,6 +52,7 @@ export class ListingResponseDto {
 export class ListingSummaryResponseDto {
   id: string;
   businessProfileId: string;
+  businessProfileSlug?: string;
   title: string;
   slug: string;
   description: string | null;
@@ -66,6 +67,9 @@ export class ListingSummaryResponseDto {
   private constructor(summary: ListingSummary) {
     this.id = summary.id;
     this.businessProfileId = summary.businessProfileId;
+    if (summary.businessProfileSlug !== undefined) {
+      this.businessProfileSlug = summary.businessProfileSlug;
+    }
     this.title = summary.title;
     this.slug = summary.slug;
     this.description = summary.description;

@@ -89,6 +89,7 @@ export interface ListingView {
 export interface ListingSummary {
   readonly id: string;
   readonly businessProfileId: string;
+  readonly businessProfileSlug?: string;
   readonly title: string;
   readonly slug: string;
   readonly description: string | null;

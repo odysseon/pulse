@@ -198,6 +198,9 @@ export class PrismaListingRepository extends IListingRepository {
             take: 1,
             select: { url: true },
           },
+          businessProfile: {
+            select: { slug: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -210,6 +213,7 @@ export class PrismaListingRepository extends IListingRepository {
         return {
           id: r.id,
           businessProfileId: r.businessProfileId,
+          businessProfileSlug: (r as any).businessProfile?.slug,
           title: r.title,
           slug: r.slug,
           description: r.description,
