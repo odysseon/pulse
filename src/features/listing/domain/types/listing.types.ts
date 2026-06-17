@@ -114,10 +114,8 @@ export interface DiscoverListingsInput {
   readonly isNegotiable?: boolean;
   readonly search?: string;
   readonly status?: ListingStatus;
-  /** Filter by an exact leaf categoryId */
-  readonly categoryId?: string;
-  /** Filter by root category slug — returns all listings in any leaf under that root */
-  readonly rootSlug?: string;
+  /** Filter by category slug (exact or parent slug) */
+  readonly categorySlug?: string;
   readonly attributes?: Record<string, unknown>;
   readonly page: number;
   readonly limit: number;

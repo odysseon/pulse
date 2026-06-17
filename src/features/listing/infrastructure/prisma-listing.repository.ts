@@ -175,12 +175,15 @@ export class PrismaListingRepository extends IListingRepository {
       ...(input.isNegotiable !== undefined && { isNegotiable: input.isNegotiable }),
       ...(input.minPrice !== undefined && { minPrice: { gte: input.minPrice } }),
       ...(input.maxPrice !== undefined && { maxPrice: { lte: input.maxPrice } }),
-      // Category filter: exact leaf or set of leaves under a root slug
-      ...(input.categoryId && { categoryId: input.categoryId }),
-      ...(input.rootSlug &&
-        !input.categoryId && {
-          category: { parent: { slug: input.rootSlug } },
-        }),
+      // Category filter: match exact leaf category slug OR parent category slug
+      ...(input.categorySlug && {
+        category: {
+          OR: [
+            { slug: input.categorySlug },
+            { parent: { slug: input.categorySlug } }
+          ]
+        }
+      }),
       ...(andConditions.length > 0 && { AND: andConditions }),
     };
 

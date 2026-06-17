@@ -23,6 +23,7 @@ export class DiscoverListingsUseCase {
     search?: string;
     page?: string;
     limit?: string;
+    categorySlug?: string;
     attributes?: string;
   }): Promise<PaginatedListingSummaries> {
     const minPrice = this.#parseNumber(raw.minPrice);
@@ -53,6 +54,7 @@ export class DiscoverListingsUseCase {
       ...(maxPrice !== undefined && { maxPrice }),
       ...(isNegotiable !== undefined && { isNegotiable }),
       ...(raw.search !== undefined && { search: raw.search }),
+      ...(raw.categorySlug !== undefined && { categorySlug: raw.categorySlug }),
       ...(parsedAttributes !== undefined && { attributes: parsedAttributes }),
     };
 
