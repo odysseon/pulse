@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { INestApplication, Logger, ValidationPipe, ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as os from 'os';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module.js';
 import { SwaggerSetup } from './configs/swagger.config.js';
@@ -15,6 +16,7 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(ConfigService<AppConfig>);
 
   app.setGlobalPrefix(configService.get('GLOBAL_PREFIX') as string);
+  app.use(helmet());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -26,7 +28,19 @@ async function bootstrap(): Promise<void> {
   );
 
   SwaggerSetup.register(app);
-  app.enableCors();
+  
+  const allowedOriginsRaw = configService.get('ALLOWED_ORIGINS') as string | undefined;
+  const frontendUrl = configService.get('FRONTEND_URL') as string;
+  let origins: string[] = [frontendUrl];
+  if (allowedOriginsRaw) {
+    origins = allowedOriginsRaw.split(',').map(o => o.trim());
+  }
+
+  app.enableCors({
+    origin: origins,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   const port = configService.get('PORT') as number;
   await app.listen(port);

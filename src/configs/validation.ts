@@ -7,6 +7,7 @@ export const configSchema = z
     GLOBAL_PREFIX: z.string().default('api'),
     DATABASE_URL: z.string().url(),
     FRONTEND_URL: z.string().url().default('https://pulse.app'),
+    ALLOWED_ORIGINS: z.string().optional(),
 
     // ── Receipt Secret ────────────────────────────────────────────────────
     RECEIPT_SECRET: z.string().min(32),
