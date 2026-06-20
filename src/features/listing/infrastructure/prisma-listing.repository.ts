@@ -167,6 +167,95 @@ export class PrismaListingRepository extends IListingRepository {
       : [];
 
     const andConditions = [...attributeFilters, ...searchFilters];
+    const skip = (input.page - 1) * input.limit;
+
+    if (input.lat !== undefined && input.lng !== undefined) {
+      const radiusMeters = (input.radiusInKm ?? 10) * 1000;
+      
+      const rawItems = await this.prisma.$queryRaw<
+        {
+          id: string;
+          businessProfileId: string;
+          businessProfileSlug: string;
+          title: string;
+          slug: string;
+          description: string | null;
+          minPrice: number | null;
+          maxPrice: number | null;
+          currencyCode: string | null;
+          isNegotiable: boolean;
+          categoryId: string | null;
+          attributes: Prisma.JsonValue;
+          coverUrl: string | null;
+          distance: number;
+        }[]
+      >`
+        SELECT l.id, l."businessProfileId", bp.slug as "businessProfileSlug", l.title, l.slug, l.description, 
+               l."minPrice", l."maxPrice", l."currencyCode", l."isNegotiable", l."categoryId", l.attributes,
+               (SELECT url FROM "Media" m WHERE m."listingId" = l.id AND m.role = 'COVER' LIMIT 1) as "coverUrl",
+               (ST_Distance(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography) / 1000) AS distance
+        FROM listings l
+        JOIN business_profiles bp ON l."businessProfileId" = bp.id
+        JOIN "Location" loc ON bp."locationId" = loc.id
+        WHERE l.status = ${input.status ?? ListingStatus.PUBLISHED}::"ListingStatus"
+          AND ST_DWithin(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusMeters})
+          ${input.businessProfileId ? Prisma.sql`AND l."businessProfileId" = ${input.businessProfileId}` : Prisma.empty}
+          ${input.currencyCode ? Prisma.sql`AND l."currencyCode" = ${input.currencyCode}` : Prisma.empty}
+          ${input.isNegotiable !== undefined ? Prisma.sql`AND l."isNegotiable" = ${input.isNegotiable}` : Prisma.empty}
+          ${input.minPrice !== undefined ? Prisma.sql`AND l."minPrice" >= ${input.minPrice}` : Prisma.empty}
+          ${input.maxPrice !== undefined ? Prisma.sql`AND l."maxPrice" <= ${input.maxPrice}` : Prisma.empty}
+          ${input.search ? Prisma.sql`AND (l.title ILIKE ${'%' + input.search + '%'} OR l.description ILIKE ${'%' + input.search + '%'})` : Prisma.empty}
+          ${input.categorySlug ? Prisma.sql`AND EXISTS (
+             SELECT 1 FROM "categories" c 
+             LEFT JOIN "categories" parent ON c."parentId" = parent.id
+             WHERE c.id = l."categoryId" AND (c.slug = ${input.categorySlug} OR parent.slug = ${input.categorySlug})
+           )` : Prisma.empty}
+        ORDER BY distance ASC
+        LIMIT ${input.limit}
+        OFFSET ${skip};
+      `;
+
+      const countResult = await this.prisma.$queryRaw<{ total: bigint }[]>`
+        SELECT COUNT(*) as total 
+        FROM listings l
+        JOIN business_profiles bp ON l."businessProfileId" = bp.id
+        JOIN "Location" loc ON bp."locationId" = loc.id
+        WHERE l.status = ${input.status ?? ListingStatus.PUBLISHED}::"ListingStatus"
+          AND ST_DWithin(loc.coordinates::geography, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography, ${radiusMeters})
+          ${input.businessProfileId ? Prisma.sql`AND l."businessProfileId" = ${input.businessProfileId}` : Prisma.empty}
+          ${input.currencyCode ? Prisma.sql`AND l."currencyCode" = ${input.currencyCode}` : Prisma.empty}
+          ${input.isNegotiable !== undefined ? Prisma.sql`AND l."isNegotiable" = ${input.isNegotiable}` : Prisma.empty}
+          ${input.minPrice !== undefined ? Prisma.sql`AND l."minPrice" >= ${input.minPrice}` : Prisma.empty}
+          ${input.maxPrice !== undefined ? Prisma.sql`AND l."maxPrice" <= ${input.maxPrice}` : Prisma.empty}
+          ${input.search ? Prisma.sql`AND (l.title ILIKE ${'%' + input.search + '%'} OR l.description ILIKE ${'%' + input.search + '%'})` : Prisma.empty}
+          ${input.categorySlug ? Prisma.sql`AND EXISTS (
+             SELECT 1 FROM "categories" c 
+             LEFT JOIN "categories" parent ON c."parentId" = parent.id
+             WHERE c.id = l."categoryId" AND (c.slug = ${input.categorySlug} OR parent.slug = ${input.categorySlug})
+           )` : Prisma.empty};
+      `;
+
+      return {
+        items: rawItems.map(r => ({
+          id: r.id,
+          businessProfileId: r.businessProfileId,
+          businessProfileSlug: r.businessProfileSlug,
+          title: r.title,
+          slug: r.slug,
+          description: r.description,
+          minPrice: r.minPrice !== null ? Number(r.minPrice) : null,
+          maxPrice: r.maxPrice !== null ? Number(r.maxPrice) : null,
+          currencyCode: r.currencyCode,
+          isNegotiable: r.isNegotiable,
+          categoryId: r.categoryId,
+          attributes: r.attributes as Record<string, unknown> | null,
+          coverUrl: r.coverUrl ?? undefined,
+        })),
+        total: Number(countResult[0]?.total ?? 0),
+        page: input.page,
+        limit: input.limit,
+      };
+    }
 
     const where: Prisma.ListingWhereInput = {
       status: input.status ?? ListingStatus.PUBLISHED,
@@ -175,7 +264,6 @@ export class PrismaListingRepository extends IListingRepository {
       ...(input.isNegotiable !== undefined && { isNegotiable: input.isNegotiable }),
       ...(input.minPrice !== undefined && { minPrice: { gte: input.minPrice } }),
       ...(input.maxPrice !== undefined && { maxPrice: { lte: input.maxPrice } }),
-      // Category filter: match exact leaf category slug OR parent category slug
       ...(input.categorySlug && {
         category: {
           OR: [
@@ -186,8 +274,6 @@ export class PrismaListingRepository extends IListingRepository {
       }),
       ...(andConditions.length > 0 && { AND: andConditions }),
     };
-
-    const skip = (input.page - 1) * input.limit;
 
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.listing.findMany({

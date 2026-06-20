@@ -128,6 +128,7 @@ export class GetBusinessesQueryDto {
   @IsString()
   lng?: string;
 
+  @IsOptional()
   @IsString()
   radius?: string;
 }

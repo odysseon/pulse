@@ -117,6 +117,9 @@ export interface DiscoverListingsInput {
   /** Filter by category slug (exact or parent slug) */
   readonly categorySlug?: string;
   readonly attributes?: Record<string, unknown>;
+  readonly lat?: number;
+  readonly lng?: number;
+  readonly radiusInKm?: number;
   readonly page: number;
   readonly limit: number;
 }

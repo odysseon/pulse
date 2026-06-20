@@ -125,6 +125,18 @@ export class GetListingsQueryDto {
   @IsString()
   categorySlug?: string;
 
+  @IsOptional()
+  @IsString()
+  lat?: string;
+
+  @IsOptional()
+  @IsString()
+  lng?: string;
+
+  @IsOptional()
+  @IsString()
+  radius?: string;
+
   /**
    * JSON stringified attributes filter (e.g., {"brand":"Samsung"})
    */
