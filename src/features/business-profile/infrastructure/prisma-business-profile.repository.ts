@@ -51,6 +51,10 @@ type PrismaBusinessProfileExtended = {
     id: string;
     name: string;
   } | null;
+  media?: {
+    role: 'LOGO' | 'BANNER' | 'COVER' | 'GALLERY';
+    url: string;
+  }[];
 };
 
 type HydratedProfile = PrismaBusinessProfileExtended & {
@@ -60,6 +64,9 @@ type HydratedProfile = PrismaBusinessProfileExtended & {
 };
 
 function toDomain(raw: HydratedProfile): BusinessProfileView {
+  const avatarUrl = raw.media?.find((m) => m.role === 'LOGO')?.url;
+  const coverUrl = raw.media?.find((m) => m.role === 'BANNER')?.url;
+
   return {
     id: raw.id,
     ownerId: raw.ownerId,
@@ -99,6 +106,8 @@ function toDomain(raw: HydratedProfile): BusinessProfileView {
         slug: t.tag.slug,
       })),
     }),
+    ...(avatarUrl && { avatarUrl }),
+    ...(coverUrl && { coverUrl }),
   };
 }
 
@@ -188,10 +197,11 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         tags: { include: { tag: true } },
         geoEntity: true,
         categories: { select: { id: true } },
+        media: { select: { role: true, url: true } },
       },
     });
     if (!raw) return null;
-    const hydratedArray = await this.hydrate([raw]);
+    const hydratedArray = await this.hydrate([raw as any]);
     return toDomain(hydratedArray[0]!);
   }
 
@@ -203,10 +213,11 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         tags: { include: { tag: true } },
         geoEntity: true,
         categories: { select: { id: true } },
+        media: { select: { role: true, url: true } },
       },
     });
     if (!raw) return null;
-    const hydratedArray = await this.hydrate([raw]);
+    const hydratedArray = await this.hydrate([raw as any]);
     return toDomain(hydratedArray[0]!);
   }
 

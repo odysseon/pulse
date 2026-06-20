@@ -249,7 +249,7 @@ export class PrismaListingRepository extends IListingRepository {
           isNegotiable: r.isNegotiable,
           categoryId: r.categoryId,
           attributes: r.attributes as Record<string, unknown> | null,
-          coverUrl: r.coverUrl ?? undefined,
+          ...(r.coverUrl ? { coverUrl: r.coverUrl } : {}),
         })),
         total: Number(countResult[0]?.total ?? 0),
         page: input.page,
@@ -312,7 +312,7 @@ export class PrismaListingRepository extends IListingRepository {
           isNegotiable: r.isNegotiable,
           categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
           attributes: r.attributes ? (r.attributes as Record<string, unknown>) : null,
-          ...(coverUrl !== undefined && { coverUrl }),
+          ...(coverUrl !== undefined ? { coverUrl } : {}),
         };
       }),
       total,

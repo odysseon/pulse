@@ -57,6 +57,8 @@ export interface BusinessProfileView {
   readonly updatedAt: Date;
   readonly operatingHours?: OperatingHours[];
   readonly tags?: Tag[];
+  readonly avatarUrl?: string;
+  readonly coverUrl?: string;
 }
 
 export interface BusinessSummary {

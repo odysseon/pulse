@@ -15,6 +15,7 @@ export class BusinessProfileResponseDto {
   @ApiProperty() slug: string;
   @ApiProperty() isPublic: boolean;
   @ApiProperty({ enum: VerificationStatus }) verificationStatus: VerificationStatus;
+  @ApiProperty() businessType: string;
   @ApiPropertyOptional({ nullable: true }) description: string | null;
   @ApiPropertyOptional({ nullable: true }) phoneNumber: string | null;
   @ApiPropertyOptional({ nullable: true }) whatsapp: string | null;
@@ -30,6 +31,8 @@ export class BusinessProfileResponseDto {
 
   @ApiPropertyOptional({ type: [OperatingHoursDto] }) operatingHours?: OperatingHoursDto[];
   @ApiPropertyOptional({ type: [TagDto] }) tags?: TagDto[];
+  @ApiPropertyOptional() avatarUrl?: string;
+  @ApiPropertyOptional() coverUrl?: string;
 
   private constructor(r: BusinessProfileView) {
     this.id = r.id;
@@ -38,6 +41,7 @@ export class BusinessProfileResponseDto {
     this.slug = r.slug;
     this.isPublic = r.isPublic;
     this.verificationStatus = r.verificationStatus;
+    this.businessType = r.businessType;
     this.description = r.description;
     this.phoneNumber = r.phoneNumber;
     this.whatsapp = r.whatsapp;
@@ -50,6 +54,9 @@ export class BusinessProfileResponseDto {
     this.isPhoneVerified = r.isPhoneVerified;
     this.createdAt = r.createdAt.toISOString();
     this.updatedAt = r.updatedAt.toISOString();
+
+    if (r.avatarUrl) this.avatarUrl = r.avatarUrl;
+    if (r.coverUrl) this.coverUrl = r.coverUrl;
 
     if (r.operatingHours) {
       this.operatingHours = r.operatingHours.map((h) => OperatingHoursDto.from(h));
