@@ -235,26 +235,23 @@ export class PrismaListingRepository extends IListingRepository {
            )` : Prisma.empty};
       `;
 
-      return {
-        items: rawItems.map(r => ({
-          id: r.id,
-          businessProfileId: r.businessProfileId,
-          businessProfileSlug: r.businessProfileSlug,
-          title: r.title,
-          slug: r.slug,
-          description: r.description,
-          minPrice: r.minPrice !== null ? Number(r.minPrice) : null,
-          maxPrice: r.maxPrice !== null ? Number(r.maxPrice) : null,
-          currencyCode: r.currencyCode,
-          isNegotiable: r.isNegotiable,
-          categoryId: r.categoryId,
-          attributes: r.attributes as Record<string, unknown> | null,
-          ...(r.coverUrl ? { coverUrl: r.coverUrl } : {}),
-        })),
-        total: Number(countResult[0]?.total ?? 0),
-        page: input.page,
-        limit: input.limit,
-      };
+      const items = rawItems.map(r => ({
+        id: r.id,
+        businessProfileId: r.businessProfileId,
+        businessProfileSlug: r.businessProfileSlug,
+        title: r.title,
+        slug: r.slug,
+        description: r.description,
+        minPrice: r.minPrice !== null ? Number(r.minPrice) : null,
+        maxPrice: r.maxPrice !== null ? Number(r.maxPrice) : null,
+        currencyCode: r.currencyCode,
+        isNegotiable: r.isNegotiable,
+        categoryId: r.categoryId,
+        attributes: r.attributes as Record<string, unknown> | null,
+        ...(r.coverUrl ? { coverUrl: r.coverUrl } : {}),
+      }));
+
+      return this.enrichWithSavedStatus(items, Number(countResult[0]?.total ?? 0), input.page, input.limit, input.currentUserId);
     }
 
     const where: Prisma.ListingWhereInput = {
@@ -296,28 +293,52 @@ export class PrismaListingRepository extends IListingRepository {
       this.prisma.listing.count({ where }),
     ]);
 
+    const items = rows.map((r) => {
+      const coverUrl = r.media?.[0]?.url;
+      return {
+        id: r.id,
+        businessProfileId: r.businessProfileId,
+        businessProfileSlug: (r as any).businessProfile?.slug,
+        title: r.title,
+        slug: r.slug,
+        description: r.description,
+        minPrice: r.minPrice !== null ? r.minPrice.toNumber() : null,
+        maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
+        currencyCode: r.currencyCode ?? null,
+        isNegotiable: r.isNegotiable,
+        categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
+        attributes: r.attributes ? (r.attributes as Record<string, unknown>) : null,
+        ...(coverUrl !== undefined ? { coverUrl } : {}),
+      };
+    });
+
+    return this.enrichWithSavedStatus(items, total, input.page, input.limit, input.currentUserId);
+  }
+
+  private async enrichWithSavedStatus(items: any[], total: number, page: number, limit: number, currentUserId?: string): Promise<PaginatedListingSummaries> {
+    if (!currentUserId || items.length === 0) {
+      return { items, total, page, limit };
+    }
+
+    const listingIds = items.map(i => i.id);
+    const saves = await this.prisma.savedListing.findMany({
+      where: {
+        userId: currentUserId,
+        listingId: { in: listingIds },
+      },
+      select: { listingId: true },
+    });
+
+    const savedSet = new Set(saves.map(s => s.listingId));
+
     return {
-      items: rows.map((r) => {
-        const coverUrl = r.media?.[0]?.url;
-        return {
-          id: r.id,
-          businessProfileId: r.businessProfileId,
-          businessProfileSlug: (r as any).businessProfile?.slug,
-          title: r.title,
-          slug: r.slug,
-          description: r.description,
-          minPrice: r.minPrice !== null ? r.minPrice.toNumber() : null,
-          maxPrice: r.maxPrice !== null ? r.maxPrice.toNumber() : null,
-          currencyCode: r.currencyCode ?? null,
-          isNegotiable: r.isNegotiable,
-          categoryId: (r as { categoryId?: string | null }).categoryId ?? null,
-          attributes: r.attributes ? (r.attributes as Record<string, unknown>) : null,
-          ...(coverUrl !== undefined ? { coverUrl } : {}),
-        };
-      }),
+      items: items.map(i => ({
+        ...i,
+        isSaved: savedSet.has(i.id),
+      })),
       total,
-      page: input.page,
-      limit: input.limit,
+      page,
+      limit,
     };
   }
 }

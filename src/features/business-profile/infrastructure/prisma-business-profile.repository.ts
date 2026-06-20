@@ -436,24 +436,21 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
 
       const total = Number(countResult[0]?.total ?? 0);
 
-      return {
-        items: rawItems.map((r) => ({
-          id: r.id,
-          name: r.name,
-          slug: r.slug,
-          verificationStatus: r.verificationStatus,
-          businessType: r.businessType,
-          description: r.description,
-          location: r.location,
-          latitude: r.latitude,
-          longitude: r.longitude,
-          categoryIds: r.categories_json ?? [],
-          distanceKm: Number(r.distance),
-        })),
-        total,
-        page: input.page,
-        limit: input.limit,
-      };
+      const items = rawItems.map((r) => ({
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        verificationStatus: r.verificationStatus,
+        businessType: r.businessType,
+        description: r.description,
+        location: r.location,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        categoryIds: r.categories_json ?? [],
+        distanceKm: Number(r.distance),
+      }));
+
+      return this.enrichWithSavedStatus(items, total, input.page, input.limit, input.currentUserId);
     }
 
     const [items, total] = await this.prisma.$transaction([
@@ -479,22 +476,46 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
 
     const hydrated = await this.hydrate(items as unknown as PrismaBusinessProfileExtended[]);
 
+    const itemsMapped = hydrated.map((r) => ({
+      id: r.id,
+      name: r.name,
+      slug: r.slug,
+      verificationStatus: r.verificationStatus,
+      businessType: r.verificationStatus === 'VERIFIED' ? r.businessType : r.businessType, // dummy bypass
+      description: r.description,
+      location: r.locationName,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      categoryIds: r.categories?.map((c) => c.id) ?? [],
+    }));
+
+    return this.enrichWithSavedStatus(itemsMapped, total, input.page, input.limit, input.currentUserId);
+  }
+
+  private async enrichWithSavedStatus(items: any[], total: number, page: number, limit: number, currentUserId?: string): Promise<PaginatedBusinessSummaries> {
+    if (!currentUserId || items.length === 0) {
+      return { items, total, page, limit };
+    }
+
+    const businessIds = items.map(i => i.id);
+    const saves = await this.prisma.savedBusiness.findMany({
+      where: {
+        userId: currentUserId,
+        businessProfileId: { in: businessIds },
+      },
+      select: { businessProfileId: true },
+    });
+
+    const savedSet = new Set(saves.map(s => s.businessProfileId));
+
     return {
-      items: hydrated.map((r) => ({
-        id: r.id,
-        name: r.name,
-        slug: r.slug,
-        verificationStatus: r.verificationStatus,
-        businessType: r.verificationStatus === 'VERIFIED' ? r.businessType : r.businessType, // dummy bypass
-        description: r.description,
-        location: r.locationName,
-        latitude: r.latitude,
-        longitude: r.longitude,
-        categoryIds: r.categories?.map((c) => c.id) ?? [],
+      items: items.map(i => ({
+        ...i,
+        isSaved: savedSet.has(i.id),
       })),
       total,
-      page: input.page,
-      limit: input.limit,
+      page,
+      limit,
     };
   }
 }

@@ -100,6 +100,7 @@ export interface ListingSummary {
   readonly categoryId: string | null;
   readonly coverUrl?: string;
   readonly attributes?: Record<string, unknown> | null;
+  readonly isSaved?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +121,7 @@ export interface DiscoverListingsInput {
   readonly lat?: number;
   readonly lng?: number;
   readonly radiusInKm?: number;
+  readonly currentUserId?: string;
   readonly page: number;
   readonly limit: number;
 }

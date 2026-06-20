@@ -59,6 +59,7 @@ export interface BusinessProfileView {
   readonly tags?: Tag[];
   readonly avatarUrl?: string;
   readonly coverUrl?: string;
+  readonly isSaved?: boolean;
 }
 
 export interface BusinessSummary {
@@ -73,6 +74,7 @@ export interface BusinessSummary {
   readonly longitude: number | null;
   readonly categoryIds: string[];
   readonly distanceKm?: number; // Added dynamically during proximity queries
+  readonly isSaved?: boolean;
 }
 
 export interface DiscoverBusinessesInput {
@@ -85,6 +87,7 @@ export interface DiscoverBusinessesInput {
   readonly lat?: number;
   readonly lng?: number;
   readonly radiusInKm?: number;
+  readonly currentUserId?: string;
   readonly page: number;
   readonly limit: number;
 }

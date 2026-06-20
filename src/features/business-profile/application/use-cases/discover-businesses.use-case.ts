@@ -20,6 +20,7 @@ export class DiscoverBusinessesUseCase {
     lat?: string;
     lng?: string;
     radius?: string;
+    currentUserId?: string;
   }): Promise<PaginatedBusinessSummaries> {
     const input: DiscoverBusinessesInput = {
       page: this.#parsePage(raw.page),
@@ -28,6 +29,7 @@ export class DiscoverBusinessesUseCase {
       ...(raw.lat !== undefined && { lat: parseFloat(raw.lat) }),
       ...(raw.lng !== undefined && { lng: parseFloat(raw.lng) }),
       ...(raw.radius !== undefined && { radiusInKm: parseFloat(raw.radius) }),
+      ...(raw.currentUserId !== undefined && { currentUserId: raw.currentUserId }),
     };
 
     return this.repo.discover(input);

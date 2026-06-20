@@ -1,92 +1,91 @@
-import { Controller, Get, Post, Delete, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
+import { Controller, Post, Delete, Get, Param, Query, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { CurrentIdentity } from '@odysseon/whoami-adapter-nestjs';
+import type { RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
-import { SavesService } from '../../application/use-cases/saves.service.js';
 
-@ApiTags('Saves (Public)')
-@Controller('users/me/saves')
-@ApiBearerAuth()
+import { SaveBusinessUseCase } from '../../application/use-cases/save-business.use-case.js';
+import { UnsaveBusinessUseCase } from '../../application/use-cases/unsave-business.use-case.js';
+import { SaveListingUseCase } from '../../application/use-cases/save-listing.use-case.js';
+import { UnsaveListingUseCase } from '../../application/use-cases/unsave-listing.use-case.js';
+import { GetSavedBusinessesUseCase } from '../../application/use-cases/get-saved-businesses.use-case.js';
+import { GetSavedListingsUseCase } from '../../application/use-cases/get-saved-listings.use-case.js';
+
+@ApiTags('Saves')
+@Controller()
 export class SavesController {
   constructor(
-    private readonly savesService: SavesService,
     private readonly prisma: PrismaService,
+    private readonly saveBusiness: SaveBusinessUseCase,
+    private readonly unsaveBusiness: UnsaveBusinessUseCase,
+    private readonly saveListing: SaveListingUseCase,
+    private readonly unsaveListing: UnsaveListingUseCase,
+    private readonly getSavedBusinesses: GetSavedBusinessesUseCase,
+    private readonly getSavedListings: GetSavedListingsUseCase,
   ) {}
 
-  private async resolveUserId(accountId: string) {
-    const user = await this.prisma.user.findUnique({ where: { accountId } });
-    if (!user) throw new Error('User not found');
+  private async resolveUser(accountId: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { accountId },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('User profile not found.');
     return user.id;
   }
 
-  @Get('listings')
-  @ApiOperation({ summary: 'Get saved listings' })
-  async getSavedListings(@CurrentIdentity() identity: RequestIdentity) {
-    const userId = await this.resolveUserId(identity.accountId);
-    return this.savesService.getSavedListings(userId);
+  @Post('business-profiles/:id/save')
+  @HttpCode(HttpStatus.OK)
+  async saveBusinessAction(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
+    const userId = await this.resolveUser(identity.accountId);
+    await this.saveBusiness.execute(userId, id);
+    return { success: true };
   }
 
-  @Post('listings/:id')
-  @ApiOperation({ summary: 'Toggle listing save state' })
-  async saveListing(@CurrentIdentity() identity: RequestIdentity, @Param('id') listingId: string) {
-    const userId = await this.resolveUserId(identity.accountId);
-    return this.savesService.toggleListingSave(userId, listingId);
+  @Delete('business-profiles/:id/save')
+  @HttpCode(HttpStatus.OK)
+  async unsaveBusinessAction(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
+    const userId = await this.resolveUser(identity.accountId);
+    await this.unsaveBusiness.execute(userId, id);
+    return { success: true };
   }
 
-  @Delete('listings/:id')
-  @ApiOperation({ summary: 'Unsave listing (alias for toggle)' })
-  async unsaveListing(
+  @Post('listings/:id/save')
+  @HttpCode(HttpStatus.OK)
+  async saveListingAction(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
+    const userId = await this.resolveUser(identity.accountId);
+    await this.saveListing.execute(userId, id);
+    return { success: true };
+  }
+
+  @Delete('listings/:id/save')
+  @HttpCode(HttpStatus.OK)
+  async unsaveListingAction(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
+    const userId = await this.resolveUser(identity.accountId);
+    await this.unsaveListing.execute(userId, id);
+    return { success: true };
+  }
+
+  @Get('users/me/saved-businesses')
+  async listSavedBusinesses(
     @CurrentIdentity() identity: RequestIdentity,
-    @Param('id') listingId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    const userId = await this.resolveUserId(identity.accountId);
-    return this.savesService.toggleListingSave(userId, listingId);
+    const userId = await this.resolveUser(identity.accountId);
+    const pageNum = parseInt(page ?? '1', 10);
+    const limitNum = parseInt(limit ?? '20', 10);
+    return this.getSavedBusinesses.execute(userId, isNaN(pageNum) ? 1 : pageNum, isNaN(limitNum) ? 20 : limitNum);
   }
 
-  @Get('businesses')
-  @ApiOperation({ summary: 'Get saved businesses' })
-  async getSavedBusinesses(@CurrentIdentity() identity: RequestIdentity) {
-    const userId = await this.resolveUserId(identity.accountId);
-    return this.savesService.getSavedBusinesses(userId);
-  }
-
-  @Post('businesses/:id')
-  @ApiOperation({ summary: 'Toggle business save state' })
-  async saveBusiness(
+  @Get('users/me/saved-listings')
+  async listSavedListings(
     @CurrentIdentity() identity: RequestIdentity,
-    @Param('id') businessId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    const userId = await this.resolveUserId(identity.accountId);
-    return this.savesService.toggleBusinessSave(userId, businessId);
-  }
-
-  @Delete('businesses/:id')
-  @ApiOperation({ summary: 'Unsave business (alias for toggle)' })
-  async unsaveBusiness(
-    @CurrentIdentity() identity: RequestIdentity,
-    @Param('id') businessId: string,
-  ) {
-    const userId = await this.resolveUserId(identity.accountId);
-    return this.savesService.toggleBusinessSave(userId, businessId);
-  }
-
-  @Get('check')
-  @ApiOperation({ summary: 'Check if entities are saved' })
-  async checkSaves(
-    @CurrentIdentity() identity: RequestIdentity,
-    @Query('listingId') listingId?: string,
-    @Query('businessId') businessId?: string,
-  ) {
-    const userId = await this.resolveUserId(identity.accountId);
-    const result: { listingSaved?: boolean; businessSaved?: boolean } = {};
-    if (listingId) {
-      const map = await this.savesService.checkSavedListings(userId, [listingId]);
-      result.listingSaved = !!map[listingId];
-    }
-    if (businessId) {
-      const map = await this.savesService.checkSavedBusinesses(userId, [businessId]);
-      result.businessSaved = !!map[businessId];
-    }
-    return result;
+    const userId = await this.resolveUser(identity.accountId);
+    const pageNum = parseInt(page ?? '1', 10);
+    const limitNum = parseInt(limit ?? '20', 10);
+    return this.getSavedListings.execute(userId, isNaN(pageNum) ? 1 : pageNum, isNaN(limitNum) ? 20 : limitNum);
   }
 }

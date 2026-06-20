@@ -28,6 +28,7 @@ export class DiscoverListingsUseCase {
     lat?: string;
     lng?: string;
     radius?: string;
+    currentUserId?: string;
   }): Promise<PaginatedListingSummaries> {
     const minPrice = this.#parseNumber(raw.minPrice);
     const maxPrice = this.#parseNumber(raw.maxPrice);
@@ -62,6 +63,7 @@ export class DiscoverListingsUseCase {
       ...(raw.lat !== undefined && { lat: parseFloat(raw.lat) }),
       ...(raw.lng !== undefined && { lng: parseFloat(raw.lng) }),
       ...(raw.radius !== undefined && { radiusInKm: parseFloat(raw.radius) }),
+      ...(raw.currentUserId !== undefined && { currentUserId: raw.currentUserId }),
     };
 
     return this.repo.discover(input);

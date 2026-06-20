@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req } from '@nestjs/common';
 import { Public } from '@odysseon/whoami-adapter-nestjs';
+import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { DiscoverBusinessesUseCase } from '../../application/use-cases/discover-businesses.use-case.js';
 import { GetPublicBusinessProfileUseCase } from '../../application/use-cases/get-public-business-profile.use-case.js';
 import { GetTagsUseCase } from '../../application/use-cases/get-tags.use-case.js';
@@ -13,14 +14,31 @@ import { ApiTags } from '@nestjs/swagger';
 @Controller('businesses')
 export class PublicBusinessProfileController {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly discoverBusinesses: DiscoverBusinessesUseCase,
     private readonly getPublicBusinessProfile: GetPublicBusinessProfileUseCase,
     private readonly getTags: GetTagsUseCase,
   ) {}
 
   @Get()
-  async discover(@Query() query: GetBusinessesQueryDto): Promise<PaginatedBusinessesResponseDto> {
-    const result = await this.discoverBusinesses.execute(query);
+  async discover(@Req() req: any, @Query() query: GetBusinessesQueryDto): Promise<PaginatedBusinessesResponseDto> {
+    let currentUserId: string | undefined;
+    const accountId = req.identity?.accountId;
+    
+    if (accountId) {
+      const user = await this.prisma.user.findUnique({
+        where: { accountId },
+        select: { id: true },
+      });
+      if (user) {
+        currentUserId = user.id;
+      }
+    }
+
+    const result = await this.discoverBusinesses.execute({
+      ...query,
+      ...(currentUserId ? { currentUserId } : {})
+    });
     return PaginatedBusinessesResponseDto.from(result);
   }
 
