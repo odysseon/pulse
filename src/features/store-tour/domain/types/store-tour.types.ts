@@ -33,14 +33,38 @@ export interface StoreTourView {
 }
 
 export interface DiscoverStoreToursInput {
-  readonly businessProfileId: string;
+  readonly businessProfileId?: string;
   readonly status?: StoreTourStatus;
+  readonly search?: string;
+  readonly lat?: number;
+  readonly lng?: number;
+  readonly radiusInKm?: number;
   readonly page: number;
   readonly limit: number;
 }
 
+export interface StoreTourSummary {
+  readonly id: string;
+  readonly businessProfileId: string;
+  readonly businessProfileSlug: string;
+  readonly title: string;
+  readonly summary: string | null;
+  readonly visitDate: Date;
+  readonly status: StoreTourStatus;
+  readonly publishedAt: Date | null;
+  readonly coverUrl?: string;
+  readonly distanceKm?: number;
+}
+
 export interface PaginatedStoreTours {
   readonly items: StoreTourView[];
+  readonly total: number;
+  readonly page: number;
+  readonly limit: number;
+}
+
+export interface PaginatedStoreToursSummary {
+  readonly items: StoreTourSummary[];
   readonly total: number;
   readonly page: number;
   readonly limit: number;

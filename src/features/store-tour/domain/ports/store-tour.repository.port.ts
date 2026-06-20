@@ -3,6 +3,7 @@ import {
   CreateStoreTourInput,
   DiscoverStoreToursInput,
   PaginatedStoreTours,
+  PaginatedStoreToursSummary,
   UpdateStoreTourInput,
   StoreTourView,
 } from '../types/store-tour.types.js';
@@ -13,4 +14,5 @@ export abstract class IStoreTourRepository {
   abstract update(id: string, input: UpdateStoreTourInput): Promise<StoreTour>;
   abstract delete(id: string): Promise<void>;
   abstract discover(input: DiscoverStoreToursInput): Promise<PaginatedStoreTours>;
+  abstract discoverGlobal(input: DiscoverStoreToursInput): Promise<PaginatedStoreToursSummary>;
 }

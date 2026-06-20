@@ -14,6 +14,7 @@ import {
   StoreTourHighlight as PrismaStoreTourHighlight,
   StoreTourStatus as PrismaStoreTourStatus,
   Media as PrismaMedia,
+  Prisma,
 } from '../../../../generated/prisma/client.js';
 
 type PrismaStoreTourWithRelations = PrismaStoreTour & {
@@ -130,8 +131,8 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
   }
 
   async discover(input: DiscoverStoreToursInput): Promise<PaginatedStoreTours> {
-    const where = {
-      businessProfileId: input.businessProfileId,
+    const where: any = {
+      ...(input.businessProfileId && { businessProfileId: input.businessProfileId }),
       ...(input.status && { status: input.status as PrismaStoreTourStatus }),
     };
 
@@ -152,10 +153,131 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
     ]);
 
     return {
-      items: rows.map((r) => toView(r)),
+      items: rows.map((r) => toView(r as PrismaStoreTourWithRelations)),
       total,
       page: input.page,
       limit: input.limit,
+    };
+  }
+
+  async discoverGlobal(input: DiscoverStoreToursInput): Promise<any> {
+    const limit = input.limit;
+    const offset = (input.page - 1) * limit;
+
+    // Use PostGIS if location is provided
+    if (input.lat !== undefined && input.lng !== undefined && input.radiusInKm !== undefined) {
+      const radiusMeters = input.radiusInKm * 1000;
+      
+      const searchPattern = input.search ? `%${input.search}%` : '%';
+      const statusFilter = input.status ? Prisma.sql`AND st.status = ${input.status}::"StoreTourStatus"` : Prisma.empty;
+
+      // Note: we fetch the cover media as a subquery or join.
+      const rows = await this.prisma.$queryRaw<any[]>`
+        SELECT 
+          st.id,
+          st."businessProfileId",
+          st.title,
+          st.summary,
+          st."visitDate",
+          st.status,
+          st."publishedAt",
+          bp.slug as "businessProfileSlug",
+          ST_Distance(bp.location, ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)) as "distanceMeters",
+          (
+            SELECT m.url 
+            FROM media m 
+            WHERE m."storeTourId" = st.id 
+            ORDER BY m."order" ASC NULLS LAST, m."createdAt" ASC 
+            LIMIT 1
+          ) as "coverUrl"
+        FROM store_tours st
+        JOIN business_profiles bp ON st."businessProfileId" = bp.id
+        WHERE ST_DWithin(
+          bp.location,
+          ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326),
+          ${radiusMeters}
+        )
+        AND (st.title ILIKE ${searchPattern} OR st.summary ILIKE ${searchPattern})
+        ${statusFilter}
+        ORDER BY "distanceMeters" ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      const [{ count }] = await this.prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*)::bigint as count
+        FROM store_tours st
+        JOIN business_profiles bp ON st."businessProfileId" = bp.id
+        WHERE ST_DWithin(
+          bp.location,
+          ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326),
+          ${radiusMeters}
+        )
+        AND (st.title ILIKE ${searchPattern} OR st.summary ILIKE ${searchPattern})
+        ${statusFilter}
+      `;
+
+      return {
+        items: rows.map(r => ({
+          id: r.id,
+          businessProfileId: r.businessProfileId,
+          businessProfileSlug: r.businessProfileSlug,
+          title: r.title,
+          summary: r.summary,
+          visitDate: r.visitDate,
+          status: r.status,
+          publishedAt: r.publishedAt,
+          coverUrl: r.coverUrl,
+          distanceKm: r.distanceMeters / 1000,
+        })),
+        total: Number(count),
+        page: input.page,
+        limit,
+      };
+    }
+
+    // Fallback to standard Prisma query without location
+    const where: any = {
+      ...(input.status && { status: input.status as PrismaStoreTourStatus }),
+      ...(input.search && {
+        OR: [
+          { title: { contains: input.search, mode: 'insensitive' } },
+          { summary: { contains: input.search, mode: 'insensitive' } },
+        ],
+      }),
+    };
+
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.storeTour.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          businessProfile: { select: { slug: true } },
+          media: {
+            orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+            take: 1,
+          },
+        },
+      }),
+      this.prisma.storeTour.count({ where }),
+    ]);
+
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        businessProfileId: r.businessProfileId,
+        businessProfileSlug: r.businessProfile.slug,
+        title: r.title,
+        summary: r.summary,
+        visitDate: r.visitDate,
+        status: r.status as StoreTourStatus,
+        publishedAt: r.publishedAt,
+        coverUrl: r.media[0]?.url,
+      })),
+      total,
+      page: input.page,
+      limit,
     };
   }
 }

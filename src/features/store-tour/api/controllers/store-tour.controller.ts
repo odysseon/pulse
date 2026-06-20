@@ -20,6 +20,7 @@ import { UpdateStoreTourUseCase } from '../../application/use-cases/update-store
 import { DeleteStoreTourUseCase } from '../../application/use-cases/delete-store-tour.use-case.js';
 import { GetStoreTourUseCase } from '../../application/use-cases/get-store-tour.use-case.js';
 import { GetBusinessStoreToursUseCase } from '../../application/use-cases/get-business-store-tours.use-case.js';
+import { GetStoreToursUseCase } from '../../application/use-cases/get-store-tours.use-case.js';
 import { CreateStoreTourDto, UpdateStoreTourDto } from '../dto/request.dto.js';
 import { StoreTourResponseDto, PaginatedStoreToursResponseDto } from '../dto/response.dto.js';
 import { StoreTourStatus } from '../../domain/types/store-tour.entity.js';
@@ -36,6 +37,7 @@ export class StoreTourController {
     private readonly deleteStoreTour: DeleteStoreTourUseCase,
     private readonly getStoreTour: GetStoreTourUseCase,
     private readonly getBusinessStoreTours: GetBusinessStoreToursUseCase,
+    private readonly getStoreTours: GetStoreToursUseCase,
   ) {}
 
   @Post('business-profiles/:businessProfileId/store-tours')
@@ -55,6 +57,35 @@ export class StoreTourController {
       createdById,
     });
     return StoreTourResponseDto.from(tour);
+  }
+
+  @Public()
+  @Get('store-tours')
+  async discoverGlobal(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: StoreTourStatus,
+    @Query('search') search?: string,
+    @Query('lat') latStr?: string,
+    @Query('lng') lngStr?: string,
+    @Query('radius') radiusStr?: string,
+  ): Promise<any> {
+    const pageNum = parseInt(page ?? '1', 10);
+    const limitNum = parseInt(limit ?? '20', 10);
+    
+    const lat = latStr ? parseFloat(latStr) : undefined;
+    const lng = lngStr ? parseFloat(lngStr) : undefined;
+    const radius = radiusStr ? parseFloat(radiusStr) : undefined;
+
+    return this.getStoreTours.execute({
+      ...(status !== undefined && { status }),
+      ...(search !== undefined && { search }),
+      ...(lat !== undefined && !isNaN(lat) && { lat }),
+      ...(lng !== undefined && !isNaN(lng) && { lng }),
+      ...(radius !== undefined && !isNaN(radius) && { radius }),
+      page: isNaN(pageNum) ? 1 : pageNum,
+      limit: isNaN(limitNum) ? 20 : limitNum,
+    });
   }
 
   @Public()
