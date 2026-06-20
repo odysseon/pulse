@@ -25,12 +25,24 @@ export class GetDashboardStatsUseCase {
       where: { businessProfileId: businessId },
     });
 
-    // We don't track profile views yet, so we return 0.
-    const profileViews = 0;
+    // We can count total views from AnalyticsEvent
+    const profileViews = await this.prisma.analyticsEvent.count({
+      where: { businessProfileId: businessId, eventType: 'PROFILE_VIEW' },
+    });
+
+    const totalSaves = await this.prisma.savedBusiness.count({
+      where: { businessProfileId: businessId },
+    });
+
+    const totalContactClicks = await this.prisma.analyticsEvent.count({
+      where: { businessProfileId: businessId, eventType: { in: ['PHONE_CLICK', 'WEBSITE_CLICK', 'DIRECTIONS_CLICK'] } },
+    });
 
     return {
       totalListings,
       profileViews,
+      totalSaves,
+      totalContactClicks,
     };
   }
 }

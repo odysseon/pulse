@@ -127,4 +127,10 @@ export class DashboardStatsResponseDto {
 
   @ApiProperty()
   profileViews!: number;
+
+  @ApiProperty()
+  totalSaves!: number;
+
+  @ApiProperty()
+  totalContactClicks!: number;
 }
