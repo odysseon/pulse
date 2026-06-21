@@ -41,11 +41,11 @@ export class UpdateStoreTourUseCase {
       if (business && business.email) {
         await this.mailQueueService.enqueueMail({
           to: business.email,
-          subject: 'Your Store Tour is Live on Pulse!',
+          subject: 'Your Store Tour is Live on Show!',
           template: 'store-tour-published',
           context: {
             businessName: business.name,
-            action_url: `https://pulse.app/store-tours/${updatedTour.id}`,
+            action_url: `https://show.app/store-tours/${updatedTour.id}`,
           },
         });
       }

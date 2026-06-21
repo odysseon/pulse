@@ -7,7 +7,7 @@ import { WebCryptoSecureTokenAdapter } from '@odysseon/whoami-adapter-webcrypto'
 import { UuidGenerator, SystemClock, NestLoggerAdapter } from './auth.adapters.js';
 
 export const joseConfig: Omit<JoseReceiptConfig, 'secret'> = {
-  issuer: 'pulse',
+  issuer: 'show',
   audience: 'password-users',
 };
 

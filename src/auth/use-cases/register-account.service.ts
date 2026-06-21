@@ -35,11 +35,11 @@ export class RegisterAccountUseCase {
       // Queue welcome email asynchronously
       await this.mailQueueService.enqueueMail({
         to: account.email,
-        subject: 'Welcome to Pulse!',
+        subject: 'Welcome to Show!',
         template: 'welcome',
         context: {
           name: user.name,
-          action_url: 'https://pulse.app/login', // Adjust the URL as needed
+          action_url: 'https://show.app/login', // Adjust the URL as needed
         },
       });
 
