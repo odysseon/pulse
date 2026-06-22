@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
+import { RedisService } from '../../../shared/redis/redis.service.js';
 import { IBusinessProfileRepository } from '../domain/ports/business-profile.repository.port.js';
 import { BusinessProfile } from '../domain/types/business-profile.entity.js';
 import {
@@ -113,8 +114,37 @@ function toDomain(raw: HydratedProfile): BusinessProfileView {
 
 @Injectable()
 export class PrismaBusinessProfileRepository extends IBusinessProfileRepository {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     super();
+  }
+
+  private getCacheKey(id: string): string {
+    return `businessProfile:id:${id}`;
+  }
+
+  private getSlugCacheKey(slug: string): string {
+    return `businessProfile:slug:${slug}`;
+  }
+
+  private updateCacheAsync(profile: BusinessProfileView): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.set(this.getCacheKey(profile.id), profile);
+        await this.redisService.set(this.getSlugCacheKey(profile.slug), profile);
+      })
+      .catch(() => {});
+  }
+
+  private deleteCacheAsync(id: string, slug: string): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.del(this.getCacheKey(id));
+        await this.redisService.del(this.getSlugCacheKey(slug));
+      })
+      .catch(() => {});
   }
 
   private async hydrate(profiles: PrismaBusinessProfileExtended[]): Promise<HydratedProfile[]> {
@@ -186,10 +216,15 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     });
 
     const hydratedArray = await this.hydrate([raw]);
-    return toDomain(hydratedArray[0]!);
+    const domain = toDomain(hydratedArray[0]!);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async findById(id: string): Promise<BusinessProfileView | null> {
+    const cached = await this.redisService.get<BusinessProfileView>(this.getCacheKey(id));
+    if (cached) return cached;
+
     const raw = await this.prisma.businessProfile.findUnique({
       where: { id },
       include: {
@@ -202,10 +237,15 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     });
     if (!raw) return null;
     const hydratedArray = await this.hydrate([raw as any]);
-    return toDomain(hydratedArray[0]!);
+    const domain = toDomain(hydratedArray[0]!);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async findBySlug(slug: string): Promise<BusinessProfileView | null> {
+    const cached = await this.redisService.get<BusinessProfileView>(this.getSlugCacheKey(slug));
+    if (cached) return cached;
+
     const raw = await this.prisma.businessProfile.findUnique({
       where: { slug },
       include: {
@@ -218,7 +258,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     });
     if (!raw) return null;
     const hydratedArray = await this.hydrate([raw as any]);
-    return toDomain(hydratedArray[0]!);
+    const domain = toDomain(hydratedArray[0]!);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async isSlugTaken(slug: string): Promise<boolean> {
@@ -291,6 +333,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ...(input.email !== undefined && { email: input.email }),
         ...(locationId !== undefined && { locationId }),
         ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
+        ...(input.isEmailVerified !== undefined && { isEmailVerified: input.isEmailVerified }),
+        ...(input.isPhoneVerified !== undefined && { isPhoneVerified: input.isPhoneVerified }),
+        ...(input.verificationStatus !== undefined && { verificationStatus: input.verificationStatus }),
         ...(input.categoryIds !== undefined && {
           categories: {
             set: input.categoryIds.map((id) => ({ id })),
@@ -306,11 +351,17 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     });
 
     const hydratedArray = await this.hydrate([raw]);
-    return toDomain(hydratedArray[0]!);
+    const domain = toDomain(hydratedArray[0]!);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async delete(id: string): Promise<void> {
+    const existing = await this.findById(id);
+    if (!existing) return;
+
     await this.prisma.businessProfile.delete({ where: { id } });
+    this.deleteCacheAsync(existing.id, existing.slug);
   }
 
   async setOperatingHours(businessId: string, hours: SetOperatingHoursInput[]): Promise<void> {
@@ -330,6 +381,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         });
       }
     });
+
+    const updated = await this.findById(businessId);
+    if (updated) this.updateCacheAsync(updated);
   }
 
   async setTags(businessId: string, tagIds: string[]): Promise<void> {
@@ -346,6 +400,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         });
       }
     });
+
+    const updated = await this.findById(businessId);
+    if (updated) this.updateCacheAsync(updated);
   }
 
   async discover(input: DiscoverBusinessesInput): Promise<PaginatedBusinessSummaries> {

@@ -5,6 +5,11 @@ export const USER_REPOSITORY_TOKEN = Symbol('USER_REPOSITORY_TOKEN');
 
 export interface IUserRepository {
   /**
+   * Creates a new domain user.
+   */
+  create(accountId: string, name: string): Promise<UserEntity>;
+
+  /**
    * Retrieves a domain user by their associated authentication account ID.
    */
   findByAccountId(accountId: string): Promise<UserEntity | null>;
@@ -14,3 +19,4 @@ export interface IUserRepository {
    */
   updateProfile(accountId: string, payload: UpdateUserProfileDto): Promise<UserEntity>;
 }
+

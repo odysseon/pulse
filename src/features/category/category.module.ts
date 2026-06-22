@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { RedisModule } from '../../shared/redis/redis.module.js';
 import { ICategoryRepository } from './domain/ports/category.repository.port.js';
 import { PrismaCategoryRepository } from './infrastructure/prisma-category.repository.js';
 import { CreateCategoryUseCase } from './application/use-cases/create-category.use-case.js';
@@ -13,6 +14,7 @@ import { UpdateCategoryAttributeUseCase } from './application/use-cases/update-c
 import { DeleteCategoryAttributeUseCase } from './application/use-cases/delete-category-attribute.use-case.js';
 
 @Module({
+  imports: [RedisModule],
   controllers: [PublicCategoryController, CategoryController],
   providers: [
     { provide: ICategoryRepository, useClass: PrismaCategoryRepository },

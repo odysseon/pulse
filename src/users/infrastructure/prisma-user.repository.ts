@@ -1,14 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { RedisService } from '../../shared/redis/redis.service.js';
 import { IUserRepository } from '../core/ports/user.repository.interface.js';
 import { UpdateUserProfileDto } from '../delivery/http/dto/update-user-profile.dto.js';
 import { UserEntity } from '../core/domain/user.types.js';
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {}
+
+  private getCacheKey(accountId: string): string {
+    return `user:accountId:${accountId}`;
+  }
+
+  private updateCacheAsync(user: UserEntity): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.set(this.getCacheKey(user.accountId), user);
+      })
+      .catch(() => {});
+  }
+
+
+  async create(accountId: string, name: string): Promise<UserEntity> {
+    const user = await this.prisma.user.create({
+      data: {
+        accountId,
+        name,
+      },
+    });
+
+    const domain = { ...user, role: user.role };
+    this.updateCacheAsync(domain);
+    return domain;
+  }
 
   async findByAccountId(accountId: string): Promise<UserEntity | null> {
+    const cached = await this.redisService.get<UserEntity>(this.getCacheKey(accountId));
+    if (cached) return cached;
     const user = await this.prisma.user.findUnique({
       where: { accountId },
       include: {
@@ -18,7 +50,9 @@ export class PrismaUserRepository implements IUserRepository {
 
     if (!user) return null;
 
-    return { ...user, role: user.role };
+    const domain = { ...user, role: user.role };
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async updateProfile(accountId: string, payload: UpdateUserProfileDto): Promise<UserEntity> {
@@ -33,7 +67,9 @@ export class PrismaUserRepository implements IUserRepository {
         },
       });
 
-      return { ...updatedUser, role: updatedUser.role };
+      const domain = { ...updatedUser, role: updatedUser.role };
+      this.updateCacheAsync(domain);
+      return domain;
     } catch (error: unknown) {
       if (
         error &&

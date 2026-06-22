@@ -4,6 +4,8 @@ import type { PasswordMethods } from '@odysseon/whoami-core/password';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RegisterDto } from '../dto/index.js';
 import { MailQueueService } from '../../mail/mail-queue.service.js';
+import { USER_REPOSITORY_TOKEN } from '../../users/core/ports/user.repository.interface.js';
+import type { IUserRepository } from '../../users/core/ports/user.repository.interface.js';
 
 @Injectable()
 export class RegisterAccountUseCase {
@@ -14,6 +16,8 @@ export class RegisterAccountUseCase {
     private readonly passwordAuth: PasswordMethods,
     private readonly prisma: PrismaService,
     private readonly mailQueueService: MailQueueService,
+    @Inject(USER_REPOSITORY_TOKEN)
+    private readonly userRepository: IUserRepository,
   ) {}
 
   async execute(dto: RegisterDto) {
@@ -25,12 +29,7 @@ export class RegisterAccountUseCase {
 
     try {
       // 2. Create Domain User
-      const user = await this.prisma.user.create({
-        data: {
-          accountId: account.id,
-          name: dto.name,
-        },
-      });
+      const user = await this.userRepository.create(account.id, dto.name);
 
       // Queue welcome email asynchronously
       await this.mailQueueService.enqueueMail({

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
+import { RedisService } from '../../../shared/redis/redis.service.js';
 import { ICategoryRepository } from '../domain/ports/category.repository.port.js';
 import { Category } from '../domain/types/category.entity.js';
 import {
@@ -43,7 +44,42 @@ function toDomain(raw: PrismaCategory): Category {
 
 @Injectable()
 export class PrismaCategoryRepository implements ICategoryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {}
+
+  private getCacheKey(id: string): string {
+    return `category:id:${id}`;
+  }
+
+  private getSlugCacheKey(slug: string): string {
+    return `category:slug:${slug}`;
+  }
+
+  private getTreeCacheKey(activeOnly: boolean): string {
+    return `category:tree:active:${activeOnly}`;
+  }
+
+  private updateCacheAsync(category: Category): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.set(this.getCacheKey(category.id), category);
+        await this.redisService.set(this.getSlugCacheKey(category.slug), category);
+        await this.redisService.delPattern('category:tree:*');
+      })
+      .catch(() => {});
+  }
+
+  private deleteCacheAsync(id: string, slug: string): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.del(this.getCacheKey(id));
+        await this.redisService.del(this.getSlugCacheKey(slug));
+        await this.redisService.delPattern('category:tree:*');
+      })
+      .catch(() => {});
+  }
 
   async create(input: CreateCategoryInput, slug: string): Promise<Category> {
     const raw = await this.prisma.category.create({
@@ -55,17 +91,29 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         order: input.order ?? 0,
       },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async findById(id: string): Promise<Category | null> {
+    const cached = await this.redisService.get<Category>(this.getCacheKey(id));
+    if (cached) return cached;
+
     const raw = await this.prisma.category.findUnique({ where: { id } });
-    return raw ? toDomain(raw) : null;
+    const domain = raw ? toDomain(raw) : null;
+    if (domain) this.updateCacheAsync(domain);
+    return domain;
   }
 
   async findBySlug(slug: string): Promise<Category | null> {
+    const cached = await this.redisService.get<Category>(this.getSlugCacheKey(slug));
+    if (cached) return cached;
+
     const raw = await this.prisma.category.findUnique({ where: { slug } });
-    return raw ? toDomain(raw) : null;
+    const domain = raw ? toDomain(raw) : null;
+    if (domain) this.updateCacheAsync(domain);
+    return domain;
   }
 
   async isSlugTaken(slug: string): Promise<boolean> {
@@ -74,6 +122,10 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   }
 
   async findTree(activeOnly = true): Promise<CategoryTreeNode[]> {
+    const cacheKey = this.getTreeCacheKey(activeOnly);
+    const cached = await this.redisService.get<CategoryTreeNode[]>(cacheKey);
+    if (cached) return cached;
+
     // Fetch all roots + their children in one query via Prisma nested include
     const roots = await this.prisma.category.findMany({
       where: {
@@ -89,7 +141,7 @@ export class PrismaCategoryRepository implements ICategoryRepository {
       },
     });
 
-    return (roots as unknown as (PrismaCategory & { children: PrismaCategory[] })[]).map(
+    const result = (roots as unknown as (PrismaCategory & { children: PrismaCategory[] })[]).map(
       (root): CategoryTreeNode => ({
         id: root.id,
         name: root.name,
@@ -109,6 +161,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         ),
       }),
     );
+
+    Promise.resolve().then(() => this.redisService.set(cacheKey, result)).catch(() => {});
+    return result;
   }
 
   async findLeafIdsByRootSlug(rootSlug: string): Promise<string[]> {
@@ -134,7 +189,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         ...(input.order !== undefined ? { order: input.order } : {}),
       },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async deactivate(id: string): Promise<Category> {
@@ -142,7 +199,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
       where: { id },
       data: { isActive: false },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async activate(id: string): Promise<Category> {
@@ -150,7 +209,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
       where: { id },
       data: { isActive: true },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async hasAssignments(id: string): Promise<boolean> {
@@ -162,7 +223,11 @@ export class PrismaCategoryRepository implements ICategoryRepository {
   }
 
   async delete(id: string): Promise<void> {
+    const existing = await this.findById(id);
+    if (!existing) return;
+
     await this.prisma.category.delete({ where: { id } });
+    this.deleteCacheAsync(existing.id, existing.slug);
   }
 
   // ---------------------------------------------------------------------------

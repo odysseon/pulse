@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
 import { ContactMethod } from '../../api/dto/request.dto.js';
 import { RedisService } from '../../../../shared/redis/redis.service.js';
-import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { BusinessProfileView } from '../../domain/types/business-profile.types.js';
 
 @Injectable()
@@ -10,7 +9,6 @@ export class VerifyContactOtpUseCase {
   constructor(
     private readonly businessProfileRepo: IBusinessProfileRepository,
     private readonly redisService: RedisService,
-    private readonly prisma: PrismaService,
   ) {}
 
   async execute(businessId: string, userId: string, method: ContactMethod, otp: string): Promise<BusinessProfileView> {
@@ -44,16 +42,10 @@ export class VerifyContactOtpUseCase {
       newStatus = 'VERIFIED';
     }
 
-    await this.prisma.businessProfile.update({
-      where: { id: businessId },
-      data: {
-        isEmailVerified,
-        isPhoneVerified,
-        verificationStatus: newStatus,
-      },
+    return this.businessProfileRepo.update(businessId, {
+      isEmailVerified,
+      isPhoneVerified,
+      verificationStatus: newStatus,
     });
-
-    const updatedProfile = await this.businessProfileRepo.findById(businessId);
-    return updatedProfile!;
   }
 }

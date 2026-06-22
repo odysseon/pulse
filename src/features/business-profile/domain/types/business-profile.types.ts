@@ -31,6 +31,9 @@ export interface UpdateBusinessProfileInput {
   readonly longitude?: number;
   readonly isPublic?: boolean;
   readonly categoryIds?: string[];
+  readonly isEmailVerified?: boolean;
+  readonly isPhoneVerified?: boolean;
+  readonly verificationStatus?: VerificationStatus;
 }
 
 export interface BusinessProfileView {
