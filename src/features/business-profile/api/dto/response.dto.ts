@@ -33,8 +33,9 @@ export class BusinessProfileResponseDto {
   @ApiPropertyOptional({ type: [TagDto] }) tags?: TagDto[];
   @ApiPropertyOptional() avatarUrl?: string;
   @ApiPropertyOptional() coverUrl?: string;
+  @ApiPropertyOptional() isSaved?: boolean;
 
-  private constructor(r: BusinessProfileView) {
+  private constructor(r: BusinessProfileView & { isSaved?: boolean }) {
     this.id = r.id;
     this.ownerId = r.ownerId;
     this.name = r.name;
@@ -64,6 +65,9 @@ export class BusinessProfileResponseDto {
     if (r.tags) {
       this.tags = r.tags.map((t) => TagDto.from(t));
     }
+    if (r.isSaved !== undefined) {
+      this.isSaved = r.isSaved;
+    }
   }
 
   static from(r: BusinessProfileView): BusinessProfileResponseDto {
@@ -82,6 +86,7 @@ export class BusinessSummaryResponseDto {
   longitude: number | null;
   categoryIds: string[];
   distanceKm?: number;
+  @ApiPropertyOptional() isSaved?: boolean;
 
   private constructor(summary: BusinessSummary) {
     this.id = summary.id;
@@ -95,6 +100,9 @@ export class BusinessSummaryResponseDto {
     this.categoryIds = summary.categoryIds;
     if (summary.distanceKm !== undefined) {
       this.distanceKm = summary.distanceKm;
+    }
+    if (summary.isSaved !== undefined) {
+      this.isSaved = summary.isSaved;
     }
   }
 

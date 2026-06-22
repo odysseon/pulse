@@ -28,7 +28,9 @@ export class PublicListingController {
     @Query() query: GetListingsQueryDto,
     @CurrentIdentity({ required: false }) identity?: RequestIdentity,
   ): Promise<PaginatedListingsResponseDto> {
+    console.log('[PublicListingController.discover] Identity:', identity);
     const currentUserId = await this.resolveUserId(identity);
+    console.log('[PublicListingController.discover] resolved currentUserId:', currentUserId);
     const result = await this.discoverListings.execute({
       ...query,
       ...(currentUserId ? { currentUserId } : {})
