@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query, NotFoundException, Req } from '@nestjs/common';
-import { Public } from '@odysseon/whoami-adapter-nestjs';
+import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
+import { OptionalAuth, CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { DiscoverListingsUseCase } from '../../application/use-cases/discover-listings.use-case.js';
 import { GetPublicListingUseCase } from '../../application/use-cases/get-public-listing.use-case.js';
 import { GetListingsQueryDto } from '../dto/request.dto.js';
@@ -9,7 +9,7 @@ import { IBusinessProfileRepository } from '../../../business-profile/domain/por
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 
 @ApiTags('Listing Public Surface')
-@Public()
+@OptionalAuth()
 @Controller()
 export class PublicListingController {
   constructor(
@@ -24,8 +24,11 @@ export class PublicListingController {
    * Global discovery — all published listings across all businesses.
    */
   @Get('listings')
-  async discover(@Req() req: any, @Query() query: GetListingsQueryDto): Promise<PaginatedListingsResponseDto> {
-    const currentUserId = await this.resolveUserId(req);
+  async discover(
+    @Query() query: GetListingsQueryDto,
+    @CurrentIdentity({ required: false }) identity?: RequestIdentity,
+  ): Promise<PaginatedListingsResponseDto> {
+    const currentUserId = await this.resolveUserId(identity);
     const result = await this.discoverListings.execute({
       ...query,
       ...(currentUserId ? { currentUserId } : {})
@@ -39,12 +42,12 @@ export class PublicListingController {
    */
   @Get('businesses/:businessSlug/listings')
   async discoverByBusiness(
-    @Req() req: any,
     @Param('businessSlug') businessSlug: string,
     @Query() query: GetListingsQueryDto,
+    @CurrentIdentity({ required: false }) identity?: RequestIdentity,
   ): Promise<PaginatedListingsResponseDto> {
     const businessProfileId = await this.resolveBusinessSlug(businessSlug);
-    const currentUserId = await this.resolveUserId(req);
+    const currentUserId = await this.resolveUserId(identity);
     const result = await this.discoverListings.execute({
       ...query,
       ...(businessProfileId ? { businessProfileId } : {}),
@@ -53,8 +56,9 @@ export class PublicListingController {
     return PaginatedListingsResponseDto.from(result);
   }
 
-  private async resolveUserId(req: any): Promise<string | undefined> {
-    const accountId = req.identity?.accountId;
+  private async resolveUserId(identity?: RequestIdentity): Promise<string | undefined> {
+    const accountId = identity?.accountId;
+
     if (accountId) {
       const user = await this.prisma.user.findUnique({
         where: { accountId },
@@ -80,8 +84,12 @@ export class PublicListingController {
    * Public listing detail page.
    */
   @Get('listings/:slug')
-  async getBySlug(@Param('slug') slug: string): Promise<ListingResponseDto> {
-    const listing = await this.getPublicListing.execute(slug);
+  async getBySlug(
+    @Param('slug') slug: string,
+    @CurrentIdentity({ required: false }) identity?: RequestIdentity,
+  ): Promise<ListingResponseDto> {
+    const currentUserId = await this.resolveUserId(identity);
+    const listing = await this.getPublicListing.execute(slug, currentUserId);
     return ListingResponseDto.from(listing);
   }
 }

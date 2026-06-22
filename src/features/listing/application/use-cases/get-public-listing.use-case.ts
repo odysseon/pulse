@@ -2,18 +2,30 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { IListingRepository } from '../../domain/ports/listing.repository.port.js';
 import { ListingStatus } from '../../domain/types/listing-status.enum.js';
 import { Listing } from '../../domain/types/listing.entity.js';
+import { PrismaService } from '../../../../prisma/prisma.service.js';
 
 @Injectable()
 export class GetPublicListingUseCase {
-  constructor(private readonly repo: IListingRepository) {}
+  constructor(
+    private readonly repo: IListingRepository,
+    private readonly prisma: PrismaService
+  ) {}
 
-  async execute(slug: string): Promise<Listing> {
+  async execute(slug: string, currentUserId?: string): Promise<Listing & { isSaved?: boolean }> {
     const listing = await this.repo.findBySlug(slug);
 
     if (!listing || listing.status !== ListingStatus.PUBLISHED) {
       throw new NotFoundException('Listing not found.');
     }
 
-    return listing;
+    let isSaved = false;
+    if (currentUserId) {
+      const saveCount = await this.prisma.savedListing.count({
+        where: { userId: currentUserId, listingId: listing.id },
+      });
+      isSaved = saveCount > 0;
+    }
+
+    return { ...listing, isSaved };
   }
 }

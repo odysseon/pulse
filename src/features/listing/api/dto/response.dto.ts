@@ -20,8 +20,9 @@ export class ListingResponseDto {
   @ApiProperty() createdAt: string;
   @ApiProperty() updatedAt: string;
   @ApiPropertyOptional() reviews?: any[];
+  @ApiPropertyOptional() isSaved?: boolean;
 
-  private constructor(listing: Listing) {
+  private constructor(listing: Listing & { isSaved?: boolean }) {
     this.id = listing.id;
     this.businessProfileId = listing.businessProfileId;
     this.title = listing.title;
@@ -42,9 +43,12 @@ export class ListingResponseDto {
         createdAt: r.createdAt.toISOString(),
       }));
     }
+    if (listing.isSaved !== undefined) {
+      this.isSaved = listing.isSaved;
+    }
   }
 
-  static from(listing: Listing): ListingResponseDto {
+  static from(listing: Listing & { isSaved?: boolean }): ListingResponseDto {
     return new ListingResponseDto(listing);
   }
 }
@@ -63,8 +67,9 @@ export class ListingSummaryResponseDto {
   isNegotiable: boolean;
   @ApiPropertyOptional() coverUrl?: string;
   @ApiPropertyOptional() attributes?: Record<string, unknown> | null;
+  @ApiPropertyOptional() isSaved?: boolean;
 
-  private constructor(summary: ListingSummary) {
+  private constructor(summary: ListingSummary & { isSaved?: boolean }) {
     this.id = summary.id;
     this.businessProfileId = summary.businessProfileId;
     if (summary.businessProfileSlug !== undefined) {
@@ -84,9 +89,12 @@ export class ListingSummaryResponseDto {
     if (summary.attributes !== undefined) {
       this.attributes = summary.attributes;
     }
+    if (summary.isSaved !== undefined) {
+      this.isSaved = summary.isSaved;
+    }
   }
 
-  static from(summary: ListingSummary): ListingSummaryResponseDto {
+  static from(summary: ListingSummary & { isSaved?: boolean }): ListingSummaryResponseDto {
     return new ListingSummaryResponseDto(summary);
   }
 }

@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query, Req } from '@nestjs/common';
-import { Public } from '@odysseon/whoami-adapter-nestjs';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { OptionalAuth, CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { DiscoverBusinessesUseCase } from '../../application/use-cases/discover-businesses.use-case.js';
 import { GetPublicBusinessProfileUseCase } from '../../application/use-cases/get-public-business-profile.use-case.js';
@@ -10,7 +10,7 @@ import { TagDto } from '../dto/tag.dto.js';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('businesses public access')
-@Public()
+@OptionalAuth()
 @Controller('businesses')
 export class PublicBusinessProfileController {
   constructor(
@@ -21,10 +21,13 @@ export class PublicBusinessProfileController {
   ) {}
 
   @Get()
-  async discover(@Req() req: any, @Query() query: GetBusinessesQueryDto): Promise<PaginatedBusinessesResponseDto> {
+  async discover(
+    @Query() query: GetBusinessesQueryDto,
+    @CurrentIdentity({ required: false }) identity?: RequestIdentity,
+  ): Promise<PaginatedBusinessesResponseDto> {
     let currentUserId: string | undefined;
-    const accountId = req.identity?.accountId;
-    
+    const accountId = identity?.accountId;
+
     if (accountId) {
       const user = await this.prisma.user.findUnique({
         where: { accountId },
@@ -49,8 +52,23 @@ export class PublicBusinessProfileController {
   }
 
   @Get(':slug')
-  async getBySlug(@Param('slug') slug: string): Promise<BusinessProfileResponseDto> {
-    const profile = await this.getPublicBusinessProfile.execute(slug);
+  async getBySlug(
+    @Param('slug') slug: string,
+    @CurrentIdentity({ required: false }) identity?: RequestIdentity,
+  ): Promise<BusinessProfileResponseDto> {
+    let currentUserId: string | undefined;
+    const accountId = identity?.accountId;
+
+    if (accountId) {
+      const user = await this.prisma.user.findUnique({
+        where: { accountId },
+        select: { id: true },
+      });
+      if (user) {
+        currentUserId = user.id;
+      }
+    }
+    const profile = await this.getPublicBusinessProfile.execute(slug, currentUserId);
     return BusinessProfileResponseDto.from(profile);
   }
 }
