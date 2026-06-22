@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { RedisModule } from '../../shared/redis/redis.module.js';
 import { IListingRepository } from './domain/ports/listing.repository.port.js';
 import { PrismaListingRepository } from './infrastructure/prisma-listing.repository.js';
 import { IBusinessProfileRepository } from '../business-profile/domain/ports/business-profile.repository.port.js';
@@ -16,7 +17,7 @@ import { PublicListingController } from './api/controllers/public-listing.contro
 import { ListingController } from './api/controllers/listing.controller.js';
 
 @Module({
-  imports: [CategoryModule],
+  imports: [CategoryModule, RedisModule],
   controllers: [PublicListingController, ListingController],
   providers: [
     { provide: IListingRepository, useClass: PrismaListingRepository },

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Listing as PrismaListing } from '../../../../generated/prisma/client.js';
 import { PrismaService } from '../../../prisma/prisma.service.js';
+import { RedisService } from '../../../shared/redis/redis.service.js';
 import { IListingRepository } from '../domain/ports/listing.repository.port.js';
 import { Listing } from '../domain/types/listing.entity.js';
 import { ListingStatus } from '../domain/types/listing-status.enum.js';
@@ -55,8 +56,37 @@ function toDomain(raw: PrismaListingExtended): Listing {
 
 @Injectable()
 export class PrismaListingRepository extends IListingRepository {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     super();
+  }
+
+  private getCacheKey(id: string): string {
+    return `listing:id:${id}`;
+  }
+
+  private getSlugCacheKey(slug: string): string {
+    return `listing:slug:${slug}`;
+  }
+
+  private updateCacheAsync(listing: Listing): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.set(this.getCacheKey(listing.id), listing);
+        await this.redisService.set(this.getSlugCacheKey(listing.slug), listing);
+      })
+      .catch(() => {}); // fire and forget
+  }
+
+  private deleteCacheAsync(id: string, slug: string): void {
+    Promise.resolve()
+      .then(async () => {
+        await this.redisService.del(this.getCacheKey(id));
+        await this.redisService.del(this.getSlugCacheKey(slug));
+      })
+      .catch(() => {}); // fire and forget
   }
 
   async create(input: CreateListingInput, slug: string): Promise<Listing> {
@@ -76,23 +106,39 @@ export class PrismaListingRepository extends IListingRepository {
         }),
       },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async findById(id: string): Promise<Listing | null> {
+    const cached = await this.redisService.get<Listing>(this.getCacheKey(id));
+    if (cached) return cached;
+
     const raw = await this.prisma.listing.findUnique({
       where: { id },
       include: { reviews: true },
     });
-    return raw ? toDomain(raw) : null;
+    const domain = raw ? toDomain(raw) : null;
+    if (domain) {
+      this.updateCacheAsync(domain);
+    }
+    return domain;
   }
 
   async findBySlug(slug: string): Promise<Listing | null> {
+    const cached = await this.redisService.get<Listing>(this.getSlugCacheKey(slug));
+    if (cached) return cached;
+
     const raw = await this.prisma.listing.findFirst({
       where: { slug },
       include: { reviews: true },
     });
-    return raw ? toDomain(raw) : null;
+    const domain = raw ? toDomain(raw) : null;
+    if (domain) {
+      this.updateCacheAsync(domain);
+    }
+    return domain;
   }
 
   async isSlugTaken(businessProfileId: string, slug: string): Promise<boolean> {
@@ -130,7 +176,9 @@ export class PrismaListingRepository extends IListingRepository {
         }),
       },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async transitionStatus(id: string, input: TransitionListingStatusInput): Promise<Listing> {
@@ -138,11 +186,17 @@ export class PrismaListingRepository extends IListingRepository {
       where: { id },
       data: { status: input.status },
     });
-    return toDomain(raw);
+    const domain = toDomain(raw);
+    this.updateCacheAsync(domain);
+    return domain;
   }
 
   async delete(id: string): Promise<void> {
+    const existing = await this.findById(id);
+    if (!existing) return;
+
     await this.prisma.listing.delete({ where: { id } });
+    this.deleteCacheAsync(existing.id, existing.slug);
   }
 
   async discover(input: DiscoverListingsInput): Promise<PaginatedListingSummaries> {
