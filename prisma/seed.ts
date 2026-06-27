@@ -243,11 +243,34 @@ async function main() {
   console.log("\n✅ Tags seeded successfully.");
 
   // -------------------------------------------------------------------------
-  // Location, Business, Listing, Review, StoreTour
+  // Location, Users, Businesses, Listings, Conversations, Review, StoreTour
   // -------------------------------------------------------------------------
-  console.log("\n🌱 Seeding dummy business data...");
+  console.log("\n🌱 Seeding dummy users, businesses, and conversations...");
 
-  // 1. Location (Using PostGIS raw query since Prisma doesn't natively support geometry create)
+  // 1. Create 5 users (plus the admin already created)
+  const users = [];
+  for (let i = 1; i <= 5; i++) {
+    const userEmail = `user${i}@example.com`;
+    const acc = await prisma.account.upsert({
+      where: { email: userEmail },
+      update: {},
+      create: {
+        email: userEmail,
+        passwordHash: { create: { hash: hashedPassword } },
+        user: {
+          create: {
+            name: `Test User ${i}`,
+            role: PlatformRole.USER,
+            avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=User${i}`,
+          },
+        },
+      },
+      include: { user: true },
+    });
+    users.push(acc.user!);
+  }
+
+  // 2. Location (Using PostGIS raw query)
   const locationId = "test-location-1";
   await prisma.$executeRaw`
     INSERT INTO "Location" ("id", "name", "formattedAddress", "coordinates")
@@ -255,73 +278,140 @@ async function main() {
     ON CONFLICT ("id") DO NOTHING;
   `;
 
-  // 2. Business Profile
-  const electronicsCategory = await prisma.category.findUnique({
-    where: { slug: "electronics" },
-  });
+  // 3. Businesses
+  const electronicsCategory = await prisma.category.findUnique({ where: { slug: "electronics" } });
+  const fashionCategory = await prisma.category.findUnique({ where: { slug: "fashion-and-apparel" } });
 
-  const business = await prisma.businessProfile.upsert({
-    where: { slug: "sample-tech-store" },
-    update: {},
-    create: {
-      ownerId: account.user!.id,
-      name: "Sample Tech Store",
-      slug: "sample-tech-store",
-      isPublic: true,
-      description: "A great tech store",
-      businessType: "PHYSICAL",
-      phoneNumber: "+2348012345678",
-      whatsapp: "+2348012345678",
-      email: "contact@sampletechstore.com",
-      locationId,
-      hours: {
-        create: [
-          { day: "MON", openTime: "09:00", closeTime: "17:00" },
-          { day: "TUE", openTime: "09:00", closeTime: "17:00" },
-        ],
+  const businessesData = [
+    { name: "Sample Tech Store", slug: "sample-tech-store", owner: users[0], category: electronicsCategory },
+    { name: "Sample Fashion Boutique", slug: "sample-fashion-boutique", owner: users[1], category: fashionCategory },
+  ];
+
+  const createdBusinesses = [];
+
+  for (let i = 0; i < businessesData.length; i++) {
+    const bData = businessesData[i];
+    const business = await prisma.businessProfile.upsert({
+      where: { slug: bData.slug },
+      update: {},
+      create: {
+        ownerId: bData.owner.id,
+        name: bData.name,
+        slug: bData.slug,
+        isPublic: true,
+        description: `A great ${bData.name}`,
+        businessType: "PHYSICAL",
+        phoneNumber: `+234801234567${i}`,
+        email: `contact@${bData.slug}.com`,
+        locationId,
+        hours: {
+          create: [
+            { day: "MON", openTime: "09:00", closeTime: "17:00" },
+            { day: "TUE", openTime: "09:00", closeTime: "17:00" },
+          ],
+        },
+        categories: { connect: bData.category ? [{ id: bData.category.id }] : [] },
       },
-      categories: {
-        connect: electronicsCategory ? [{ id: electronicsCategory.id }] : [],
+    });
+    createdBusinesses.push(business);
+
+    // 4. 10 Listings per business
+    for (let j = 1; j <= 10; j++) {
+      const listingSlug = `${bData.slug}-item-${j}`;
+      await prisma.listing.upsert({
+        where: { businessProfileId_slug: { businessProfileId: business.id, slug: listingSlug } },
+        update: {},
+        create: {
+          businessProfileId: business.id,
+          title: `${bData.name} Item ${j}`,
+          slug: listingSlug,
+          description: `Description for ${bData.name} Item ${j}`,
+          status: "PUBLISHED",
+          minPrice: Math.floor(Math.random() * 1000) + 10,
+          currencyCode: "USD",
+          categoryId: bData.category?.id || null,
+        },
+      });
+    }
+  }
+
+  // 5. Conversations
+  const allListings = await prisma.listing.findMany();
+
+  // Convo 1: User 3 asks Business 0 about their first listing
+  const conv1User = users[2];
+  const conv1Business = createdBusinesses[0];
+  const conv1Listing = allListings.find(l => l.businessProfileId === conv1Business.id);
+
+  // Convo 2: User 4 asks Business 1 about their first listing
+  const conv2User = users[3];
+  const conv2Business = createdBusinesses[1];
+  const conv2Listing = allListings.find(l => l.businessProfileId === conv2Business.id);
+
+  const convos = [
+    { user: conv1User, business: conv1Business, listing: conv1Listing },
+    { user: conv2User, business: conv2Business, listing: conv2Listing }
+  ];
+
+  for (const convo of convos) {
+    if (!convo.listing) continue;
+
+    const existingConversation = await prisma.conversation.findFirst({
+      where: {
+        businessProfileId: convo.business.id,
+        listingId: convo.listing.id,
+        participants: { some: { userId: convo.user.id } }
+      }
+    });
+
+    if (!existingConversation) {
+      await prisma.conversation.create({
+        data: {
+          businessProfileId: convo.business.id,
+          listingId: convo.listing.id,
+          subject: `Inquiry about ${convo.listing.title}`,
+          participants: {
+            create: [
+              { userId: convo.user.id },
+              // Business owner is implicitly part of the thread, but we add them explicitly to participants
+              { userId: convo.business.ownerId } 
+            ]
+          },
+          messages: {
+            create: [
+              { senderId: convo.user.id, content: `Hi, is ${convo.listing.title} still available?` },
+              { senderId: convo.business.ownerId, content: `Yes, we have it in stock!` },
+              { senderId: convo.user.id, content: `Great, I will come by tomorrow.` },
+            ]
+          }
+        }
+      });
+    }
+  }
+
+  // 6. Review
+  const firstListing = allListings.find(l => l.businessProfileId === createdBusinesses[0].id);
+  if (firstListing) {
+    await prisma.review.upsert({
+      where: { listingId_reviewerId: { listingId: firstListing.id, reviewerId: account.user!.id } },
+      update: {},
+      create: {
+        listingId: firstListing.id,
+        reviewerId: account.user!.id, // Admin reviews the first listing
+        rating: 5,
+        comment: "Excellent machine!",
       },
-    },
-  });
+    });
+  }
 
-  // 3. Listing
-  const listing = await prisma.listing.upsert({
-    where: { businessProfileId_slug: { businessProfileId: business.id, slug: "macbook-pro" } },
-    update: {},
-    create: {
-      businessProfileId: business.id,
-      title: "MacBook Pro M3",
-      slug: "macbook-pro",
-      description: "Latest Apple Silicon",
-      status: "PUBLISHED",
-      minPrice: 2000,
-      currencyCode: "USD",
-      categoryId: electronicsCategory?.id || null,
-    },
-  });
-
-  // 4. Review
-  await prisma.review.upsert({
-    where: { listingId_reviewerId: { listingId: listing.id, reviewerId: account.user!.id } },
-    update: {},
-    create: {
-      listingId: listing.id,
-      reviewerId: account.user!.id,
-      rating: 5,
-      comment: "Excellent machine!",
-    },
-  });
-
-  // 5. Store Tour
+  // 7. Store Tour
   await prisma.storeTour.upsert({
     where: { id: "test-tour-1" },
     update: {},
     create: {
       id: "test-tour-1",
-      businessProfileId: business.id,
-      createdById: account.user!.id,
+      businessProfileId: createdBusinesses[0].id,
+      createdById: createdBusinesses[0].ownerId,
       title: "Store Walkthrough",
       summary: "A quick look at our displays",
       visitDate: new Date(),
@@ -350,7 +440,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Dummy business data seeded successfully.");
+  console.log("✅ Dummy data seeded successfully.");
 }
 
 main()
