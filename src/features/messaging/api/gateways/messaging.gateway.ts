@@ -110,8 +110,8 @@ export class MessagingGateway
     if (payload.mediaUrl !== undefined) input.mediaUrl = payload.mediaUrl;
     if (payload.mediaType !== undefined) input.mediaType = payload.mediaType;
 
-    await this.sendMessageUseCase.execute(input);
-    // broadcast is handled inside SendMessageUseCase via IRealtimeGateway
+    const message = await this.sendMessageUseCase.execute(input);
+    this.broadcastMessage(payload.conversationId, message);
   }
 
   @UseGuards(WsAuthGuard)
@@ -128,6 +128,10 @@ export class MessagingGateway
       messageIds: payload.messageIds,
       userId,
     });
-    // broadcast is handled inside MarkMessagesReadUseCase via IRealtimeGateway
+    
+    const readAt = new Date();
+    for (const messageId of payload.messageIds) {
+      this.broadcastReadReceipt(payload.conversationId, messageId, userId, readAt);
+    }
   }
 }

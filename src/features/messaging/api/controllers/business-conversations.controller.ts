@@ -6,6 +6,7 @@ import { SendMessageUseCase } from '../../application/use-cases/send-message.use
 import { GetConversationsByBusinessUseCase } from '../../application/use-cases/get-conversations.use-case.js';
 import { GetConversationDetailsUseCase } from '../../application/use-cases/get-conversation-details.use-case.js';
 import { UpdateConversationStatusUseCase } from '../../application/use-cases/update-conversation-status.use-case.js';
+import { IRealtimeGateway } from '../../domain/ports/realtime.gateway.port.js';
 import { SendMessageDto, UpdateConversationStatusDto } from '../dto/request.dto.js';
 import { ConversationResponseDto, MessageResponseDto } from '../dto/response.dto.js';
 
@@ -19,6 +20,7 @@ export class BusinessConversationsController {
     private readonly getConversations: GetConversationsByBusinessUseCase,
     private readonly getDetails: GetConversationDetailsUseCase,
     private readonly updateStatus: UpdateConversationStatusUseCase,
+    private readonly realtime: IRealtimeGateway,
   ) {}
 
   private async resolveUserId(accountId: string): Promise<string> {
@@ -52,6 +54,7 @@ export class BusinessConversationsController {
   ): Promise<MessageResponseDto> {
     const senderId = await this.resolveUserId(identity.accountId);
     const message = await this.sendMessage.execute({ conversationId: id, senderId, ...dto });
+    this.realtime.broadcastMessage(id, message);
     return MessageResponseDto.from(message);
   }
 

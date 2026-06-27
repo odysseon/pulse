@@ -7,6 +7,7 @@ import { SendMessageUseCase } from '../../application/use-cases/send-message.use
 import { GetConversationsByUserUseCase } from '../../application/use-cases/get-conversations.use-case.js';
 import { GetConversationDetailsUseCase } from '../../application/use-cases/get-conversation-details.use-case.js';
 import { MarkMessagesReadUseCase } from '../../application/use-cases/mark-messages-read.use-case.js';
+import { IRealtimeGateway } from '../../domain/ports/realtime.gateway.port.js';
 import {
   CreateConversationDto,
   SendMessageDto,
@@ -25,6 +26,7 @@ export class UserConversationsController {
     private readonly getConversations: GetConversationsByUserUseCase,
     private readonly getDetails: GetConversationDetailsUseCase,
     private readonly markRead: MarkMessagesReadUseCase,
+    private readonly realtime: IRealtimeGateway,
   ) {}
 
   private async resolveUserId(accountId: string): Promise<string> {
@@ -70,6 +72,7 @@ export class UserConversationsController {
   ): Promise<MessageResponseDto> {
     const senderId = await this.resolveUserId(identity.accountId);
     const message = await this.sendMessage.execute({ conversationId: id, senderId, ...dto });
+    this.realtime.broadcastMessage(id, message);
     return MessageResponseDto.from(message);
   }
 
@@ -83,5 +86,10 @@ export class UserConversationsController {
   ): Promise<void> {
     const userId = await this.resolveUserId(identity.accountId);
     await this.markRead.execute({ conversationId: id, messageIds: dto.messageIds, userId });
+    
+    const readAt = new Date();
+    for (const messageId of dto.messageIds) {
+      this.realtime.broadcastReadReceipt(id, messageId, userId, readAt);
+    }
   }
 }
