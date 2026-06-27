@@ -1,12 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { INestApplication, Logger, ValidationPipe, ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { IoAdapter } from '@nestjs/platform-socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { Server } from 'socket.io';
 import * as os from 'os';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module.js';
 import { SwaggerSetup } from './configs/swagger.config.js';
 import { AppConfig } from './configs/validation.js';
+import { RedisService } from './shared/redis/redis.service.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -41,6 +45,20 @@ async function bootstrap(): Promise<void> {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
+  const redisService = app.get(RedisService);
+  const pubClient = redisService.getClient();
+  const subClient = pubClient.duplicate();
+
+  const ioAdapter = new IoAdapter(app);
+  // Override the createIOServer so we can inject the Redis adapter
+  const originalCreate = ioAdapter.createIOServer.bind(ioAdapter);
+  ioAdapter.createIOServer = (port: number, options?: Record<string, unknown>): Server => {
+    const server = originalCreate(port, options) as Server;
+    server.adapter(createAdapter(pubClient, subClient));
+    return server;
+  };
+  app.useWebSocketAdapter(ioAdapter);
 
   const port = configService.get('PORT') as number;
   await app.listen(port);

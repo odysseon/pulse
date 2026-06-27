@@ -28,8 +28,8 @@ export class AnalyticsService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Get total inquiries
-    const totalInquiries = await this.prisma.inquiry.count({
+    // Get total conversations
+    const totalInquiries = await this.prisma.conversation.count({
       where: { businessProfileId: businessId },
     });
 

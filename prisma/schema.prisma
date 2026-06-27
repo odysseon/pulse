@@ -111,13 +111,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  businessProfiles  BusinessProfile[]
-  reviewsGiven      Review[]               @relation("ReviewsGiven")
-  storeToursCreated StoreTour[]
-  inquiries         Inquiry[]              @relation("UserInquiries")
-  messagesSent      InquiryMessage[]       @relation("MessageSender")
-  savedListings     SavedListing[]         @relation("SavedListings")
-  savedBusinesses   SavedBusiness[]        @relation("SavedBusinesses")
+  businessProfiles              BusinessProfile[]
+  reviewsGiven                  Review[]                    @relation("ReviewsGiven")
+  storeToursCreated             StoreTour[]
+  conversationsParticipated     ConversationParticipant[]
+  messagesSent                  Message[]                   @relation("MessageSender")
+  messageReadReceipts           MessageReadReceipt[]         @relation("MessageReadBy")
+  savedListings                 SavedListing[]              @relation("SavedListings")
+  savedBusinesses               SavedBusiness[]             @relation("SavedBusinesses")
 
   @@index([accountId])
 }
@@ -178,7 +179,7 @@ model BusinessProfile {
   hours           OperatingHours[]
   tags            BusinessProfileTag[]
   media           Media[]
-  inquiries       Inquiry[]
+  conversations   Conversation[]
   savedByUsers    SavedBusiness[]      @relation("SavedByUsers")
   analyticsEvents AnalyticsEvent[]
 
@@ -243,9 +244,9 @@ model Listing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  reviews      Review[]
-  inquiries    Inquiry[]
-  savedByUsers SavedListing[] @relation("SavedByUsers")
+  reviews       Review[]
+  conversations Conversation[]
+  savedByUsers  SavedListing[] @relation("SavedByUsers")
 
   @@unique([businessProfileId, slug])
   @@index([businessProfileId])
@@ -508,56 +509,91 @@ model OperatingHours {
 }
 
 // ============================================
-// Inquiry
+// Messaging
 // ============================================
 
-enum InquiryStatus {
-  UNREAD
-  READ
-  RESPONDED
+// Purpose: explicit inbox management only.
+// CLOSED means a party deliberately resolved/archived the conversation.
+// Read state is tracked separately via MessageReadReceipt.
+enum ConversationStatus {
+  ACTIVE
   CLOSED
 }
 
-model Inquiry {
-  id                String          @id @default(cuid())
+model Conversation {
+  id                String             @id @default(cuid())
   businessProfileId String
-  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation("UserInquiries", fields: [userId], references: [id], onDelete: Cascade)
+  businessProfile   BusinessProfile    @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
   listingId String?
   listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
   subject String?
-  status  InquiryStatus @default(UNREAD)
+  status  ConversationStatus @default(ACTIVE)
 
-  messages InquiryMessage[]
+  participants ConversationParticipant[]
+  messages     Message[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([businessProfileId])
-  @@index([userId])
   @@index([status])
-  @@map("inquiries")
+  @@map("conversations")
 }
 
-model InquiryMessage {
-  id        String  @id @default(cuid())
-  inquiryId String
-  inquiry   Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+// Replaces the hard-coded userId on Inquiry.
+// Supports adding more participants in the future without schema changes.
+model ConversationParticipant {
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   senderId String
   sender   User   @relation("MessageSender", fields: [senderId], references: [id])
 
   content String @db.Text
 
+  // Optional media attachment
+  mediaUrl  String?
+  mediaType MediaType?
+
   createdAt DateTime @default(now())
 
-  @@index([inquiryId])
+  readReceipts MessageReadReceipt[]
+
+  @@index([conversationId])
   @@index([senderId])
-  @@map("inquiry_messages")
+  @@map("messages")
+}
+
+model MessageReadReceipt {
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("MessageReadBy", fields: [userId], references: [id], onDelete: Cascade)
+
+  readAt DateTime @default(now())
+
+  @@id([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+  @@map("message_read_receipts")
 }
 
 // ============================================

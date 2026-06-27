@@ -50,7 +50,7 @@ export class AdminMetricsService {
       this.prisma.listing.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
 
       // Engagement
-      this.prisma.inquiry.count(),
+      this.prisma.conversation.count(),
       this.prisma.savedListing.count(),
       this.prisma.savedBusiness.count(),
 

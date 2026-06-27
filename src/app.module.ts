@@ -17,7 +17,7 @@ import { MediaModule } from './features/media/media.module.js';
 import { CategoryModule } from './features/category/category.module.js';
 import { ReviewModule } from './features/review/review.module.js';
 import { StoreTourModule } from './features/store-tour/store-tour.module.js';
-import { InquiryModule } from './features/inquiry/inquiry.module.js';
+import { MessagingModule } from './features/messaging/messaging.module.js';
 import { SavesModule } from './features/saves/saves.module.js';
 import { AnalyticsModule } from './features/analytics/analytics.module.js';
 import { AdminModule } from './features/admin/admin.module.js';
@@ -63,7 +63,7 @@ import { RedisModule } from './shared/redis/redis.module.js';
 
     ReviewModule,
     StoreTourModule,
-    InquiryModule,
+    MessagingModule,
     SavesModule,
     AnalyticsModule,
     AdminModule,
