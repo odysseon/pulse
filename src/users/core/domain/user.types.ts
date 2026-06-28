@@ -7,6 +7,7 @@ export interface UserEntity {
   role: PlatformRole;
   avatarUrl: string | null;
   avatarId: string | null;
+  businessId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

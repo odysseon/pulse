@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { DeleteBusinessProfileUseCase } from '../../application/use-cases/delete-business-profile.use-case.js';
-import { GetMyBusinessProfilesUseCase } from '../../application/use-cases/get-my-business-profiles.use-case.js';
+import { GetMyBusinessProfileUseCase } from '../../application/use-cases/get-my-business-profile.use-case.js';
 import { UpdateBusinessProfileUseCase } from '../../application/use-cases/update-business-profile.use-case.js';
 import { CreateBusinessProfileUseCase } from '../../application/use-cases/create-business-profile.use-case.js';
 import { SetOperatingHoursUseCase } from '../../application/use-cases/set-operating-hours.use-case.js';
@@ -33,7 +33,7 @@ import { SetTagsDto } from '../dto/tag.dto.js';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('businesses management')
+@ApiTags('business management')
 @Controller()
 export class BusinessProfileController {
   constructor(
@@ -43,13 +43,13 @@ export class BusinessProfileController {
     private readonly verifyContactOtp: VerifyContactOtpUseCase,
     private readonly updateBusinessProfile: UpdateBusinessProfileUseCase,
     private readonly deleteBusinessProfile: DeleteBusinessProfileUseCase,
-    private readonly getMyBusinessProfiles: GetMyBusinessProfilesUseCase,
+    private readonly getMyBusinessProfile: GetMyBusinessProfileUseCase,
     private readonly setOperatingHours: SetOperatingHoursUseCase,
     private readonly setBusinessTags: SetBusinessTagsUseCase,
     private readonly getDashboardStats: GetDashboardStatsUseCase,
   ) {}
 
-  @Post('businesses')
+  @Post('business')
   async createProfile(
     @CurrentIdentity() identity: RequestIdentity,
     @Body() dto: CreateBusinessProfileDto,
@@ -62,7 +62,7 @@ export class BusinessProfileController {
     return BusinessProfileResponseDto.from(profile);
   }
 
-  @Post('businesses/:id/contacts/request-verification')
+  @Post('business/:id/contacts/request-verification')
   @HttpCode(HttpStatus.OK)
   async requestContactVerificationEndpoint(
     @CurrentIdentity() identity: RequestIdentity,
@@ -73,7 +73,7 @@ export class BusinessProfileController {
     await this.requestContactVerification.execute(id, userId, dto.method);
   }
 
-  @Post('businesses/:id/contacts/verify')
+  @Post('business/:id/contacts/verify')
   @HttpCode(HttpStatus.OK)
   async verifyContactOtpEndpoint(
     @CurrentIdentity() identity: RequestIdentity,
@@ -85,7 +85,7 @@ export class BusinessProfileController {
     return BusinessProfileResponseDto.from(profile);
   }
 
-  @Patch('businesses/:id')
+  @Patch('business/:id')
   async update(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('id') id: string,
@@ -100,7 +100,7 @@ export class BusinessProfileController {
     return BusinessProfileResponseDto.from(profile);
   }
 
-  @Delete('businesses/:id')
+  @Delete('business/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
     @CurrentIdentity() identity: RequestIdentity,
@@ -110,16 +110,19 @@ export class BusinessProfileController {
     await this.deleteBusinessProfile.execute(id, userId);
   }
 
-  @Get('users/me/businesses')
-  async getMyProfiles(
+  @Get('users/me/business')
+  async getMyProfile(
     @CurrentIdentity() identity: RequestIdentity,
-  ): Promise<BusinessProfileResponseDto[]> {
+  ): Promise<BusinessProfileResponseDto> {
     const { id: userId } = await this.resolveUser(identity.accountId);
-    const profiles = await this.getMyBusinessProfiles.execute(userId);
-    return profiles.map((p) => BusinessProfileResponseDto.from(p));
+    const profile = await this.getMyBusinessProfile.execute(userId);
+    if (!profile) {
+      throw new NotFoundException('You do not have a business profile.');
+    }
+    return BusinessProfileResponseDto.from(profile);
   }
 
-  @Get('businesses/:id/dashboard-stats')
+  @Get('business/:id/dashboard-stats')
   async getStats(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('id') id: string,
@@ -129,7 +132,7 @@ export class BusinessProfileController {
     return stats;
   }
 
-  @Put('businesses/:id/hours')
+  @Put('business/:id/hours')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateHours(
     @CurrentIdentity() identity: RequestIdentity,
@@ -140,7 +143,7 @@ export class BusinessProfileController {
     await this.setOperatingHours.execute(id, dto.hours, userId, isAdmin);
   }
 
-  @Put('businesses/:id/tags')
+  @Put('business/:id/tags')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateTags(
     @CurrentIdentity() identity: RequestIdentity,

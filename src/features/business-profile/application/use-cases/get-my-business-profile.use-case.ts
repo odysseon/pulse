@@ -3,10 +3,10 @@ import { IBusinessProfileRepository } from '../../domain/ports/business-profile.
 import { BusinessProfileView } from '../../domain/types/business-profile.types.js';
 
 @Injectable()
-export class GetMyBusinessProfilesUseCase {
+export class GetMyBusinessProfileUseCase {
   constructor(private readonly repo: IBusinessProfileRepository) {}
 
-  async execute(ownerId: string): Promise<BusinessProfileView[]> {
+  async execute(ownerId: string): Promise<BusinessProfileView | null> {
     return this.repo.findByOwner(ownerId);
   }
 }

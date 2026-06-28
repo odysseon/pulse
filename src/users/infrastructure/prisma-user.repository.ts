@@ -32,7 +32,7 @@ export class PrismaUserRepository implements IUserRepository {
       },
     });
 
-    const domain = { ...user, role: user.role };
+    const domain = { ...user, role: user.role, businessId: null };
     this.updateCacheAsync(domain);
     return domain;
   }
@@ -44,12 +44,17 @@ export class PrismaUserRepository implements IUserRepository {
       where: { accountId },
       include: {
         account: true,
+        businessProfile: true,
       },
     });
 
     if (!user) return null;
 
-    const domain = { ...user, role: user.role };
+    const domain = {
+      ...user,
+      role: user.role,
+      businessId: user.businessProfile ? user.businessProfile.id : null,
+    };
     this.updateCacheAsync(domain);
     return domain;
   }
@@ -63,9 +68,16 @@ export class PrismaUserRepository implements IUserRepository {
           ...(payload.avatarUrl !== undefined && { avatarUrl: payload.avatarUrl }),
           ...(payload.avatarId !== undefined && { avatarId: payload.avatarId }),
         },
+        include: {
+          businessProfile: true,
+        },
       });
 
-      const domain = { ...updatedUser, role: updatedUser.role };
+      const domain = {
+        ...updatedUser,
+        role: updatedUser.role,
+        businessId: updatedUser.businessProfile?.id || null,
+      };
       this.updateCacheAsync(domain);
       return domain;
     } catch (error: unknown) {

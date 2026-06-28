@@ -4,7 +4,7 @@ import { VerifyContactOtpUseCase } from './application/use-cases/verify-contact-
 import { CreateBusinessProfileUseCase } from './application/use-cases/create-business-profile.use-case.js';
 import { DeleteBusinessProfileUseCase } from './application/use-cases/delete-business-profile.use-case.js';
 import { DiscoverBusinessesUseCase } from './application/use-cases/discover-businesses.use-case.js';
-import { GetMyBusinessProfilesUseCase } from './application/use-cases/get-my-business-profiles.use-case.js';
+import { GetMyBusinessProfileUseCase } from './application/use-cases/get-my-business-profile.use-case.js';
 import { GetPublicBusinessProfileUseCase } from './application/use-cases/get-public-business-profile.use-case.js';
 import { UpdateBusinessProfileUseCase } from './application/use-cases/update-business-profile.use-case.js';
 import { SetOperatingHoursUseCase } from './application/use-cases/set-operating-hours.use-case.js';
@@ -34,7 +34,7 @@ import { RedisModule } from '../../shared/redis/redis.module.js';
     UpdateBusinessProfileUseCase,
     DeleteBusinessProfileUseCase,
     GetPublicBusinessProfileUseCase,
-    GetMyBusinessProfilesUseCase,
+    GetMyBusinessProfileUseCase,
     DiscoverBusinessesUseCase,
     SetOperatingHoursUseCase,
     SetBusinessTagsUseCase,

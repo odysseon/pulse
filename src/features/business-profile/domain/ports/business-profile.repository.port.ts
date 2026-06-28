@@ -12,7 +12,7 @@ export abstract class IBusinessProfileRepository {
   abstract findById(id: string): Promise<BusinessProfileView | null>;
   abstract findBySlug(slug: string): Promise<BusinessProfileView | null>;
   abstract isSlugTaken(slug: string): Promise<boolean>;
-  abstract findByOwner(ownerId: string): Promise<BusinessProfileView[]>;
+  abstract findByOwner(ownerId: string): Promise<BusinessProfileView | null>;
   abstract update(id: string, input: UpdateBusinessProfileInput): Promise<BusinessProfileView>;
   abstract delete(id: string): Promise<void>;
   abstract discover(input: DiscoverBusinessesInput): Promise<PaginatedBusinessSummaries>;

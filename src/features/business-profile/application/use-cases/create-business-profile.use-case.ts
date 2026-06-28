@@ -12,7 +12,7 @@ export class CreateBusinessProfileUseCase {
 
   async execute(input: CreateBusinessProfileInput): Promise<BusinessProfileView> {
     const existing = await this.repo.findByOwner(input.ownerId);
-    if (existing.length > 0) {
+    if (existing) {
       throw new ConflictException('A user can only own at most one business profile.');
     }
 

@@ -268,8 +268,8 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     return count > 0;
   }
 
-  async findByOwner(ownerId: string): Promise<BusinessProfileView[]> {
-    const rows = await this.prisma.businessProfile.findMany({
+  async findByOwner(ownerId: string): Promise<BusinessProfileView | null> {
+    const raw = await this.prisma.businessProfile.findUnique({
       where: { ownerId },
       include: {
         hours: true,
@@ -277,10 +277,10 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         geoEntity: true,
         categories: { select: { id: true } },
       },
-      orderBy: { createdAt: 'desc' },
     });
-    const hydrated = await this.hydrate(rows);
-    return hydrated.map(toDomain);
+    if (!raw) return null;
+    const hydratedArray = await this.hydrate([raw as any]);
+    return toDomain(hydratedArray[0]!);
   }
 
   async update(id: string, input: UpdateBusinessProfileInput): Promise<BusinessProfileView> {

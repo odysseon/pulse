@@ -2,7 +2,7 @@ export { CreateBusinessProfileUseCase } from './use-cases/create-business-profil
 export { UpdateBusinessProfileUseCase } from './use-cases/update-business-profile.use-case.js';
 export { DeleteBusinessProfileUseCase } from './use-cases/delete-business-profile.use-case.js';
 export { GetPublicBusinessProfileUseCase } from './use-cases/get-public-business-profile.use-case.js';
-export { GetMyBusinessProfilesUseCase } from './use-cases/get-my-business-profiles.use-case.js';
+export { GetMyBusinessProfileUseCase } from './use-cases/get-my-business-profile.use-case.js';
 export { DiscoverBusinessesUseCase } from './use-cases/discover-businesses.use-case.js';
 export { SetOperatingHoursUseCase } from './use-cases/set-operating-hours.use-case.js';
 export { SetBusinessTagsUseCase } from './use-cases/set-business-tags.use-case.js';
