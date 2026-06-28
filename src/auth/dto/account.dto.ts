@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsStrongPassword, MinLength } from "class-validator";
 
 export class RegisterDto {
   /**
@@ -14,8 +14,7 @@ export class RegisterDto {
    * @example secret123
    */
   @IsString()
-  @IsNotEmpty()
-  @MinLength(8)
+  @IsStrongPassword()
   password!: string;
 
   /**
