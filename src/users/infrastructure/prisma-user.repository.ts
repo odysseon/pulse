@@ -43,14 +43,15 @@ export class PrismaUserRepository implements IUserRepository {
     const user = await this.prisma.user.findUnique({
       where: { accountId },
       include: {
-        account: true,
-        businessProfile: true,
+        businessProfile: {
+          select: { id: true },
+        },
       },
     });
 
     if (!user) return null;
 
-    const { businessProfile, account, ...rest } = user;
+    const { businessProfile, ...rest } = user;
     const domain = {
       ...rest,
       role: user.role,
@@ -70,11 +71,13 @@ export class PrismaUserRepository implements IUserRepository {
           ...(payload.avatarId !== undefined && { avatarId: payload.avatarId }),
         },
         include: {
-          businessProfile: true,
+          businessProfile: {
+            select: { id: true },
+          },
         },
       });
 
-      const { businessProfile, account, ...rest } = updatedUser as any;
+      const { businessProfile, ...rest } = updatedUser;
       const domain = {
         ...rest,
         role: updatedUser.role,
