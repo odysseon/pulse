@@ -50,10 +50,11 @@ export class PrismaUserRepository implements IUserRepository {
 
     if (!user) return null;
 
+    const { businessProfile, account, ...rest } = user;
     const domain = {
-      ...user,
+      ...rest,
       role: user.role,
-      businessId: user.businessProfile ? user.businessProfile.id : null,
+      businessId: businessProfile?.id || null,
     };
     this.updateCacheAsync(domain);
     return domain;
@@ -73,10 +74,11 @@ export class PrismaUserRepository implements IUserRepository {
         },
       });
 
+      const { businessProfile, account, ...rest } = updatedUser as any;
       const domain = {
-        ...updatedUser,
+        ...rest,
         role: updatedUser.role,
-        businessId: updatedUser.businessProfile?.id || null,
+        businessId: businessProfile?.id || null,
       };
       this.updateCacheAsync(domain);
       return domain;
