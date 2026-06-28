@@ -1,6 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { BusinessTourStatus, BusinessTourMediaItem } from '../../domain/types/business-tour.entity.js';
-import { PaginatedBusinessTours, BusinessTourView } from '../../domain/types/business-tour.types.js';
+import {
+  BusinessTourStatus,
+  BusinessTourMediaItem,
+} from '../../domain/types/business-tour.entity.js';
+import {
+  PaginatedBusinessTours,
+  BusinessTourView,
+} from '../../domain/types/business-tour.types.js';
 
 export class BusinessTourHighlightDto {
   @ApiProperty() id: string;

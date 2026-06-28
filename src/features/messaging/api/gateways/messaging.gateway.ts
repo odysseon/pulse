@@ -68,7 +68,12 @@ export class MessagingGateway
     this.server.to(this.roomFor(conversationId)).emit('message:new', event);
   }
 
-  broadcastReadReceipt(conversationId: string, messageId: string, userId: string, readAt: Date): void {
+  broadcastReadReceipt(
+    conversationId: string,
+    messageId: string,
+    userId: string,
+    readAt: Date,
+  ): void {
     const event: WsReadReceiptEvent = { conversationId, messageId, userId, readAt };
     this.server.to(this.roomFor(conversationId)).emit('message:read', event);
   }
@@ -128,7 +133,7 @@ export class MessagingGateway
       messageIds: payload.messageIds,
       userId,
     });
-    
+
     const readAt = new Date();
     for (const messageId of payload.messageIds) {
       this.broadcastReadReceipt(payload.conversationId, messageId, userId, readAt);

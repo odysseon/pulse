@@ -31,9 +31,7 @@ export class MagicLinkController {
   @Public()
   @Post('request')
   @HttpCode(HttpStatus.OK)
-  async requestMagicLink(
-    @Body() dto: RequestMagicLinkDto,
-  ): Promise<RequestMagicLinkResponseDto> {
+  async requestMagicLink(@Body() dto: RequestMagicLinkDto): Promise<RequestMagicLinkResponseDto> {
     const { plainTextToken, isNewAccount } = await this.magicLink.requestMagicLink({
       email: dto.email,
     });
@@ -63,9 +61,7 @@ export class MagicLinkController {
   @Public()
   @Post('authenticate')
   @HttpCode(HttpStatus.OK)
-  async authenticate(
-    @Body() dto: AuthenticateMagicLinkDto,
-  ): Promise<ReceiptTokenResponse> {
+  async authenticate(@Body() dto: AuthenticateMagicLinkDto): Promise<ReceiptTokenResponse> {
     const { receipt } = await this.magicLink.authenticateWithMagicLink({
       token: dto.token,
     });

@@ -32,12 +32,12 @@ async function bootstrap(): Promise<void> {
   );
 
   SwaggerSetup.register(app);
-  
+
   const allowedOriginsRaw = configService.get('ALLOWED_ORIGINS') as string | undefined;
   const frontendUrl = configService.get('FRONTEND_URL') as string;
   let origins: string[] = [frontendUrl];
   if (allowedOriginsRaw) {
-    origins = allowedOriginsRaw.split(',').map(o => o.trim());
+    origins = allowedOriginsRaw.split(',').map((o) => o.trim());
   }
 
   app.enableCors({

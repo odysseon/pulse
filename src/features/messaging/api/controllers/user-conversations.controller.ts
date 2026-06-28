@@ -8,11 +8,7 @@ import { GetConversationsByUserUseCase } from '../../application/use-cases/get-c
 import { GetConversationDetailsUseCase } from '../../application/use-cases/get-conversation-details.use-case.js';
 import { MarkMessagesReadUseCase } from '../../application/use-cases/mark-messages-read.use-case.js';
 import { IRealtimeGateway } from '../../domain/ports/realtime.gateway.port.js';
-import {
-  CreateConversationDto,
-  SendMessageDto,
-  MarkMessagesReadDto,
-} from '../dto/request.dto.js';
+import { CreateConversationDto, SendMessageDto, MarkMessagesReadDto } from '../dto/request.dto.js';
 import { ConversationResponseDto, MessageResponseDto } from '../dto/response.dto.js';
 
 @ApiTags('Conversations (User)')
@@ -48,9 +44,7 @@ export class UserConversationsController {
 
   @Get()
   @ApiOperation({ summary: 'List my conversations' })
-  async list(
-    @CurrentIdentity() identity: RequestIdentity,
-  ): Promise<ConversationResponseDto[]> {
+  async list(@CurrentIdentity() identity: RequestIdentity): Promise<ConversationResponseDto[]> {
     const userId = await this.resolveUserId(identity.accountId);
     const conversations = await this.getConversations.execute(userId);
     return conversations.map((c) => ConversationResponseDto.from(c));
@@ -86,7 +80,7 @@ export class UserConversationsController {
   ): Promise<void> {
     const userId = await this.resolveUserId(identity.accountId);
     await this.markRead.execute({ conversationId: id, messageIds: dto.messageIds, userId });
-    
+
     const readAt = new Date();
     for (const messageId of dto.messageIds) {
       this.realtime.broadcastReadReceipt(id, messageId, userId, readAt);

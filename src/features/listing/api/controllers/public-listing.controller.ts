@@ -1,5 +1,9 @@
 import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
-import { OptionalAuth, CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
+import {
+  OptionalAuth,
+  CurrentIdentity,
+  type RequestIdentity,
+} from '@odysseon/whoami-adapter-nestjs';
 import { DiscoverListingsUseCase } from '../../application/use-cases/discover-listings.use-case.js';
 import { GetPublicListingUseCase } from '../../application/use-cases/get-public-listing.use-case.js';
 import { GetListingsQueryDto } from '../dto/request.dto.js';
@@ -33,7 +37,7 @@ export class PublicListingController {
     console.log('[PublicListingController.discover] resolved currentUserId:', currentUserId);
     const result = await this.discoverListings.execute({
       ...query,
-      ...(currentUserId ? { currentUserId } : {})
+      ...(currentUserId ? { currentUserId } : {}),
     });
     return PaginatedListingsResponseDto.from(result);
   }
@@ -53,7 +57,7 @@ export class PublicListingController {
     const result = await this.discoverListings.execute({
       ...query,
       ...(businessProfileId ? { businessProfileId } : {}),
-      ...(currentUserId ? { currentUserId } : {})
+      ...(currentUserId ? { currentUserId } : {}),
     });
     return PaginatedListingsResponseDto.from(result);
   }

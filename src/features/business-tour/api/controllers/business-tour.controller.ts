@@ -72,7 +72,7 @@ export class BusinessTourController {
   ): Promise<any> {
     const pageNum = parseInt(page ?? '1', 10);
     const limitNum = parseInt(limit ?? '20', 10);
-    
+
     const lat = latStr ? parseFloat(latStr) : undefined;
     const lng = lngStr ? parseFloat(lngStr) : undefined;
     const radius = radiusStr ? parseFloat(radiusStr) : undefined;

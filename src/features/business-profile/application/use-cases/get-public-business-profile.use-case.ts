@@ -7,10 +7,13 @@ import { PrismaService } from '../../../../prisma/prisma.service.js';
 export class GetPublicBusinessProfileUseCase {
   constructor(
     private readonly repo: IBusinessProfileRepository,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
   ) {}
 
-  async execute(slug: string, currentUserId?: string): Promise<BusinessProfileView & { isSaved?: boolean }> {
+  async execute(
+    slug: string,
+    currentUserId?: string,
+  ): Promise<BusinessProfileView & { isSaved?: boolean }> {
     const profile = await this.repo.findBySlug(slug);
 
     if (!profile || !profile.isPublic) {

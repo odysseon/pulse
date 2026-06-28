@@ -35,7 +35,10 @@ export class GetDashboardStatsUseCase {
     });
 
     const totalContactClicks = await this.prisma.analyticsEvent.count({
-      where: { businessProfileId: businessId, eventType: { in: ['PHONE_CLICK', 'WEBSITE_CLICK', 'DIRECTIONS_CLICK'] } },
+      where: {
+        businessProfileId: businessId,
+        eventType: { in: ['PHONE_CLICK', 'WEBSITE_CLICK', 'DIRECTIONS_CLICK'] },
+      },
     });
 
     return {

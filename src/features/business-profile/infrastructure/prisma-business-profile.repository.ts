@@ -335,7 +335,9 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
         ...(input.isEmailVerified !== undefined && { isEmailVerified: input.isEmailVerified }),
         ...(input.isPhoneVerified !== undefined && { isPhoneVerified: input.isPhoneVerified }),
-        ...(input.verificationStatus !== undefined && { verificationStatus: input.verificationStatus }),
+        ...(input.verificationStatus !== undefined && {
+          verificationStatus: input.verificationStatus,
+        }),
         ...(input.categoryIds !== undefined && {
           categories: {
             set: input.categoryIds.map((id) => ({ id })),
@@ -546,15 +548,27 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       categoryIds: r.categories?.map((c) => c.id) ?? [],
     }));
 
-    return this.enrichWithSavedStatus(itemsMapped, total, input.page, input.limit, input.currentUserId);
+    return this.enrichWithSavedStatus(
+      itemsMapped,
+      total,
+      input.page,
+      input.limit,
+      input.currentUserId,
+    );
   }
 
-  private async enrichWithSavedStatus(items: any[], total: number, page: number, limit: number, currentUserId?: string): Promise<PaginatedBusinessSummaries> {
+  private async enrichWithSavedStatus(
+    items: any[],
+    total: number,
+    page: number,
+    limit: number,
+    currentUserId?: string,
+  ): Promise<PaginatedBusinessSummaries> {
     if (!currentUserId || items.length === 0) {
       return { items, total, page, limit };
     }
 
-    const businessIds = items.map(i => i.id);
+    const businessIds = items.map((i) => i.id);
     const saves = await this.prisma.savedBusiness.findMany({
       where: {
         userId: currentUserId,
@@ -563,10 +577,10 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       select: { businessProfileId: true },
     });
 
-    const savedSet = new Set(saves.map(s => s.businessProfileId));
+    const savedSet = new Set(saves.map((s) => s.businessProfileId));
 
     return {
-      items: items.map(i => ({
+      items: items.map((i) => ({
         ...i,
         isSaved: savedSet.has(i.id),
       })),

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { IBusinessTourRepository } from '../../domain/ports/business-tour.repository.port.js';
 import { BusinessTourStatus } from '../../domain/types/business-tour.entity.js';
-import { DiscoverBusinessToursInput, PaginatedBusinessToursSummary } from '../../domain/types/business-tour.types.js';
+import {
+  DiscoverBusinessToursInput,
+  PaginatedBusinessToursSummary,
+} from '../../domain/types/business-tour.types.js';
 
 interface Input {
   readonly status?: BusinessTourStatus;

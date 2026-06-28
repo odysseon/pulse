@@ -1,4 +1,14 @@
-import { Controller, Post, Delete, Get, Param, Query, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentIdentity } from '@odysseon/whoami-adapter-nestjs';
 import type { RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
@@ -43,7 +53,10 @@ export class SavesController {
 
   @Delete('business-profiles/:id/save')
   @HttpCode(HttpStatus.OK)
-  async unsaveBusinessAction(@CurrentIdentity() identity: RequestIdentity, @Param('id') id: string) {
+  async unsaveBusinessAction(
+    @CurrentIdentity() identity: RequestIdentity,
+    @Param('id') id: string,
+  ) {
     const userId = await this.resolveUser(identity.accountId);
     await this.unsaveBusiness.execute(userId, id);
     return { success: true };
@@ -74,7 +87,11 @@ export class SavesController {
     const userId = await this.resolveUser(identity.accountId);
     const pageNum = parseInt(page ?? '1', 10);
     const limitNum = parseInt(limit ?? '20', 10);
-    return this.getSavedBusinesses.execute(userId, isNaN(pageNum) ? 1 : pageNum, isNaN(limitNum) ? 20 : limitNum);
+    return this.getSavedBusinesses.execute(
+      userId,
+      isNaN(pageNum) ? 1 : pageNum,
+      isNaN(limitNum) ? 20 : limitNum,
+    );
   }
 
   @Get('users/me/saved-listings')
@@ -86,6 +103,10 @@ export class SavesController {
     const userId = await this.resolveUser(identity.accountId);
     const pageNum = parseInt(page ?? '1', 10);
     const limitNum = parseInt(limit ?? '20', 10);
-    return this.getSavedListings.execute(userId, isNaN(pageNum) ? 1 : pageNum, isNaN(limitNum) ? 20 : limitNum);
+    return this.getSavedListings.execute(
+      userId,
+      isNaN(pageNum) ? 1 : pageNum,
+      isNaN(limitNum) ? 20 : limitNum,
+    );
   }
 }

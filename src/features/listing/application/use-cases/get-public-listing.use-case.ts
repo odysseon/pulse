@@ -8,7 +8,7 @@ import { PrismaService } from '../../../../prisma/prisma.service.js';
 export class GetPublicListingUseCase {
   constructor(
     private readonly repo: IListingRepository,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
   ) {}
 
   async execute(slug: string, currentUserId?: string): Promise<Listing & { isSaved?: boolean }> {

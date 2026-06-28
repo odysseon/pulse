@@ -11,9 +11,14 @@ export class VerifyContactOtpUseCase {
     private readonly redisService: RedisService,
   ) {}
 
-  async execute(businessId: string, userId: string, method: ContactMethod, otp: string): Promise<BusinessProfileView> {
+  async execute(
+    businessId: string,
+    userId: string,
+    method: ContactMethod,
+    otp: string,
+  ): Promise<BusinessProfileView> {
     const profile = await this.businessProfileRepo.findById(businessId);
-    
+
     if (!profile || profile.ownerId !== userId) {
       throw new NotFoundException('Business profile not found.');
     }

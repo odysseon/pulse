@@ -17,13 +17,13 @@ export class RequestContactVerificationUseCase {
 
   async execute(businessId: string, userId: string, method: ContactMethod): Promise<void> {
     const profile = await this.businessProfileRepo.findById(businessId);
-    
+
     if (!profile || profile.ownerId !== userId) {
       throw new NotFoundException('Business profile not found.');
     }
 
     let contactValue: string | null = null;
-    
+
     switch (method) {
       case ContactMethod.EMAIL:
         contactValue = profile.email;
@@ -31,11 +31,13 @@ export class RequestContactVerificationUseCase {
         break;
       case ContactMethod.PHONE:
         contactValue = profile.phoneNumber;
-        if (profile.isPhoneVerified) throw new BadRequestException('Phone number is already verified.');
+        if (profile.isPhoneVerified)
+          throw new BadRequestException('Phone number is already verified.');
         break;
       case ContactMethod.WHATSAPP:
         contactValue = profile.whatsapp;
-        if (profile.isPhoneVerified) throw new BadRequestException('Phone number (WhatsApp) is already verified.');
+        if (profile.isPhoneVerified)
+          throw new BadRequestException('Phone number (WhatsApp) is already verified.');
         break;
     }
 

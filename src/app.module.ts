@@ -31,10 +31,12 @@ import { RedisModule } from './shared/redis/redis.module.js';
       envFilePath: ['.env', '.env.local'],
       validate: validateConfig,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

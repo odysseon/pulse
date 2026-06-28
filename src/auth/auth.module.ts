@@ -11,7 +11,12 @@ import { UsersModule } from '../users/users.module.js';
 
 @Module({
   imports: [WhoamiModule.registerAsync(whoamiConfig), MailModule, UsersModule],
-  controllers: [AccountsController, PasswordAuthController, MagicLinkController, IdentityController],
+  controllers: [
+    AccountsController,
+    PasswordAuthController,
+    MagicLinkController,
+    IdentityController,
+  ],
   providers: [RegisterAccountUseCase],
 })
 export class AuthModule {}

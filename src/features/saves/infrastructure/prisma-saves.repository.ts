@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service.js';
-import { ISavesRepository, SavedBusinessView, SavedListingView } from '../domain/ports/saves.repository.port.js';
+import {
+  ISavesRepository,
+  SavedBusinessView,
+  SavedListingView,
+} from '../domain/ports/saves.repository.port.js';
 
 @Injectable()
 export class PrismaSavesRepository implements ISavesRepository {
@@ -23,16 +27,18 @@ export class PrismaSavesRepository implements ISavesRepository {
   }
 
   async unsaveListing(userId: string, listingId: string): Promise<void> {
-    await this.prisma.savedListing.delete({
-      where: {
-        userId_listingId: {
-          userId,
-          listingId,
+    await this.prisma.savedListing
+      .delete({
+        where: {
+          userId_listingId: {
+            userId,
+            listingId,
+          },
         },
-      },
-    }).catch(() => {
-      // Ignore if it doesn't exist
-    });
+      })
+      .catch(() => {
+        // Ignore if it doesn't exist
+      });
   }
 
   async saveBusiness(userId: string, businessProfileId: string): Promise<void> {
@@ -52,16 +58,18 @@ export class PrismaSavesRepository implements ISavesRepository {
   }
 
   async unsaveBusiness(userId: string, businessProfileId: string): Promise<void> {
-    await this.prisma.savedBusiness.delete({
-      where: {
-        userId_businessProfileId: {
-          userId,
-          businessProfileId,
+    await this.prisma.savedBusiness
+      .delete({
+        where: {
+          userId_businessProfileId: {
+            userId,
+            businessProfileId,
+          },
         },
-      },
-    }).catch(() => {
-      // Ignore if it doesn't exist
-    });
+      })
+      .catch(() => {
+        // Ignore if it doesn't exist
+      });
   }
 
   async isListingSaved(userId: string, listingId: string): Promise<boolean> {
@@ -78,7 +86,11 @@ export class PrismaSavesRepository implements ISavesRepository {
     return count > 0;
   }
 
-  async getSavedListings(userId: string, skip: number, take: number): Promise<{ items: SavedListingView[]; total: number }> {
+  async getSavedListings(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<{ items: SavedListingView[]; total: number }> {
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.savedListing.findMany({
         where: { userId },
@@ -124,7 +136,11 @@ export class PrismaSavesRepository implements ISavesRepository {
     return { items, total };
   }
 
-  async getSavedBusinesses(userId: string, skip: number, take: number): Promise<{ items: SavedBusinessView[]; total: number }> {
+  async getSavedBusinesses(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<{ items: SavedBusinessView[]; total: number }> {
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.savedBusiness.findMany({
         where: { userId },

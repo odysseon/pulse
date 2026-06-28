@@ -19,4 +19,3 @@ export interface IUserRepository {
    */
   updateProfile(accountId: string, payload: UpdateUserProfileDto): Promise<UserEntity>;
 }
-

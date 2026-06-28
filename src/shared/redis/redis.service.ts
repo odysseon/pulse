@@ -43,7 +43,7 @@ export class RedisService implements OnModuleDestroy {
       // Add random jitter between 0 and 20% of base TTL to prevent cache stampede
       const jitter = Math.floor(Math.random() * (baseTtlSeconds * 0.2));
       const finalTtl = baseTtlSeconds + jitter;
-      
+
       const serialized = JSON.stringify(value);
       await this.client.set(key, serialized, 'EX', finalTtl);
     } catch (err) {

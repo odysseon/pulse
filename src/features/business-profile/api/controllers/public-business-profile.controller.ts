@@ -1,5 +1,9 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { OptionalAuth, CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
+import {
+  OptionalAuth,
+  CurrentIdentity,
+  type RequestIdentity,
+} from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
 import { DiscoverBusinessesUseCase } from '../../application/use-cases/discover-businesses.use-case.js';
 import { GetPublicBusinessProfileUseCase } from '../../application/use-cases/get-public-business-profile.use-case.js';
@@ -40,7 +44,7 @@ export class PublicBusinessProfileController {
 
     const result = await this.discoverBusinesses.execute({
       ...query,
-      ...(currentUserId ? { currentUserId } : {})
+      ...(currentUserId ? { currentUserId } : {}),
     });
     return PaginatedBusinessesResponseDto.from(result);
   }

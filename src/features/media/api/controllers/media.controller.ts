@@ -182,7 +182,9 @@ export class MediaController {
    */
   @Public()
   @Get('business-tours/:resourceId/media')
-  async getBusinessTourMedia(@Param('resourceId') resourceId: string): Promise<BusinessTourMediaDto> {
+  async getBusinessTourMedia(
+    @Param('resourceId') resourceId: string,
+  ): Promise<BusinessTourMediaDto> {
     const items = await this.getResourceMedia.execute('businessTourId', resourceId);
     return BusinessTourMediaDto.from(items);
   }

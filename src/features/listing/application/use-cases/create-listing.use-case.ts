@@ -30,7 +30,9 @@ export class CreateListingUseCase {
     if (businessProfile.verificationStatus === 'UNVERIFIED') {
       const existingListings = await this.repo.findByBusinessProfile(input.businessProfileId);
       if (existingListings.length >= 1) {
-        throw new BadRequestException('Unverified businesses can only create one listing. Please complete your profile verification to create more.');
+        throw new BadRequestException(
+          'Unverified businesses can only create one listing. Please complete your profile verification to create more.',
+        );
       }
     }
 

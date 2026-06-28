@@ -19,10 +19,18 @@ export abstract class ISavesRepository {
   abstract unsaveListing(userId: string, listingId: string): Promise<void>;
   abstract saveBusiness(userId: string, businessProfileId: string): Promise<void>;
   abstract unsaveBusiness(userId: string, businessProfileId: string): Promise<void>;
-  
+
   abstract isListingSaved(userId: string, listingId: string): Promise<boolean>;
   abstract isBusinessSaved(userId: string, businessProfileId: string): Promise<boolean>;
 
-  abstract getSavedListings(userId: string, skip: number, take: number): Promise<{ items: SavedListingView[]; total: number }>;
-  abstract getSavedBusinesses(userId: string, skip: number, take: number): Promise<{ items: SavedBusinessView[]; total: number }>;
+  abstract getSavedListings(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<{ items: SavedListingView[]; total: number }>;
+  abstract getSavedBusinesses(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<{ items: SavedBusinessView[]; total: number }>;
 }

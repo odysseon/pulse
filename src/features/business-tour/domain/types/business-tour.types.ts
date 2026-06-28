@@ -1,4 +1,8 @@
-import { BusinessTourStatus, BusinessTourHighlight, BusinessTourMediaItem } from './business-tour.entity.js';
+import {
+  BusinessTourStatus,
+  BusinessTourHighlight,
+  BusinessTourMediaItem,
+} from './business-tour.entity.js';
 
 export interface CreateBusinessTourInput {
   readonly businessProfileId: string;

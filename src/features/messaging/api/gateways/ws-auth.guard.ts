@@ -2,9 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import {
-  JoseReceiptVerifier,
-} from '@odysseon/whoami-adapter-jose';
+import { JoseReceiptVerifier } from '@odysseon/whoami-adapter-jose';
 import { joseConfig } from '../../../../auth/password.config.js';
 
 @Injectable()

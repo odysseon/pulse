@@ -21,7 +21,12 @@ import { SetBusinessTagsUseCase } from '../../application/use-cases/set-business
 import { GetDashboardStatsUseCase } from '../../application/use-cases/get-dashboard-stats.use-case.js';
 import { RequestContactVerificationUseCase } from '../../application/use-cases/request-contact-verification.use-case.js';
 import { VerifyContactOtpUseCase } from '../../application/use-cases/verify-contact-otp.use-case.js';
-import { CreateBusinessProfileDto, UpdateBusinessProfileDto, RequestContactVerificationDto, VerifyContactOtpDto } from '../dto/request.dto.js';
+import {
+  CreateBusinessProfileDto,
+  UpdateBusinessProfileDto,
+  RequestContactVerificationDto,
+  VerifyContactOtpDto,
+} from '../dto/request.dto.js';
 import { BusinessProfileResponseDto, DashboardStatsResponseDto } from '../dto/response.dto.js';
 import { SetOperatingHoursDto } from '../dto/operating-hours.dto.js';
 import { SetTagsDto } from '../dto/tag.dto.js';

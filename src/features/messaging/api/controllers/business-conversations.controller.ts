@@ -31,9 +31,7 @@ export class BusinessConversationsController {
 
   @Get()
   @ApiOperation({ summary: 'List all conversations for a business' })
-  async list(
-    @Param('businessId') businessId: string,
-  ): Promise<ConversationResponseDto[]> {
+  async list(@Param('businessId') businessId: string): Promise<ConversationResponseDto[]> {
     const conversations = await this.getConversations.execute(businessId);
     return conversations.map((c) => ConversationResponseDto.from(c));
   }

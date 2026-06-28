@@ -225,7 +225,7 @@ export class PrismaListingRepository extends IListingRepository {
 
     if (input.lat !== undefined && input.lng !== undefined) {
       const radiusMeters = (input.radiusInKm ?? 10) * 1000;
-      
+
       const rawItems = await this.prisma.$queryRaw<
         {
           id: string;
@@ -259,11 +259,15 @@ export class PrismaListingRepository extends IListingRepository {
           ${input.minPrice !== undefined ? Prisma.sql`AND l."minPrice" >= ${input.minPrice}` : Prisma.empty}
           ${input.maxPrice !== undefined ? Prisma.sql`AND l."maxPrice" <= ${input.maxPrice}` : Prisma.empty}
           ${input.search ? Prisma.sql`AND (l.title ILIKE ${'%' + input.search + '%'} OR l.description ILIKE ${'%' + input.search + '%'})` : Prisma.empty}
-          ${input.categorySlug ? Prisma.sql`AND EXISTS (
+          ${
+            input.categorySlug
+              ? Prisma.sql`AND EXISTS (
              SELECT 1 FROM "categories" c 
              LEFT JOIN "categories" parent ON c."parentId" = parent.id
              WHERE c.id = l."categoryId" AND (c.slug = ${input.categorySlug} OR parent.slug = ${input.categorySlug})
-           )` : Prisma.empty}
+           )`
+              : Prisma.empty
+          }
         ORDER BY distance ASC
         LIMIT ${input.limit}
         OFFSET ${skip};
@@ -282,14 +286,18 @@ export class PrismaListingRepository extends IListingRepository {
           ${input.minPrice !== undefined ? Prisma.sql`AND l."minPrice" >= ${input.minPrice}` : Prisma.empty}
           ${input.maxPrice !== undefined ? Prisma.sql`AND l."maxPrice" <= ${input.maxPrice}` : Prisma.empty}
           ${input.search ? Prisma.sql`AND (l.title ILIKE ${'%' + input.search + '%'} OR l.description ILIKE ${'%' + input.search + '%'})` : Prisma.empty}
-          ${input.categorySlug ? Prisma.sql`AND EXISTS (
+          ${
+            input.categorySlug
+              ? Prisma.sql`AND EXISTS (
              SELECT 1 FROM "categories" c 
              LEFT JOIN "categories" parent ON c."parentId" = parent.id
              WHERE c.id = l."categoryId" AND (c.slug = ${input.categorySlug} OR parent.slug = ${input.categorySlug})
-           )` : Prisma.empty};
+           )`
+              : Prisma.empty
+          };
       `;
 
-      const items = rawItems.map(r => ({
+      const items = rawItems.map((r) => ({
         id: r.id,
         businessProfileId: r.businessProfileId,
         businessProfileSlug: r.businessProfileSlug,
@@ -305,7 +313,13 @@ export class PrismaListingRepository extends IListingRepository {
         ...(r.coverUrl ? { coverUrl: r.coverUrl } : {}),
       }));
 
-      return this.enrichWithSavedStatus(items, Number(countResult[0]?.total ?? 0), input.page, input.limit, input.currentUserId);
+      return this.enrichWithSavedStatus(
+        items,
+        Number(countResult[0]?.total ?? 0),
+        input.page,
+        input.limit,
+        input.currentUserId,
+      );
     }
 
     const where: Prisma.ListingWhereInput = {
@@ -317,11 +331,8 @@ export class PrismaListingRepository extends IListingRepository {
       ...(input.maxPrice !== undefined && { maxPrice: { lte: input.maxPrice } }),
       ...(input.categorySlug && {
         category: {
-          OR: [
-            { slug: input.categorySlug },
-            { parent: { slug: input.categorySlug } }
-          ]
-        }
+          OR: [{ slug: input.categorySlug }, { parent: { slug: input.categorySlug } }],
+        },
       }),
       ...(andConditions.length > 0 && { AND: andConditions }),
     };
@@ -369,12 +380,18 @@ export class PrismaListingRepository extends IListingRepository {
     return this.enrichWithSavedStatus(items, total, input.page, input.limit, input.currentUserId);
   }
 
-  private async enrichWithSavedStatus(items: any[], total: number, page: number, limit: number, currentUserId?: string): Promise<PaginatedListingSummaries> {
+  private async enrichWithSavedStatus(
+    items: any[],
+    total: number,
+    page: number,
+    limit: number,
+    currentUserId?: string,
+  ): Promise<PaginatedListingSummaries> {
     if (!currentUserId || items.length === 0) {
       return { items, total, page, limit };
     }
 
-    const listingIds = items.map(i => i.id);
+    const listingIds = items.map((i) => i.id);
     const saves = await this.prisma.savedListing.findMany({
       where: {
         userId: currentUserId,
@@ -383,10 +400,10 @@ export class PrismaListingRepository extends IListingRepository {
       select: { listingId: true },
     });
 
-    const savedSet = new Set(saves.map(s => s.listingId));
+    const savedSet = new Set(saves.map((s) => s.listingId));
 
     return {
-      items: items.map(i => ({
+      items: items.map((i) => ({
         ...i,
         isSaved: savedSet.has(i.id),
       })),

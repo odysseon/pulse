@@ -33,11 +33,13 @@ export class PrismaConversationRepository implements IConversationRepository {
       mediaUrl: m.mediaUrl,
       mediaType: m.mediaType as MessageView['mediaType'],
       createdAt: m.createdAt,
-      readReceipts: m.readReceipts.map((r): MessageReadReceiptView => ({
-        messageId: r.messageId,
-        userId: r.userId,
-        readAt: r.readAt,
-      })),
+      readReceipts: m.readReceipts.map(
+        (r): MessageReadReceiptView => ({
+          messageId: r.messageId,
+          userId: r.userId,
+          readAt: r.readAt,
+        }),
+      ),
     };
   }
 

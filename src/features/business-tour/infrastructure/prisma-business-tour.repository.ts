@@ -167,9 +167,11 @@ export class PrismaBusinessTourRepository extends IBusinessTourRepository {
     // Use PostGIS if location is provided
     if (input.lat !== undefined && input.lng !== undefined && input.radiusInKm !== undefined) {
       const radiusMeters = input.radiusInKm * 1000;
-      
+
       const searchPattern = input.search ? `%${input.search}%` : '%';
-      const statusFilter = input.status ? Prisma.sql`AND st.status = ${input.status}::"BusinessTourStatus"` : Prisma.empty;
+      const statusFilter = input.status
+        ? Prisma.sql`AND st.status = ${input.status}::"BusinessTourStatus"`
+        : Prisma.empty;
 
       // Note: we fetch the cover media as a subquery or join.
       const rows = await this.prisma.$queryRaw<any[]>`
@@ -217,7 +219,7 @@ export class PrismaBusinessTourRepository extends IBusinessTourRepository {
       `;
 
       return {
-        items: rows.map(r => ({
+        items: rows.map((r) => ({
           id: r.id,
           businessProfileId: r.businessProfileId,
           businessProfileSlug: r.businessProfileSlug,

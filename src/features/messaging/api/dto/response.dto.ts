@@ -27,7 +27,8 @@ export class MessageResponseDto {
   @ApiPropertyOptional() mediaUrl!: string | null;
   @ApiPropertyOptional() mediaType!: string | null;
   @ApiProperty() createdAt!: Date;
-  @ApiProperty({ type: [MessageReadReceiptResponseDto] }) readReceipts!: MessageReadReceiptResponseDto[];
+  @ApiProperty({ type: [MessageReadReceiptResponseDto] })
+  readReceipts!: MessageReadReceiptResponseDto[];
 
   static from(m: MessageView): MessageResponseDto {
     const dto = new MessageResponseDto();

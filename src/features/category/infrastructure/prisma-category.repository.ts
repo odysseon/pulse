@@ -162,7 +162,9 @@ export class PrismaCategoryRepository implements ICategoryRepository {
       }),
     );
 
-    Promise.resolve().then(() => this.redisService.set(cacheKey, result)).catch(() => {});
+    Promise.resolve()
+      .then(() => this.redisService.set(cacheKey, result))
+      .catch(() => {});
     return result;
   }
 

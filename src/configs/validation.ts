@@ -18,10 +18,7 @@ export const configSchema = z
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_FROM: z.string().optional(),
-    SMTP_SECURE: z.preprocess(
-      (val) => val === 'true' || val === true,
-      z.boolean(),
-    ).default(false),
+    SMTP_SECURE: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
 
     // ── Redis ─────────────────────────────────────────────────────────────
     REDIS_HOST: z.string().default('localhost'),
