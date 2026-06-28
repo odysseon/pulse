@@ -14,7 +14,7 @@ import {
   RequestMagicLinkResponseDto,
   ReceiptTokenResponse,
 } from '../dto/index.js';
-import { MailService } from '../../mail/mail.service.js';
+import { MailQueueService } from '../../mail/mail-queue.service.js';
 
 @ApiTags('Magic Link Authentication')
 @Controller('auth/magic-link')
@@ -22,7 +22,7 @@ export class MagicLinkController {
   constructor(
     @Inject(moduleToken('magiclink'))
     private readonly magicLink: MagicLinkMethods,
-    private readonly mailService: MailService,
+    private readonly mailQueueService: MailQueueService,
   ) {}
 
   @ApiOperation({ summary: 'Request a magic link for login' })
@@ -40,7 +40,7 @@ export class MagicLinkController {
 
     const magicLinkUrl = `http://localhost:3000/auth/magic-link/callback?token=${plainTextToken}`;
 
-    await this.mailService.sendMail({
+    await this.mailQueueService.enqueueMail({
       to: dto.email,
       subject: 'Your Magic Link to Login',
       template: 'magic-link',
