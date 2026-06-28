@@ -25,7 +25,7 @@ export interface Media {
   /** Specific resource owners */
   readonly businessProfileId: string | null;
   readonly listingId: string | null;
-  readonly storeTourId: string | null;
+  readonly businessTourId: string | null;
   readonly reviewId: string | null;
 
   /** Delivery URL */

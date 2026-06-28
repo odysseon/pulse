@@ -24,7 +24,7 @@ export interface AddMediaInput {
 const MAX_GALLERY_ITEMS: Record<MediaOwnerKey, number> = {
   listingId: 18,
   businessProfileId: 18,
-  storeTourId: 18,
+  businessTourId: 18,
   // Reviews are raw & concise — 8 photos max.
   reviewId: 8,
 };
@@ -32,7 +32,7 @@ const MAX_GALLERY_ITEMS: Record<MediaOwnerKey, number> = {
 const STORAGE_DESTINATION: Record<MediaOwnerKey, string> = {
   listingId: 'listings/media',
   businessProfileId: 'businesses/media',
-  storeTourId: 'store-tours/media',
+  businessTourId: 'business-tours/media',
   reviewId: 'reviews/media',
 };
 

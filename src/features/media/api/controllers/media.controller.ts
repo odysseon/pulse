@@ -33,7 +33,7 @@ import {
   BusinessProfileMediaDto,
   ListingMediaDto,
   ReviewMediaDto,
-  StoreTourMediaDto,
+  BusinessTourMediaDto,
 } from '../dto/media.dto.js';
 import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
@@ -115,7 +115,7 @@ export class MediaController {
   }
 
   /**
-   * POST /store-tours/:resourceId/media
+   * POST /business-tours/:resourceId/media
    *
    * Accepts multipart/form-data with:
    *   - file: the image or video file
@@ -123,18 +123,18 @@ export class MediaController {
    *
    * Only the creator who created the store tour may upload media.
    */
-  @Post('store-tours/:resourceId/media')
+  @Post('business-tours/:resourceId/media')
   @ModeratorOrAdminGuard()
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UploadMediaDto })
-  async addStoreTourMedia(
+  async addBusinessTourMedia(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('resourceId') resourceId: string,
     @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadMediaDto,
   ): Promise<MediaResponseDto> {
-    return this.#handleAdd(identity, 'storeTourId', resourceId, file, dto.role);
+    return this.#handleAdd(identity, 'businessTourId', resourceId, file, dto.role);
   }
 
   // ---------------------------------------------------------------------------
@@ -177,14 +177,14 @@ export class MediaController {
   }
 
   /**
-   * GET /store-tours/:resourceId/media
+   * GET /business-tours/:resourceId/media
    * Returns { gallery } — raw user photos, gallery-ordered.
    */
   @Public()
-  @Get('store-tours/:resourceId/media')
-  async getStoreTourMedia(@Param('resourceId') resourceId: string): Promise<StoreTourMediaDto> {
-    const items = await this.getResourceMedia.execute('storeTourId', resourceId);
-    return StoreTourMediaDto.from(items);
+  @Get('business-tours/:resourceId/media')
+  async getBusinessTourMedia(@Param('resourceId') resourceId: string): Promise<BusinessTourMediaDto> {
+    const items = await this.getResourceMedia.execute('businessTourId', resourceId);
+    return BusinessTourMediaDto.from(items);
   }
 
   // ---------------------------------------------------------------------------
@@ -253,19 +253,19 @@ export class MediaController {
   }
 
   /**
-   * PATCH /store-tours/:resourceId/media/reorder
+   * PATCH /business-tours/:resourceId/media/reorder
    * orderedIds must include all GALLERY item IDs for this store tour.
    * Only the creator may reorder their own store tour media.
    */
-  @Patch('store-tours/:resourceId/media/reorder')
+  @Patch('business-tours/:resourceId/media/reorder')
   @ModeratorOrAdminGuard()
-  async reorderStoreTourMedia(
+  async reorderBusinessTourMedia(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('resourceId') resourceId: string,
     @Body() dto: ReorderMediaDto,
   ): Promise<MediaResponseDto[]> {
-    await this.#assertResourceOwnership('storeTourId', resourceId, identity.accountId);
-    const items = await this.reorderMedia.execute('storeTourId', resourceId, dto.orderedIds);
+    await this.#assertResourceOwnership('businessTourId', resourceId, identity.accountId);
+    const items = await this.reorderMedia.execute('businessTourId', resourceId, dto.orderedIds);
     return items.map((m) => MediaResponseDto.from(m));
   }
 
@@ -348,8 +348,8 @@ export class MediaController {
       }
     }
 
-    if (ownerKey === 'storeTourId') {
-      const tour = await this.prisma.storeTour.findUnique({
+    if (ownerKey === 'businessTourId') {
+      const tour = await this.prisma.businessTour.findUnique({
         where: { id: resourceId },
         select: { createdById: true },
       });
@@ -372,9 +372,9 @@ export class MediaController {
     } else if (media.listingId) {
       ownerKey = 'listingId';
       resourceId = media.listingId;
-    } else if (media.storeTourId) {
-      ownerKey = 'storeTourId';
-      resourceId = media.storeTourId;
+    } else if (media.businessTourId) {
+      ownerKey = 'businessTourId';
+      resourceId = media.businessTourId;
     } else if (media.reviewId) {
       ownerKey = 'reviewId';
       resourceId = media.reviewId;

@@ -30,7 +30,7 @@ export const SINGLETON_ROLES: ReadonlySet<MediaRole> = new Set([
 export const ROLES_BY_FK_NAME: Record<string, ReadonlySet<MediaRole>> = {
   businessProfileId: new Set([MediaRole.LOGO, MediaRole.BANNER, MediaRole.GALLERY]),
   listingId: new Set([MediaRole.COVER, MediaRole.GALLERY]),
-  storeTourId: new Set([MediaRole.GALLERY]),
+  businessTourId: new Set([MediaRole.GALLERY]),
   // Reviews only support raw gallery photos — no logo, banner, or cover slots.
   reviewId: new Set([MediaRole.GALLERY]),
 };

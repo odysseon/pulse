@@ -1,14 +1,14 @@
-export enum StoreTourStatus {
+export enum BusinessTourStatus {
   DRAFT = 'DRAFT',
   PUBLISHED = 'PUBLISHED',
 }
 
-export interface StoreTourHighlight {
+export interface BusinessTourHighlight {
   readonly id: string;
   readonly value: string;
 }
 
-export interface StoreTourMediaItem {
+export interface BusinessTourMediaItem {
   readonly id: string;
   readonly url: string;
   readonly mediaType: 'IMAGE' | 'VIDEO';
@@ -16,18 +16,18 @@ export interface StoreTourMediaItem {
   readonly createdAt: Date;
 }
 
-export interface StoreTour {
+export interface BusinessTour {
   readonly id: string;
   readonly businessProfileId: string;
   readonly title: string;
   readonly summary: string | null;
   readonly visitDate: Date;
-  readonly status: StoreTourStatus;
+  readonly status: BusinessTourStatus;
   readonly publishedAt: Date | null;
   readonly createdById: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 
-  readonly highlights: StoreTourHighlight[];
-  readonly media: StoreTourMediaItem[];
+  readonly highlights: BusinessTourHighlight[];
+  readonly media: BusinessTourMediaItem[];
 }

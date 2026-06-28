@@ -11,7 +11,7 @@ function toDomain(raw: PrismaMedia): Media {
     id: raw.id,
     businessProfileId: raw.businessProfileId,
     listingId: raw.listingId,
-    storeTourId: raw.storeTourId,
+    businessTourId: raw.businessTourId,
     reviewId: raw.reviewId,
     url: raw.url,
     fileId: raw.fileId,

@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { StoreTourStatus, StoreTourMediaItem } from '../../domain/types/store-tour.entity.js';
-import { PaginatedStoreTours, StoreTourView } from '../../domain/types/store-tour.types.js';
+import { BusinessTourStatus, BusinessTourMediaItem } from '../../domain/types/business-tour.entity.js';
+import { PaginatedBusinessTours, BusinessTourView } from '../../domain/types/business-tour.types.js';
 
-export class StoreTourHighlightDto {
+export class BusinessTourHighlightDto {
   @ApiProperty() id: string;
   @ApiProperty() value: string;
 
@@ -12,18 +12,18 @@ export class StoreTourHighlightDto {
   }
 
   static from(h: { id: string; value: string }) {
-    return new StoreTourHighlightDto(h);
+    return new BusinessTourHighlightDto(h);
   }
 }
 
-export class StoreTourMediaItemDto {
+export class BusinessTourMediaItemDto {
   @ApiProperty() id: string;
   @ApiProperty() url: string;
   @ApiProperty() mediaType: string;
   @ApiPropertyOptional({ nullable: true }) order: number | null;
   @ApiProperty() createdAt: string;
 
-  private constructor(m: StoreTourMediaItem) {
+  private constructor(m: BusinessTourMediaItem) {
     this.id = m.id;
     this.url = m.url;
     this.mediaType = m.mediaType;
@@ -31,26 +31,26 @@ export class StoreTourMediaItemDto {
     this.createdAt = m.createdAt.toISOString();
   }
 
-  static from(m: StoreTourMediaItem): StoreTourMediaItemDto {
-    return new StoreTourMediaItemDto(m);
+  static from(m: BusinessTourMediaItem): BusinessTourMediaItemDto {
+    return new BusinessTourMediaItemDto(m);
   }
 }
 
-export class StoreTourResponseDto {
+export class BusinessTourResponseDto {
   @ApiProperty() id: string;
   @ApiProperty() businessProfileId: string;
   @ApiProperty() title: string;
   @ApiPropertyOptional({ nullable: true }) summary: string | null;
   @ApiProperty() visitDate: string;
-  @ApiProperty({ enum: StoreTourStatus }) status: StoreTourStatus;
+  @ApiProperty({ enum: BusinessTourStatus }) status: BusinessTourStatus;
   @ApiPropertyOptional({ nullable: true }) publishedAt: string | null;
   @ApiProperty() createdById: string;
   @ApiProperty() createdAt: string;
   @ApiProperty() updatedAt: string;
-  @ApiProperty({ type: [StoreTourHighlightDto] }) highlights: StoreTourHighlightDto[];
-  @ApiProperty({ type: [StoreTourMediaItemDto] }) media: StoreTourMediaItemDto[];
+  @ApiProperty({ type: [BusinessTourHighlightDto] }) highlights: BusinessTourHighlightDto[];
+  @ApiProperty({ type: [BusinessTourMediaItemDto] }) media: BusinessTourMediaItemDto[];
 
-  private constructor(tour: StoreTourView) {
+  private constructor(tour: BusinessTourView) {
     this.id = tour.id;
     this.businessProfileId = tour.businessProfileId;
     this.title = tour.title;
@@ -61,29 +61,29 @@ export class StoreTourResponseDto {
     this.createdById = tour.createdById;
     this.createdAt = tour.createdAt.toISOString();
     this.updatedAt = tour.updatedAt.toISOString();
-    this.highlights = tour.highlights.map((h) => StoreTourHighlightDto.from(h));
-    this.media = tour.media.map((m) => StoreTourMediaItemDto.from(m));
+    this.highlights = tour.highlights.map((h) => BusinessTourHighlightDto.from(h));
+    this.media = tour.media.map((m) => BusinessTourMediaItemDto.from(m));
   }
 
-  static from(tour: StoreTourView): StoreTourResponseDto {
-    return new StoreTourResponseDto(tour);
+  static from(tour: BusinessTourView): BusinessTourResponseDto {
+    return new BusinessTourResponseDto(tour);
   }
 }
 
-export class PaginatedStoreToursResponseDto {
-  @ApiProperty({ type: [StoreTourResponseDto] }) items: StoreTourResponseDto[];
+export class PaginatedBusinessToursResponseDto {
+  @ApiProperty({ type: [BusinessTourResponseDto] }) items: BusinessTourResponseDto[];
   @ApiProperty() total: number;
   @ApiProperty() page: number;
   @ApiProperty() limit: number;
 
-  private constructor(paginated: PaginatedStoreTours) {
-    this.items = paginated.items.map((i) => StoreTourResponseDto.from(i));
+  private constructor(paginated: PaginatedBusinessTours) {
+    this.items = paginated.items.map((i) => BusinessTourResponseDto.from(i));
     this.total = paginated.total;
     this.page = paginated.page;
     this.limit = paginated.limit;
   }
 
-  static from(paginated: PaginatedStoreTours): PaginatedStoreToursResponseDto {
-    return new PaginatedStoreToursResponseDto(paginated);
+  static from(paginated: PaginatedBusinessTours): PaginatedBusinessToursResponseDto {
+    return new PaginatedBusinessToursResponseDto(paginated);
   }
 }

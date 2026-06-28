@@ -36,7 +36,7 @@ export class DeleteMediaUseCase {
   #getOwner(media: Media): { key: MediaOwnerKey; id: string } | null {
     if (media.businessProfileId) return { key: 'businessProfileId', id: media.businessProfileId };
     if (media.listingId) return { key: 'listingId', id: media.listingId };
-    if (media.storeTourId) return { key: 'storeTourId', id: media.storeTourId };
+    if (media.businessTourId) return { key: 'businessTourId', id: media.businessTourId };
     if (media.reviewId) return { key: 'reviewId', id: media.reviewId };
     return null;
   }

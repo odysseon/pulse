@@ -1,28 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service.js';
-import { IStoreTourRepository } from '../domain/ports/store-tour.repository.port.js';
-import { StoreTour, StoreTourStatus } from '../domain/types/store-tour.entity.js';
+import { IBusinessTourRepository } from '../domain/ports/business-tour.repository.port.js';
+import { BusinessTour, BusinessTourStatus } from '../domain/types/business-tour.entity.js';
 import {
-  CreateStoreTourInput,
-  DiscoverStoreToursInput,
-  PaginatedStoreTours,
-  StoreTourView,
-  UpdateStoreTourInput,
-} from '../domain/types/store-tour.types.js';
+  CreateBusinessTourInput,
+  DiscoverBusinessToursInput,
+  PaginatedBusinessTours,
+  BusinessTourView,
+  UpdateBusinessTourInput,
+} from '../domain/types/business-tour.types.js';
 import {
-  StoreTour as PrismaStoreTour,
-  StoreTourHighlight as PrismaStoreTourHighlight,
-  StoreTourStatus as PrismaStoreTourStatus,
+  BusinessTour as PrismaBusinessTour,
+  BusinessTourHighlight as PrismaBusinessTourHighlight,
+  BusinessTourStatus as PrismaBusinessTourStatus,
   Media as PrismaMedia,
   Prisma,
 } from '../../../../generated/prisma/client.js';
 
-type PrismaStoreTourWithRelations = PrismaStoreTour & {
-  highlights: PrismaStoreTourHighlight[];
+type PrismaBusinessTourWithRelations = PrismaBusinessTour & {
+  highlights: PrismaBusinessTourHighlight[];
   media: PrismaMedia[];
 };
 
-function toDomain(raw: PrismaStoreTourWithRelations): StoreTour {
+function toDomain(raw: PrismaBusinessTourWithRelations): BusinessTour {
   const sortedMedia = (raw.media ?? []).toSorted((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return {
     id: raw.id,
@@ -30,7 +30,7 @@ function toDomain(raw: PrismaStoreTourWithRelations): StoreTour {
     title: raw.title,
     summary: raw.summary,
     visitDate: raw.visitDate,
-    status: raw.status as StoreTourStatus,
+    status: raw.status as BusinessTourStatus,
     publishedAt: raw.publishedAt,
     createdById: raw.createdById,
     createdAt: raw.createdAt,
@@ -46,25 +46,25 @@ function toDomain(raw: PrismaStoreTourWithRelations): StoreTour {
   };
 }
 
-function toView(raw: PrismaStoreTourWithRelations): StoreTourView {
+function toView(raw: PrismaBusinessTourWithRelations): BusinessTourView {
   return toDomain(raw);
 }
 
 @Injectable()
-export class PrismaStoreTourRepository extends IStoreTourRepository {
+export class PrismaBusinessTourRepository extends IBusinessTourRepository {
   constructor(private readonly prisma: PrismaService) {
     super();
   }
 
-  async create(input: CreateStoreTourInput): Promise<StoreTour> {
-    const raw = await this.prisma.storeTour.create({
+  async create(input: CreateBusinessTourInput): Promise<BusinessTour> {
+    const raw = await this.prisma.businessTour.create({
       data: {
         businessProfileId: input.businessProfileId,
         title: input.title,
         summary: input.summary ?? null,
         visitDate: input.visitDate,
         createdById: input.createdById,
-        status: PrismaStoreTourStatus.DRAFT,
+        status: PrismaBusinessTourStatus.DRAFT,
         highlights: {
           create: input.highlights?.map((value) => ({ value })) ?? [],
         },
@@ -77,8 +77,8 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
     return toDomain(raw);
   }
 
-  async findById(id: string): Promise<StoreTourView | null> {
-    const raw = await this.prisma.storeTour.findUnique({
+  async findById(id: string): Promise<BusinessTourView | null> {
+    const raw = await this.prisma.businessTour.findUnique({
       where: { id },
       include: {
         highlights: true,
@@ -88,25 +88,25 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
     return raw ? toView(raw) : null;
   }
 
-  async update(id: string, input: UpdateStoreTourInput): Promise<StoreTour> {
+  async update(id: string, input: UpdateBusinessTourInput): Promise<BusinessTour> {
     const raw = await this.prisma.$transaction(async (tx) => {
       if (input.highlights !== undefined) {
         // Replace all highlights if provided
-        await tx.storeTourHighlight.deleteMany({
-          where: { storeTourId: id },
+        await tx.businessTourHighlight.deleteMany({
+          where: { businessTourId: id },
         });
       }
 
       const publishedAtUpdate =
-        input.status === StoreTourStatus.PUBLISHED ? { publishedAt: new Date() } : {};
+        input.status === BusinessTourStatus.PUBLISHED ? { publishedAt: new Date() } : {};
 
-      return tx.storeTour.update({
+      return tx.businessTour.update({
         where: { id },
         data: {
           ...(input.title !== undefined && { title: input.title }),
           ...(input.summary !== undefined && { summary: input.summary }),
           ...(input.visitDate !== undefined && { visitDate: input.visitDate }),
-          ...(input.status !== undefined && { status: input.status as PrismaStoreTourStatus }),
+          ...(input.status !== undefined && { status: input.status as PrismaBusinessTourStatus }),
           ...publishedAtUpdate,
           ...(input.highlights !== undefined && {
             highlights: {
@@ -125,21 +125,21 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.storeTour.delete({
+    await this.prisma.businessTour.delete({
       where: { id },
     });
   }
 
-  async discover(input: DiscoverStoreToursInput): Promise<PaginatedStoreTours> {
+  async discover(input: DiscoverBusinessToursInput): Promise<PaginatedBusinessTours> {
     const where: any = {
       ...(input.businessProfileId && { businessProfileId: input.businessProfileId }),
-      ...(input.status && { status: input.status as PrismaStoreTourStatus }),
+      ...(input.status && { status: input.status as PrismaBusinessTourStatus }),
     };
 
     const skip = (input.page - 1) * input.limit;
 
     const [rows, total] = await this.prisma.$transaction([
-      this.prisma.storeTour.findMany({
+      this.prisma.businessTour.findMany({
         where,
         skip,
         take: input.limit,
@@ -149,18 +149,18 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
           media: true,
         },
       }),
-      this.prisma.storeTour.count({ where }),
+      this.prisma.businessTour.count({ where }),
     ]);
 
     return {
-      items: rows.map((r) => toView(r as PrismaStoreTourWithRelations)),
+      items: rows.map((r) => toView(r as PrismaBusinessTourWithRelations)),
       total,
       page: input.page,
       limit: input.limit,
     };
   }
 
-  async discoverGlobal(input: DiscoverStoreToursInput): Promise<any> {
+  async discoverGlobal(input: DiscoverBusinessToursInput): Promise<any> {
     const limit = input.limit;
     const offset = (input.page - 1) * limit;
 
@@ -169,7 +169,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
       const radiusMeters = input.radiusInKm * 1000;
       
       const searchPattern = input.search ? `%${input.search}%` : '%';
-      const statusFilter = input.status ? Prisma.sql`AND st.status = ${input.status}::"StoreTourStatus"` : Prisma.empty;
+      const statusFilter = input.status ? Prisma.sql`AND st.status = ${input.status}::"BusinessTourStatus"` : Prisma.empty;
 
       // Note: we fetch the cover media as a subquery or join.
       const rows = await this.prisma.$queryRaw<any[]>`
@@ -186,7 +186,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
           (
             SELECT m.url 
             FROM media m 
-            WHERE m."storeTourId" = st.id 
+            WHERE m."businessTourId" = st.id 
             ORDER BY m."order" ASC NULLS LAST, m."createdAt" ASC 
             LIMIT 1
           ) as "coverUrl"
@@ -237,7 +237,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
 
     // Fallback to standard Prisma query without location
     const where: any = {
-      ...(input.status && { status: input.status as PrismaStoreTourStatus }),
+      ...(input.status && { status: input.status as PrismaBusinessTourStatus }),
       ...(input.search && {
         OR: [
           { title: { contains: input.search, mode: 'insensitive' } },
@@ -247,7 +247,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
     };
 
     const [rows, total] = await this.prisma.$transaction([
-      this.prisma.storeTour.findMany({
+      this.prisma.businessTour.findMany({
         where,
         skip: offset,
         take: limit,
@@ -260,7 +260,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
           },
         },
       }),
-      this.prisma.storeTour.count({ where }),
+      this.prisma.businessTour.count({ where }),
     ]);
 
     return {
@@ -271,7 +271,7 @@ export class PrismaStoreTourRepository extends IStoreTourRepository {
         title: r.title,
         summary: r.summary,
         visitDate: r.visitDate,
-        status: r.status as StoreTourStatus,
+        status: r.status as BusinessTourStatus,
         publishedAt: r.publishedAt,
         coverUrl: r.media[0]?.url,
       })),

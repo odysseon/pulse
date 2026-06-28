@@ -1,6 +1,6 @@
-import { StoreTourStatus, StoreTourHighlight, StoreTourMediaItem } from './store-tour.entity.js';
+import { BusinessTourStatus, BusinessTourHighlight, BusinessTourMediaItem } from './business-tour.entity.js';
 
-export interface CreateStoreTourInput {
+export interface CreateBusinessTourInput {
   readonly businessProfileId: string;
   readonly title: string;
   readonly summary?: string;
@@ -9,32 +9,32 @@ export interface CreateStoreTourInput {
   readonly createdById: string;
 }
 
-export interface UpdateStoreTourInput {
+export interface UpdateBusinessTourInput {
   readonly title?: string;
   readonly summary?: string | null;
   readonly visitDate?: Date;
   readonly highlights?: string[];
-  readonly status?: StoreTourStatus;
+  readonly status?: BusinessTourStatus;
 }
 
-export interface StoreTourView {
+export interface BusinessTourView {
   readonly id: string;
   readonly businessProfileId: string;
   readonly title: string;
   readonly summary: string | null;
   readonly visitDate: Date;
-  readonly status: StoreTourStatus;
+  readonly status: BusinessTourStatus;
   readonly publishedAt: Date | null;
   readonly createdById: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
-  readonly highlights: StoreTourHighlight[];
-  readonly media: StoreTourMediaItem[];
+  readonly highlights: BusinessTourHighlight[];
+  readonly media: BusinessTourMediaItem[];
 }
 
-export interface DiscoverStoreToursInput {
+export interface DiscoverBusinessToursInput {
   readonly businessProfileId?: string;
-  readonly status?: StoreTourStatus;
+  readonly status?: BusinessTourStatus;
   readonly search?: string;
   readonly lat?: number;
   readonly lng?: number;
@@ -43,28 +43,28 @@ export interface DiscoverStoreToursInput {
   readonly limit: number;
 }
 
-export interface StoreTourSummary {
+export interface BusinessTourSummary {
   readonly id: string;
   readonly businessProfileId: string;
   readonly businessProfileSlug: string;
   readonly title: string;
   readonly summary: string | null;
   readonly visitDate: Date;
-  readonly status: StoreTourStatus;
+  readonly status: BusinessTourStatus;
   readonly publishedAt: Date | null;
   readonly coverUrl?: string;
   readonly distanceKm?: number;
 }
 
-export interface PaginatedStoreTours {
-  readonly items: StoreTourView[];
+export interface PaginatedBusinessTours {
+  readonly items: BusinessTourView[];
   readonly total: number;
   readonly page: number;
   readonly limit: number;
 }
 
-export interface PaginatedStoreToursSummary {
-  readonly items: StoreTourSummary[];
+export interface PaginatedBusinessToursSummary {
+  readonly items: BusinessTourSummary[];
   readonly total: number;
   readonly page: number;
   readonly limit: number;

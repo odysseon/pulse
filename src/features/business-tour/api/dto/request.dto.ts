@@ -8,9 +8,9 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { StoreTourStatus } from '../../domain/types/store-tour.entity.js';
+import { BusinessTourStatus } from '../../domain/types/business-tour.entity.js';
 
-export class CreateStoreTourDto {
+export class CreateBusinessTourDto {
   @ApiProperty()
   @IsString()
   @MinLength(2)
@@ -35,7 +35,7 @@ export class CreateStoreTourDto {
   highlights?: string[];
 }
 
-export class UpdateStoreTourDto {
+export class UpdateBusinessTourDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
@@ -61,8 +61,8 @@ export class UpdateStoreTourDto {
   @MaxLength(100, { each: true })
   highlights?: string[];
 
-  @ApiPropertyOptional({ enum: StoreTourStatus })
+  @ApiPropertyOptional({ enum: BusinessTourStatus })
   @IsOptional()
-  @IsEnum(StoreTourStatus)
-  status?: StoreTourStatus;
+  @IsEnum(BusinessTourStatus)
+  status?: BusinessTourStatus;
 }

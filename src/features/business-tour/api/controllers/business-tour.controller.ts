@@ -15,40 +15,40 @@ import { ApiTags } from '@nestjs/swagger';
 import { CurrentIdentity, Public } from '@odysseon/whoami-adapter-nestjs';
 import type { RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
 import { PrismaService } from '../../../../prisma/prisma.service.js';
-import { CreateStoreTourUseCase } from '../../application/use-cases/create-store-tour.use-case.js';
-import { UpdateStoreTourUseCase } from '../../application/use-cases/update-store-tour.use-case.js';
-import { DeleteStoreTourUseCase } from '../../application/use-cases/delete-store-tour.use-case.js';
-import { GetStoreTourUseCase } from '../../application/use-cases/get-store-tour.use-case.js';
-import { GetBusinessStoreToursUseCase } from '../../application/use-cases/get-business-store-tours.use-case.js';
-import { GetStoreToursUseCase } from '../../application/use-cases/get-store-tours.use-case.js';
-import { CreateStoreTourDto, UpdateStoreTourDto } from '../dto/request.dto.js';
-import { StoreTourResponseDto, PaginatedStoreToursResponseDto } from '../dto/response.dto.js';
-import { StoreTourStatus } from '../../domain/types/store-tour.entity.js';
+import { CreateBusinessTourUseCase } from '../../application/use-cases/create-business-tour.use-case.js';
+import { UpdateBusinessTourUseCase } from '../../application/use-cases/update-business-tour.use-case.js';
+import { DeleteBusinessTourUseCase } from '../../application/use-cases/delete-business-tour.use-case.js';
+import { GetBusinessTourUseCase } from '../../application/use-cases/get-business-tour.use-case.js';
+import { GetBusinessToursByProfileUseCase } from '../../application/use-cases/get-business-tours-by-profile.use-case.js';
+import { GetBusinessToursUseCase } from '../../application/use-cases/get-business-tours.use-case.js';
+import { CreateBusinessTourDto, UpdateBusinessTourDto } from '../dto/request.dto.js';
+import { BusinessTourResponseDto, PaginatedBusinessToursResponseDto } from '../dto/response.dto.js';
+import { BusinessTourStatus } from '../../domain/types/business-tour.entity.js';
 
 import { ModeratorOrAdminGuard } from '../../../../shared/decorators/moderator-or-admin-guard.decorator.js';
 
 @ApiTags('Store Tours')
 @Controller()
-export class StoreTourController {
+export class BusinessTourController {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly createStoreTour: CreateStoreTourUseCase,
-    private readonly updateStoreTour: UpdateStoreTourUseCase,
-    private readonly deleteStoreTour: DeleteStoreTourUseCase,
-    private readonly getStoreTour: GetStoreTourUseCase,
-    private readonly getBusinessStoreTours: GetBusinessStoreToursUseCase,
-    private readonly getStoreTours: GetStoreToursUseCase,
+    private readonly createBusinessTour: CreateBusinessTourUseCase,
+    private readonly updateBusinessTour: UpdateBusinessTourUseCase,
+    private readonly deleteBusinessTour: DeleteBusinessTourUseCase,
+    private readonly getBusinessTour: GetBusinessTourUseCase,
+    private readonly getBusinessToursByProfile: GetBusinessToursByProfileUseCase,
+    private readonly getBusinessTours: GetBusinessToursUseCase,
   ) {}
 
-  @Post('business-profiles/:businessProfileId/store-tours')
+  @Post('business-profiles/:businessProfileId/business-tours')
   @ModeratorOrAdminGuard()
   async create(
     @CurrentIdentity() identity: RequestIdentity,
     @Param('businessProfileId') businessProfileId: string,
-    @Body() dto: CreateStoreTourDto,
-  ): Promise<StoreTourResponseDto> {
+    @Body() dto: CreateBusinessTourDto,
+  ): Promise<BusinessTourResponseDto> {
     const createdById = await this.resolveUserId(identity.accountId);
-    const tour = await this.createStoreTour.execute({
+    const tour = await this.createBusinessTour.execute({
       businessProfileId,
       title: dto.title,
       ...(dto.summary !== undefined && { summary: dto.summary }),
@@ -56,15 +56,15 @@ export class StoreTourController {
       ...(dto.highlights !== undefined && { highlights: dto.highlights }),
       createdById,
     });
-    return StoreTourResponseDto.from(tour);
+    return BusinessTourResponseDto.from(tour);
   }
 
   @Public()
-  @Get('store-tours')
+  @Get('business-tours')
   async discoverGlobal(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('status') status?: StoreTourStatus,
+    @Query('status') status?: BusinessTourStatus,
     @Query('search') search?: string,
     @Query('lat') latStr?: string,
     @Query('lng') lngStr?: string,
@@ -77,7 +77,7 @@ export class StoreTourController {
     const lng = lngStr ? parseFloat(lngStr) : undefined;
     const radius = radiusStr ? parseFloat(radiusStr) : undefined;
 
-    return this.getStoreTours.execute({
+    return this.getBusinessTours.execute({
       ...(status !== undefined && { status }),
       ...(search !== undefined && { search }),
       ...(lat !== undefined && !isNaN(lat) && { lat }),
@@ -89,52 +89,52 @@ export class StoreTourController {
   }
 
   @Public()
-  @Get('business-profiles/:businessProfileId/store-tours')
+  @Get('business-profiles/:businessProfileId/business-tours')
   async listByBusiness(
     @Param('businessProfileId') businessProfileId: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('status') status?: StoreTourStatus,
-  ): Promise<PaginatedStoreToursResponseDto> {
+    @Query('status') status?: BusinessTourStatus,
+  ): Promise<PaginatedBusinessToursResponseDto> {
     const pageNum = parseInt(page ?? '1', 10);
     const limitNum = parseInt(limit ?? '20', 10);
-    const paginated = await this.getBusinessStoreTours.execute({
+    const paginated = await this.getBusinessToursByProfile.execute({
       businessProfileId,
       ...(status !== undefined && { status }),
       page: isNaN(pageNum) ? 1 : pageNum,
       limit: isNaN(limitNum) ? 20 : limitNum,
     });
-    return PaginatedStoreToursResponseDto.from(paginated);
+    return PaginatedBusinessToursResponseDto.from(paginated);
   }
 
   @Public()
-  @Get('store-tours/:id')
-  async get(@Param('id') id: string): Promise<StoreTourResponseDto> {
-    const tour = await this.getStoreTour.execute(id);
-    return StoreTourResponseDto.from(tour);
+  @Get('business-tours/:id')
+  async get(@Param('id') id: string): Promise<BusinessTourResponseDto> {
+    const tour = await this.getBusinessTour.execute(id);
+    return BusinessTourResponseDto.from(tour);
   }
 
-  @Patch('store-tours/:id')
+  @Patch('business-tours/:id')
   @ModeratorOrAdminGuard()
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdateStoreTourDto,
-  ): Promise<StoreTourResponseDto> {
-    const tour = await this.updateStoreTour.execute(id, {
+    @Body() dto: UpdateBusinessTourDto,
+  ): Promise<BusinessTourResponseDto> {
+    const tour = await this.updateBusinessTour.execute(id, {
       ...(dto.title !== undefined && { title: dto.title }),
       ...(dto.summary !== undefined && { summary: dto.summary }),
       ...(dto.visitDate !== undefined && { visitDate: new Date(dto.visitDate) }),
       ...(dto.highlights !== undefined && { highlights: dto.highlights }),
       ...(dto.status !== undefined && { status: dto.status }),
     });
-    return StoreTourResponseDto.from(tour);
+    return BusinessTourResponseDto.from(tour);
   }
 
-  @Delete('store-tours/:id')
+  @Delete('business-tours/:id')
   @ModeratorOrAdminGuard()
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
-    await this.deleteStoreTour.execute(id);
+    await this.deleteBusinessTour.execute(id);
   }
 
   private async resolveUserId(accountId: string): Promise<string> {

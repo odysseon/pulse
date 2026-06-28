@@ -113,7 +113,7 @@ model User {
 
   businessProfiles              BusinessProfile[]
   reviewsGiven                  Review[]                    @relation("ReviewsGiven")
-  storeToursCreated             StoreTour[]
+  businessToursCreated          BusinessTour[]
   conversationsParticipated     ConversationParticipant[]
   messagesSent                  Message[]                   @relation("MessageSender")
   messageReadReceipts           MessageReadReceipt[]         @relation("MessageReadBy")
@@ -170,7 +170,7 @@ model BusinessProfile {
 
   // Commercial identity — many-to-many relations with Category
   categories Category[] @relation("BusinessCategories")
-  storeTours StoreTour[]
+  businessTours BusinessTour[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -296,8 +296,8 @@ model Media {
   listingId String?
   listing   Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  storeTourId String?
-  storeTour   StoreTour? @relation(fields: [storeTourId], references: [id], onDelete: Cascade)
+  businessTourId String?
+  businessTour   BusinessTour? @relation(fields: [businessTourId], references: [id], onDelete: Cascade)
 
   reviewId String?
   review   Review? @relation(fields: [reviewId], references: [id], onDelete: Cascade)
@@ -306,7 +306,7 @@ model Media {
 
   @@index([businessProfileId])
   @@index([listingId])
-  @@index([storeTourId])
+  @@index([businessTourId])
   @@map("media")
 }
 
@@ -405,12 +405,12 @@ model Review {
   @@map("reviews")
 }
 
-enum StoreTourStatus {
+enum BusinessTourStatus {
   DRAFT
   PUBLISHED
 }
 
-model StoreTour {
+model BusinessTour {
   id String @id @default(cuid())
 
   businessProfileId String
@@ -422,7 +422,7 @@ model StoreTour {
 
   visitDate DateTime
 
-  status StoreTourStatus @default(DRAFT)
+  status BusinessTourStatus @default(DRAFT)
 
   publishedAt DateTime?
 
@@ -432,25 +432,25 @@ model StoreTour {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  highlights StoreTourHighlight[]
+  highlights BusinessTourHighlight[]
 
   media Media[]
 
   @@index([businessProfileId])
   @@index([status])
-  @@map("store_tours")
+  @@map("business_tours")
 }
 
-model StoreTourHighlight {
+model BusinessTourHighlight {
   id String @id @default(cuid())
 
-  storeTourId String
-  storeTour   StoreTour @relation(fields: [storeTourId], references: [id], onDelete: Cascade)
+  businessTourId String
+  businessTour   BusinessTour @relation(fields: [businessTourId], references: [id], onDelete: Cascade)
 
   value String
 
-  @@index([storeTourId])
-  @@map("store_tour_highlights")
+  @@index([businessTourId])
+  @@map("business_tour_highlights")
 }
 
 // ============================================

@@ -3,6 +3,7 @@ import { WhoamiModule } from '@odysseon/whoami-adapter-nestjs';
 import { whoamiConfig } from './auth.config.js';
 import { AccountsController } from './controllers/accounts.controller.js';
 import { PasswordAuthController } from './controllers/password.controller.js';
+import { MagicLinkController } from './controllers/magic-link.controller.js';
 import { IdentityController } from './controllers/identity.controller.js';
 import { RegisterAccountUseCase } from './use-cases/register-account.service.js';
 import { MailModule } from '../mail/mail.module.js';
@@ -10,7 +11,7 @@ import { UsersModule } from '../users/users.module.js';
 
 @Module({
   imports: [WhoamiModule.registerAsync(whoamiConfig), MailModule, UsersModule],
-  controllers: [AccountsController, PasswordAuthController, IdentityController],
+  controllers: [AccountsController, PasswordAuthController, MagicLinkController, IdentityController],
   providers: [RegisterAccountUseCase],
 })
 export class AuthModule {}

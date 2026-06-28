@@ -243,7 +243,7 @@ async function main() {
   console.log("\n✅ Tags seeded successfully.");
 
   // -------------------------------------------------------------------------
-  // Location, Users, Businesses, Listings, Conversations, Review, StoreTour
+  // Location, Users, Businesses, Listings, Conversations, Review, BusinessTour
   // -------------------------------------------------------------------------
   console.log("\n🌱 Seeding dummy users, businesses, and conversations...");
 
@@ -404,8 +404,8 @@ async function main() {
     });
   }
 
-  // 7. Store Tour
-  await prisma.storeTour.upsert({
+  // 7. Business Tour
+  await prisma.businessTour.upsert({
     where: { id: "test-tour-1" },
     update: {},
     create: {
@@ -422,14 +422,14 @@ async function main() {
       media: {
         create: [
           {
-            url: "https://example.com/store-tour-video.mp4",
+            url: "https://example.com/business-tour-video.mp4",
             fileId: "file-tour-1",
             mediaType: MediaType.VIDEO,
             role: MediaRole.GALLERY,
             order: 0,
           },
           {
-            url: "https://example.com/store-tour-photo.jpg",
+            url: "https://example.com/business-tour-photo.jpg",
             fileId: "file-tour-2",
             mediaType: MediaType.IMAGE,
             role: MediaRole.GALLERY,
