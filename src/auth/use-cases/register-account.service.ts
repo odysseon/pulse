@@ -29,7 +29,7 @@ export class RegisterAccountUseCase {
 
     try {
       // 2. Create Domain User
-      const user = await this.userRepository.create(account.id, dto.name);
+      const user = await this.userRepository.create(account.id, dto.username);
 
       // Queue welcome email asynchronously
       await this.mailQueueService.enqueueMail({
@@ -37,7 +37,7 @@ export class RegisterAccountUseCase {
         subject: 'Welcome to Show!',
         template: 'welcome',
         context: {
-          name: user.name,
+          username: user.username,
           action_url: 'https://show.app/login', // Adjust the URL as needed
         },
       });
@@ -46,7 +46,7 @@ export class RegisterAccountUseCase {
         accountId: account.id,
         userId: user.id,
         email: account.email,
-        name: user.name,
+        username: user.username,
         createdAt: account.createdAt,
       };
     } catch (error: unknown) {

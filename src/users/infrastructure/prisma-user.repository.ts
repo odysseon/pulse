@@ -24,11 +24,11 @@ export class PrismaUserRepository implements IUserRepository {
       .catch(() => {});
   }
 
-  async create(accountId: string, name: string): Promise<UserEntity> {
+  async create(accountId: string, username: string): Promise<UserEntity> {
     const user = await this.prisma.user.create({
       data: {
         accountId,
-        name,
+        username,
       },
     });
 
@@ -59,10 +59,9 @@ export class PrismaUserRepository implements IUserRepository {
       const updatedUser = await this.prisma.user.update({
         where: { accountId },
         data: {
-          ...(payload.name !== undefined && { name: payload.name }),
+          ...(payload.username !== undefined && { username: payload.username }),
           ...(payload.avatarUrl !== undefined && { avatarUrl: payload.avatarUrl }),
           ...(payload.avatarId !== undefined && { avatarId: payload.avatarId }),
-          ...(payload.phoneNumber !== undefined && { phoneNumber: payload.phoneNumber }),
         },
       });
 

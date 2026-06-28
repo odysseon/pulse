@@ -162,7 +162,7 @@ async function main() {
       },
       user: {
         create: {
-          name: "Steven Aanu",
+          username: "steven_aanu",
           role: PlatformRole.ADMIN,
           avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Steven",
         },
@@ -175,7 +175,7 @@ async function main() {
   });
 
   console.log(`✅ Admin created with ID: ${account.id}`);
-  console.log(`✅ User profile linked: ${account.user?.name}`);
+  console.log(`✅ User profile linked: ${account.user?.username}`);
 
   // -------------------------------------------------------------------------
   // Category taxonomy — idempotent (upsert by slug)
@@ -259,7 +259,7 @@ async function main() {
         passwordHash: { create: { hash: hashedPassword } },
         user: {
           create: {
-            name: `Test User ${i}`,
+            username: `test_user_${i}`,
             role: PlatformRole.USER,
             avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=User${i}`,
           },

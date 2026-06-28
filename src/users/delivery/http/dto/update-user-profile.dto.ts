@@ -6,12 +6,12 @@ import { IsString, IsOptional, IsUrl } from 'class-validator';
  */
 export class UpdateUserProfileDto {
   /**
-   * The updated full name of the user.
-   * @example "Hammed Anuoluwapo"
+   * The updated username of the user.
+   * @example "hammed_anu"
    */
   @IsOptional()
   @IsString()
-  name?: string;
+  username?: string;
 
   /**
    * The delivery URL of the newly uploaded avatar.
@@ -27,12 +27,4 @@ export class UpdateUserProfileDto {
   @IsOptional()
   @IsString()
   avatarId?: string;
-
-  /**
-   * Direct contact number for the user/owner.
-   * @example "+2348012345678"
-   */
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
 }

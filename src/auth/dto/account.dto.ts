@@ -18,12 +18,12 @@ export class RegisterDto {
   password!: string;
 
   /**
-   * The full name of the user/owner
-   * @example "Hammed Anuoluwapo"
+   * The unique username of the user/owner
+   * @example "hammed_anu"
    */
   @IsString()
   @MinLength(2)
-  name!: string;
+  username!: string;
 }
 
 export class RegisterResponse {
@@ -46,10 +46,10 @@ export class RegisterResponse {
   userId!: string;
 
   /**
-   * The full name of the registered user.
-   * @example "Hammed Anuoluwapo"
+   * The unique username of the registered user.
+   * @example "hammed_anu"
    */
-  name!: string;
+  username!: string;
 
   /**
    * The date and time when the account was created.
