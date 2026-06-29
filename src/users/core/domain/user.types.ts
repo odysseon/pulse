@@ -4,6 +4,7 @@ export interface UserEntity {
   id: string;
   accountId: string;
   username: string;
+  email: string;
   role: PlatformRole;
   avatarUrl: string | null;
   avatarId: string | null;

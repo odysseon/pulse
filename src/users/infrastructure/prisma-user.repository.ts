@@ -30,9 +30,22 @@ export class PrismaUserRepository implements IUserRepository {
         accountId,
         username,
       },
+      include: {
+        account: {
+          select: {
+            email: true,
+          },
+        },
+      },
     });
 
-    const domain = { ...user, role: user.role, businessId: null };
+    const { account, ...rest } = user;
+    const domain = {
+      ...rest,
+      role: user.role,
+      businessId: null,
+      email: account.email,
+    };
     this.updateCacheAsync(domain);
     return domain;
   }
@@ -43,6 +56,12 @@ export class PrismaUserRepository implements IUserRepository {
     const user = await this.prisma.user.findUnique({
       where: { accountId },
       include: {
+        location: true,
+        account: {
+          select: {
+            email: true,
+          },
+        },
         businessProfile: {
           select: { id: true },
         },
@@ -51,10 +70,11 @@ export class PrismaUserRepository implements IUserRepository {
 
     if (!user) return null;
 
-    const { businessProfile, ...rest } = user;
+    const { account, businessProfile, ...rest } = user;
     const domain = {
       ...rest,
       role: user.role,
+      email: account.email,
       businessId: businessProfile?.id || null,
     };
     this.updateCacheAsync(domain);
@@ -71,15 +91,21 @@ export class PrismaUserRepository implements IUserRepository {
           ...(payload.avatarId !== undefined && { avatarId: payload.avatarId }),
         },
         include: {
+          account: {
+            select: {
+              email: true,
+            },
+          },
           businessProfile: {
             select: { id: true },
           },
         },
       });
 
-      const { businessProfile, ...rest } = updatedUser;
+      const { account, businessProfile, ...rest } = updatedUser;
       const domain = {
         ...rest,
+        email: account.email,
         role: updatedUser.role,
         businessId: businessProfile?.id || null,
       };
