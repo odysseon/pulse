@@ -1,8 +1,8 @@
 {
-  "name": "pulse",
+  "name": "orita",
   "version": "0.0.0",
   "private": true,
-  "description": "",
+  "description": "Orita — local discovery platform connecting people with businesses, services, and opportunities around them.",
   "license": "ISC",
   "author": "Hammed Anuoluwapo Pelumi",
   "type": "module",

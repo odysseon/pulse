@@ -3,11 +3,11 @@ import { Redis } from 'ioredis';
 async function runMvpTest() {
   const apiUrl = 'http://localhost:3000';
   const runId = Date.now();
-  const email = `mvp_${runId}@pulse.test`;
+  const email = `mvp_${runId}@orita.test`;
   const password = 'Password123!';
 
   console.log('\n=============================================');
-  console.log('🚀 PULSE MVP END-TO-END VERIFICATION SCRIPT');
+  console.log('🚀 ORITA MVP END-TO-END VERIFICATION SCRIPT');
   console.log('=============================================\n');
 
   try {
@@ -38,7 +38,7 @@ async function runMvpTest() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        name: `Pulse Electronics ${runId}`,
+        name: `Orita Electronics ${runId}`,
         description: 'Best electronics in town.',
         businessType: 'PHYSICAL',
         phoneNumber: '+2348000000000',

@@ -83,7 +83,7 @@ jobs:
           context: .
           target: production
           push: false
-          tags: campuspulse:pr-${{ github.event.pull_request.number || github.sha }}
+          tags: orita:pr-${{ github.event.pull_request.number || github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |

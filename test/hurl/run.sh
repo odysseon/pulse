@@ -60,7 +60,7 @@ REPORT_FLAGS=(
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║         Pulse API — Hurl Test Suite      ║"
+echo "║         Orita API — Hurl Test Suite      ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 echo "  🌐 API URL:     $HURL_api_url"

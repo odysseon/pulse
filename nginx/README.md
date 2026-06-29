@@ -1,6 +1,6 @@
 # nginx/
 
-Nginx configuration for the CampusPulse reverse proxy. Sits in front of the NestJS app and handles
+Nginx configuration for the Orita reverse proxy. Sits in front of the NestJS app and handles
 rate limiting, security headers, compression, upstream load balancing, and connection management.
 
 ---

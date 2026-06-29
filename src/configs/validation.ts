@@ -6,7 +6,7 @@ export const configSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
     GLOBAL_PREFIX: z.string().default('api'),
     DATABASE_URL: z.string().url(),
-    FRONTEND_URL: z.string().url().default('https://show.app'),
+    FRONTEND_URL: z.string().url().default('https://orita.app'),
     ALLOWED_ORIGINS: z.string().optional(),
 
     // ── Receipt Secret ────────────────────────────────────────────────────
@@ -31,8 +31,8 @@ export const configSchema = z
     SWAGGER_PASS: z.string().optional(),
     SWAGGER_PATH_DOCS: z.string().default('api/docs'),
     SWAGGER_PATH_JSON: z.string().default('api/docs-json'),
-    SWAGGER_TITLE: z.string().default('Show API'),
-    SWAGGER_DESCRIPTION: z.string().default('Discovery-first commercial visibility platform API'),
+    SWAGGER_TITLE: z.string().default('Orita API'),
+    SWAGGER_DESCRIPTION: z.string().default('Local discovery platform connecting people with businesses, services, and opportunities around them'),
     SWAGGER_VERSION: z.string().default('1.0'),
     SWAGGER_TAG_NAME: z.string().default('events'),
     SWAGGER_TAG_DESC: z.string().default('Event management endpoints'),

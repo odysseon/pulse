@@ -34,11 +34,11 @@ export class RegisterAccountUseCase {
       // Queue welcome email asynchronously
       await this.mailQueueService.enqueueMail({
         to: account.email,
-        subject: 'Welcome to Show!',
+        subject: 'Welcome to Orita!',
         template: 'welcome',
         context: {
           username: user.username,
-          action_url: 'https://show.app/login', // Adjust the URL as needed
+          action_url: 'https://orita.app/login', // Adjust the URL as needed
         },
       });
 

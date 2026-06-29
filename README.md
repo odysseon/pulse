@@ -1,13 +1,13 @@
-# Pulse Backend
+# Orita Backend
 
-Pulse helps businesses and individuals become discoverable through digital storefronts, structured
-listings, and trust-first commercial visibility.
+Orita is a local discovery platform connecting people with businesses, services, and opportunities
+around them.
 
-> Discovery-first commercial infrastructure.
+> Discovery-first local commerce infrastructure.
 
 ## Overview
 
-Pulse is designed to help businesses and individuals become discoverable.
+Orita is designed to help businesses and individuals become discoverable to people around them.
 
 The backend provides the foundation for:
 
@@ -24,9 +24,9 @@ It intentionally avoids becoming an ERP or ecommerce platform in its initial sta
 
 ## Product Philosophy
 
-Pulse is not trying to own commerce.
+Orita is not trying to own commerce.
 
-Pulse helps people connect for commerce.
+Orita helps people connect for commerce.
 
 Typical flow:
 
@@ -194,7 +194,7 @@ Deferred:
 
 The backend should continuously optimize for one question:
 
-> Can a real business create a storefront and become discoverable?
+> Can a real business create a storefront and become discoverable to people around them?
 
 Every new feature should justify itself against that objective.
 
@@ -212,8 +212,8 @@ Complexity should only be introduced when required by demonstrated product needs
 Clone the repository and set up your environment variables:
 
 ```bash
-git clone https://github.com/phastboy/campuspulse.git
-cd pulse
+git clone https://github.com/odysseon/orita.git
+cd orita
 cp .env.example .env
 ```
 

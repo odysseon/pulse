@@ -41,11 +41,11 @@ export class UpdateBusinessTourUseCase {
       if (business && business.email) {
         await this.mailQueueService.enqueueMail({
           to: business.email,
-          subject: 'Your Store Tour is Live on Show!',
+          subject: 'Your Store Tour is Live on Orita!',
           template: 'business-tour-published',
           context: {
             businessName: business.name,
-            action_url: `https://show.app/business-tours/${updatedTour.id}`,
+            action_url: `https://orita.app/business-tours/${updatedTour.id}`,
           },
         });
       }
