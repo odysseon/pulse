@@ -1,7 +1,7 @@
 # nginx/
 
-Nginx configuration for the Orita reverse proxy. Sits in front of the NestJS app and handles
-rate limiting, security headers, compression, upstream load balancing, and connection management.
+Nginx configuration for the Orita reverse proxy. Sits in front of the NestJS app and handles rate
+limiting, security headers, compression, upstream load balancing, and connection management.
 
 ---
 

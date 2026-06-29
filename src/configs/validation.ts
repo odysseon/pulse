@@ -32,7 +32,11 @@ export const configSchema = z
     SWAGGER_PATH_DOCS: z.string().default('api/docs'),
     SWAGGER_PATH_JSON: z.string().default('api/docs-json'),
     SWAGGER_TITLE: z.string().default('Orita API'),
-    SWAGGER_DESCRIPTION: z.string().default('Local discovery platform connecting people with businesses, services, and opportunities around them'),
+    SWAGGER_DESCRIPTION: z
+      .string()
+      .default(
+        'Local discovery platform connecting people with businesses, services, and opportunities around them',
+      ),
     SWAGGER_VERSION: z.string().default('1.0'),
     SWAGGER_TAG_NAME: z.string().default('events'),
     SWAGGER_TAG_DESC: z.string().default('Event management endpoints'),

@@ -1,4 +1,6 @@
 import { Body, Controller, Inject, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AppConfig } from '../../configs/validation.js';
 import {
   ApiTags,
   ApiOperation,
@@ -23,6 +25,7 @@ export class MagicLinkController {
     @Inject(moduleToken('magiclink'))
     private readonly magicLink: MagicLinkMethods,
     private readonly mailQueueService: MailQueueService,
+    private readonly configService: ConfigService<AppConfig>,
   ) {}
 
   @ApiOperation({ summary: 'Request a magic link for login' })
@@ -36,7 +39,8 @@ export class MagicLinkController {
       email: dto.email,
     });
 
-    const magicLinkUrl = `http://localhost:3000/auth/magic-link/callback?token=${plainTextToken}`;
+    const frontendUrl = this.configService.get('FRONTEND_URL') as string;
+    const magicLinkUrl = `${frontendUrl}/auth/magic-link/callback?token=${plainTextToken}`;
 
     await this.mailQueueService.enqueueMail({
       to: dto.email,
