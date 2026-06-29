@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsArray,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -53,6 +54,15 @@ export class CreateBusinessProfileDto {
 
   @IsOptional()
   longitude?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  categoryIds?: string[];
 }
 
 export class UpdateBusinessProfileDto {

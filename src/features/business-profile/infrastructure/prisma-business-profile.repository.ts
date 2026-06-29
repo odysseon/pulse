@@ -206,6 +206,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
         ...(input.whatsapp !== undefined && { whatsapp: input.whatsapp }),
         ...(input.email !== undefined && { email: input.email }),
         ...(locationId !== undefined && { locationId }),
+        ...(input.isPublic !== undefined && { isPublic: input.isPublic }),
         ...(input.categoryIds && {
           categories: {
             connect: input.categoryIds.map((id) => ({ id })),
@@ -218,6 +219,15 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     const hydratedArray = await this.hydrate([raw]);
     const domain = toDomain(hydratedArray[0]!);
     this.updateCacheAsync(domain);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: input.ownerId },
+      select: { accountId: true },
+    });
+    if (user) {
+      this.redisService.del(`user:accountId:${user.accountId}`).catch(() => {});
+    }
+
     return domain;
   }
 
@@ -364,6 +374,14 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
 
     await this.prisma.businessProfile.delete({ where: { id } });
     this.deleteCacheAsync(existing.id, existing.slug);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: existing.ownerId },
+      select: { accountId: true },
+    });
+    if (user) {
+      this.redisService.del(`user:accountId:${user.accountId}`).catch(() => {});
+    }
   }
 
   async setOperatingHours(businessId: string, hours: SetOperatingHoursInput[]): Promise<void> {

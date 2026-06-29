@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service.js';
+import { RedisService } from '../../../shared/redis/redis.service.js';
 import { IReviewRepository } from '../domain/ports/review.repository.port.js';
 import { Review } from '../domain/types/review.entity.js';
 import {
@@ -56,8 +57,22 @@ function toWithMedia(raw: PrismaReview & { media: PrismaMedia[] }): ReviewWithMe
 
 @Injectable()
 export class PrismaReviewRepository extends IReviewRepository {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     super();
+  }
+
+  private async invalidateListingCache(listingId: string): Promise<void> {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { slug: true },
+    });
+    if (listing) {
+      await this.redisService.del(`listing:id:${listingId}`).catch(() => {});
+      await this.redisService.del(`listing:slug:${listing.slug}`).catch(() => {});
+    }
   }
 
   async create(input: CreateReviewInput): Promise<Review> {
@@ -69,6 +84,7 @@ export class PrismaReviewRepository extends IReviewRepository {
         comment: input.comment ?? null,
       },
     });
+    await this.invalidateListingCache(input.listingId);
     return toDomain(raw);
   }
 
@@ -143,10 +159,18 @@ export class PrismaReviewRepository extends IReviewRepository {
         ...(input.comment !== undefined && { comment: input.comment }),
       },
     });
+    await this.invalidateListingCache(raw.listingId);
     return toDomain(raw);
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.review.delete({ where: { id } });
+    const review = await this.prisma.review.findUnique({
+      where: { id },
+      select: { listingId: true },
+    });
+    if (review) {
+      await this.prisma.review.delete({ where: { id } });
+      await this.invalidateListingCache(review.listingId);
+    }
   }
 }

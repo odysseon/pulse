@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service.js';
+import { RedisService } from '../../../shared/redis/redis.service.js';
 import { IMediaRepository, MediaOwnerKey } from '../domain/ports/media.repository.port.js';
 import { Media } from '../domain/types/media.entity.js';
 import { MediaRole } from '../domain/types/media-role.enum.js';
@@ -24,8 +25,34 @@ function toDomain(raw: PrismaMedia): Media {
 
 @Injectable()
 export class PrismaMediaRepository extends IMediaRepository {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     super();
+  }
+
+  // fallow-ignore-next-line complexity
+  private async invalidateParentCache(ownerKey: string, ownerId: string): Promise<void> {
+    if (ownerKey === 'businessProfileId') {
+      const bp = await this.prisma.businessProfile.findUnique({
+        where: { id: ownerId },
+        select: { slug: true },
+      });
+      if (bp) {
+        await this.redisService.del(`businessProfile:id:${ownerId}`).catch(() => {});
+        await this.redisService.del(`businessProfile:slug:${bp.slug}`).catch(() => {});
+      }
+    } else if (ownerKey === 'listingId') {
+      const listing = await this.prisma.listing.findUnique({
+        where: { id: ownerId },
+        select: { slug: true },
+      });
+      if (listing) {
+        await this.redisService.del(`listing:id:${ownerId}`).catch(() => {});
+        await this.redisService.del(`listing:slug:${listing.slug}`).catch(() => {});
+      }
+    }
   }
 
   async add(input: AddMediaInput): Promise<Media> {
@@ -34,6 +61,11 @@ export class PrismaMediaRepository extends IMediaRepository {
         ...input,
       },
     });
+    if (input.businessProfileId) {
+      await this.invalidateParentCache('businessProfileId', input.businessProfileId);
+    } else if (input.listingId) {
+      await this.invalidateParentCache('listingId', input.listingId);
+    }
     return toDomain(raw);
   }
 
@@ -73,11 +105,24 @@ export class PrismaMediaRepository extends IMediaRepository {
       ),
     );
 
+    await this.invalidateParentCache(ownerKey, ownerId);
+
     return this.findByRole(ownerKey, ownerId, MediaRole.GALLERY);
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.media.delete({ where: { id } });
+    const media = await this.prisma.media.findUnique({
+      where: { id },
+      select: { businessProfileId: true, listingId: true },
+    });
+    if (media) {
+      await this.prisma.media.delete({ where: { id } });
+      if (media.businessProfileId) {
+        await this.invalidateParentCache('businessProfileId', media.businessProfileId);
+      } else if (media.listingId) {
+        await this.invalidateParentCache('listingId', media.listingId);
+      }
+    }
   }
 
   async renormalize(ownerKey: MediaOwnerKey, ownerId: string): Promise<void> {
@@ -96,6 +141,8 @@ export class PrismaMediaRepository extends IMediaRepository {
         }),
       ),
     );
+
+    await this.invalidateParentCache(ownerKey, ownerId);
   }
 
   async countByOwner(ownerKey: MediaOwnerKey, ownerId: string): Promise<number> {

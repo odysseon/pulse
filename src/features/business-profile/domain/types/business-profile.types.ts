@@ -15,6 +15,7 @@ export interface CreateBusinessProfileInput {
   readonly location?: string;
   readonly latitude?: number;
   readonly longitude?: number;
+  readonly isPublic?: boolean;
   readonly categoryIds?: string[];
 }
 
