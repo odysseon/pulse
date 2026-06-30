@@ -18,7 +18,7 @@ export class ReviewMediaItemDto {
     this.url = m.url;
     this.mediaType = m.mediaType;
     this.order = m.order;
-    this.createdAt = m.createdAt.toISOString();
+    this.createdAt = new Date(m.createdAt).toISOString();
   }
 
   static from(m: ReviewMediaItem): ReviewMediaItemDto {
@@ -45,8 +45,8 @@ export class ReviewResponseDto {
     this.reviewerId = r.reviewerId;
     this.rating = r.rating;
     this.comment = r.comment;
-    this.createdAt = r.createdAt.toISOString();
-    this.updatedAt = r.updatedAt.toISOString();
+    this.createdAt = new Date(r.createdAt).toISOString();
+    this.updatedAt = new Date(r.updatedAt).toISOString();
   }
 
   static from(r: Review): ReviewResponseDto {
@@ -75,8 +75,8 @@ export class ReviewWithMediaDto {
     this.reviewerId = r.reviewerId;
     this.rating = r.rating;
     this.comment = r.comment;
-    this.createdAt = r.createdAt.toISOString();
-    this.updatedAt = r.updatedAt.toISOString();
+    this.createdAt = new Date(r.createdAt).toISOString();
+    this.updatedAt = new Date(r.updatedAt).toISOString();
     this.media = r.media.map((m) => ReviewMediaItemDto.from(m));
   }
 

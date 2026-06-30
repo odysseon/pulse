@@ -34,7 +34,7 @@ export class BusinessTourMediaItemDto {
     this.url = m.url;
     this.mediaType = m.mediaType;
     this.order = m.order;
-    this.createdAt = m.createdAt.toISOString();
+    this.createdAt = new Date(m.createdAt).toISOString();
   }
 
   static from(m: BusinessTourMediaItem): BusinessTourMediaItemDto {
@@ -61,12 +61,12 @@ export class BusinessTourResponseDto {
     this.businessProfileId = tour.businessProfileId;
     this.title = tour.title;
     this.summary = tour.summary;
-    this.visitDate = tour.visitDate.toISOString();
+    this.visitDate = new Date(tour.visitDate).toISOString();
     this.status = tour.status;
-    this.publishedAt = tour.publishedAt ? tour.publishedAt.toISOString() : null;
+    this.publishedAt = tour.publishedAt ? new Date(tour.publishedAt).toISOString() : null;
     this.createdById = tour.createdById;
-    this.createdAt = tour.createdAt.toISOString();
-    this.updatedAt = tour.updatedAt.toISOString();
+    this.createdAt = new Date(tour.createdAt).toISOString();
+    this.updatedAt = new Date(tour.updatedAt).toISOString();
     this.highlights = tour.highlights.map((h) => BusinessTourHighlightDto.from(h));
     this.media = tour.media.map((m) => BusinessTourMediaItemDto.from(m));
   }

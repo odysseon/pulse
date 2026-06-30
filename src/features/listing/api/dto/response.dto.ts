@@ -35,12 +35,12 @@ export class ListingResponseDto {
     this.isNegotiable = listing.price.isNegotiable;
     this.categoryId = listing.categoryId;
     this.attributes = listing.attributes;
-    this.createdAt = listing.createdAt.toISOString();
-    this.updatedAt = listing.updatedAt.toISOString();
+    this.createdAt = new Date(listing.createdAt).toISOString();
+    this.updatedAt = new Date(listing.updatedAt).toISOString();
     if (listing.reviews !== undefined) {
       this.reviews = listing.reviews.map((r) => ({
         ...r,
-        createdAt: r.createdAt.toISOString(),
+        createdAt: new Date(r.createdAt).toISOString(),
       }));
     }
     if (listing.isSaved !== undefined) {

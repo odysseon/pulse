@@ -53,8 +53,8 @@ export class BusinessProfileResponseDto {
     this.categoryIds = r.categoryIds;
     this.isEmailVerified = r.isEmailVerified;
     this.isPhoneVerified = r.isPhoneVerified;
-    this.createdAt = r.createdAt.toISOString();
-    this.updatedAt = r.updatedAt.toISOString();
+    this.createdAt = new Date(r.createdAt).toISOString();
+    this.updatedAt = new Date(r.updatedAt).toISOString();
 
     if (r.avatarUrl) this.avatarUrl = r.avatarUrl;
     if (r.coverUrl) this.coverUrl = r.coverUrl;

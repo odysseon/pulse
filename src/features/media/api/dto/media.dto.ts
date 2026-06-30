@@ -40,7 +40,7 @@ export class MediaResponseDto {
     this.mediaType = media.mediaType;
     this.role = media.role;
     this.order = media.order;
-    this.createdAt = media.createdAt.toISOString();
+    this.createdAt = new Date(media.createdAt).toISOString();
   }
 
   static from(media: Media): MediaResponseDto {

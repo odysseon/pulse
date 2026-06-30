@@ -247,9 +247,9 @@ async function main() {
   // -------------------------------------------------------------------------
   console.log("\n🌱 Seeding dummy users, businesses, and conversations...");
 
-  // 1. Create 5 users (plus the admin already created)
+  // 1. Create 15 users (plus the admin already created)
   const users = [];
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 15; i++) {
     const userEmail = `user${i}@example.com`;
     const acc = await prisma.account.upsert({
       where: { email: userEmail },
@@ -279,29 +279,38 @@ async function main() {
   `;
 
   // 3. Businesses
-  const electronicsCategory = await prisma.category.findUnique({ where: { slug: "electronics" } });
-  const fashionCategory = await prisma.category.findUnique({ where: { slug: "fashion-and-apparel" } });
+  const categories = await prisma.category.findMany({ where: { parentId: { not: null } }, take: 15 });
 
   const businessesData = [
-    { name: "Sample Tech Store", slug: "sample-tech-store", owner: users[0], category: electronicsCategory },
-    { name: "Sample Fashion Boutique", slug: "sample-fashion-boutique", owner: users[1], category: fashionCategory },
+    { name: "Sample Tech Store", slug: "sample-tech-store", owner: users[0], category: categories[0] },
+    { name: "Sample Fashion Boutique", slug: "sample-fashion-boutique", owner: users[1], category: categories[1] },
   ];
+
+  for (let i = 2; i < 15; i++) {
+    businessesData.push({
+      name: `Sample Business ${i + 1}`,
+      slug: `sample-business-${i + 1}`,
+      owner: users[i],
+      category: categories[i % categories.length],
+    });
+  }
 
   const createdBusinesses = [];
 
-  for (let i = 0; i < businessesData.length; i++) {
-    const bData = businessesData[i];
+  for (let i = 0; i < 15; i++) {
+    const bData = businessesData[i]!;
+    
     const business = await prisma.businessProfile.upsert({
       where: { slug: bData.slug },
       update: {},
       create: {
-        ownerId: bData.owner.id,
+        ownerId: bData.owner!.id,
         name: bData.name,
         slug: bData.slug,
         isPublic: true,
         description: `A great ${bData.name}`,
         businessType: "PHYSICAL",
-        phoneNumber: `+234801234567${i}`,
+        phoneNumber: `+2348012345${i.toString().padStart(3, '0')}`,
         email: `contact@${bData.slug}.com`,
         locationId,
         hours: {
@@ -404,41 +413,46 @@ async function main() {
     });
   }
 
-  // 7. Business Tour
-  await prisma.businessTour.upsert({
-    where: { id: "test-tour-1" },
-    update: {},
-    create: {
-      id: "test-tour-1",
-      businessProfileId: createdBusinesses[0].id,
-      createdById: createdBusinesses[0].ownerId,
-      title: "Store Walkthrough",
-      summary: "A quick look at our displays",
-      visitDate: new Date(),
-      status: "PUBLISHED",
-      highlights: {
-        create: [{ value: "MacBook display" }, { value: "Accessories wall" }],
+  // 7. Business Tours
+  for (let i = 0; i < 12; i++) {
+    const business = createdBusinesses[i];
+    if (!business) continue;
+
+    await prisma.businessTour.upsert({
+      where: { id: `test-tour-${i + 1}` },
+      update: {},
+      create: {
+        id: `test-tour-${i + 1}`,
+        businessProfileId: business.id,
+        createdById: account.user!.id,
+        title: `Store Walkthrough ${i + 1}`,
+        summary: "A quick look at our displays",
+        visitDate: new Date(),
+        status: "PUBLISHED",
+        highlights: {
+          create: [{ value: "Great display" }, { value: "Friendly staff" }],
+        },
+        media: {
+          create: [
+            {
+              url: "https://example.com/business-tour-video.mp4",
+              fileId: `file-tour-${i + 1}-1`,
+              mediaType: MediaType.VIDEO,
+              role: MediaRole.GALLERY,
+              order: 0,
+            },
+            {
+              url: "https://example.com/business-tour-photo.jpg",
+              fileId: `file-tour-${i + 1}-2`,
+              mediaType: MediaType.IMAGE,
+              role: MediaRole.GALLERY,
+              order: 1,
+            },
+          ],
+        },
       },
-      media: {
-        create: [
-          {
-            url: "https://example.com/business-tour-video.mp4",
-            fileId: "file-tour-1",
-            mediaType: MediaType.VIDEO,
-            role: MediaRole.GALLERY,
-            order: 0,
-          },
-          {
-            url: "https://example.com/business-tour-photo.jpg",
-            fileId: "file-tour-2",
-            mediaType: MediaType.IMAGE,
-            role: MediaRole.GALLERY,
-            order: 1,
-          },
-        ],
-      },
-    },
-  });
+    });
+  }
 
   console.log("✅ Dummy data seeded successfully.");
 }
