@@ -7,9 +7,11 @@ import {
 } from '@odysseon/whoami-adapter-jose';
 import { PasswordModule } from '@odysseon/whoami-core/password';
 import { MagicLinkModule } from '@odysseon/whoami-core/magiclink';
+import { OAuthModule } from '@odysseon/whoami-core/oauth';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { passwordConfig, joseConfig } from './password.config.js';
 import { magicLinkConfig } from './magic-link.config.js';
+import { oauthConfig } from './oauth.config.js';
 
 export const whoamiConfig: WhoamiModuleAsyncOptions = {
   inject: [ConfigService, PrismaService],
@@ -27,10 +29,11 @@ export const whoamiConfig: WhoamiModuleAsyncOptions = {
 
     const passConfig = passwordConfig(prismaService, receiptSigner);
     const mlConfig = magicLinkConfig(prismaService, receiptSigner);
+    const oAuthConfig = oauthConfig(prismaService, receiptSigner);
 
     return {
       receiptVerifier,
-      modules: [PasswordModule(passConfig), MagicLinkModule(mlConfig)],
+      modules: [PasswordModule(passConfig), MagicLinkModule(mlConfig), OAuthModule(oAuthConfig)],
     };
   },
 };

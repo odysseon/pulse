@@ -12,6 +12,9 @@ export const configSchema = z
     // ── Receipt Secret ────────────────────────────────────────────────────
     RECEIPT_SECRET: z.string().min(32),
 
+    // ── Google Auth ───────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID: z.string().optional(),
+
     // ── Mailer ────────────────────────────────────────────────────────────
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().optional(),
