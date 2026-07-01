@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import handlebars from 'handlebars';
+import { isError } from '../shared/utils/error.util.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -29,7 +30,7 @@ export class MailTemplateService {
     } catch (error) {
       this.logger.error(
         `Failed to compile template ${templateName}`,
-        error instanceof Error ? error.stack : String(error),
+        isError(error) ? error.stack : String(error),
       );
       throw error;
     }

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { AppConfig } from '../../configs/validation.js';
 import { MailAdapter, SendMailOptions } from '../mail.adapter.js';
+import { isError } from '../../shared/utils/error.util.js';
 
 @Injectable()
 export class NodemailerAdapter implements MailAdapter {
@@ -57,7 +58,7 @@ export class NodemailerAdapter implements MailAdapter {
       const toStr = Array.isArray(options.to) ? options.to.join(', ') : options.to;
       this.logger.error(
         `Failed to send email to ${toStr}`,
-        error instanceof Error ? error.stack : String(error),
+        isError(error) ? error.stack : String(error),
       );
       throw error;
     }

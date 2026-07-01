@@ -1,5 +1,7 @@
 import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { v2 as Cloudinary } from 'cloudinary';
+
+import { isError } from '../../../shared/utils/error.util.js';
 import * as path from 'path';
 import { CLOUDINARY } from './cloudinary.provider.js';
 import {
@@ -66,7 +68,7 @@ export class CloudinaryStorageProvider implements StorageProvider {
 
       return { success: true };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown storage error';
+      const errorMessage = isError(error) ? error.message : 'Unknown storage error';
 
       this.logger.error('Cloudinary Delete Error:', error);
 
