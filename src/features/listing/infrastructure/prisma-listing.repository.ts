@@ -11,6 +11,7 @@ import {
   PaginatedListingSummaries,
   TransitionListingStatusInput,
   UpdateListingInput,
+  ListingSummary,
 } from '../domain/types/listing.types.js';
 
 type PrismaListingExtended = PrismaListing & {
@@ -363,7 +364,7 @@ export class PrismaListingRepository extends IListingRepository {
       return {
         id: r.id,
         businessProfileId: r.businessProfileId,
-        businessProfileSlug: (r as any).businessProfile?.slug,
+        businessProfileSlug: (r as { businessProfile: { slug: string } }).businessProfile.slug,
         title: r.title,
         slug: r.slug,
         description: r.description,
@@ -381,7 +382,7 @@ export class PrismaListingRepository extends IListingRepository {
   }
 
   private async enrichWithSavedStatus(
-    items: any[],
+    items: ListingSummary[],
     total: number,
     page: number,
     limit: number,
@@ -403,7 +404,7 @@ export class PrismaListingRepository extends IListingRepository {
     const savedSet = new Set(saves.map((s) => s.listingId));
 
     return {
-      items: items.map((i) => ({
+      items: items.map((i: ListingSummary) => ({
         ...i,
         isSaved: savedSet.has(i.id),
       })),

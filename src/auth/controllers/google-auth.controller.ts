@@ -1,6 +1,18 @@
 import { Body, Controller, Post, Delete, HttpCode, HttpStatus, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiUnauthorizedResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { Public, moduleToken, CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import {
+  Public,
+  moduleToken,
+  CurrentIdentity,
+  type RequestIdentity,
+} from '@odysseon/whoami-adapter-nestjs';
 import type { OAuthMethods } from '@odysseon/whoami-core/oauth';
 import { AuthenticateGoogleDto, LinkGoogleDto } from '../dto/google-auth.dto.js';
 import { ReceiptTokenResponse } from '../dto/receipt.dto.js';
@@ -32,7 +44,10 @@ export class GoogleAuthController {
   @ApiBearerAuth()
   @Post('link')
   @HttpCode(HttpStatus.OK)
-  async link(@Body() dto: LinkGoogleDto, @CurrentIdentity() identity: RequestIdentity): Promise<{ success: boolean }> {
+  async link(
+    @Body() dto: LinkGoogleDto,
+    @CurrentIdentity() identity: RequestIdentity,
+  ): Promise<{ success: boolean }> {
     await this.googleAuthUseCase.link(dto.idToken, identity.accountId);
     return { success: true };
   }

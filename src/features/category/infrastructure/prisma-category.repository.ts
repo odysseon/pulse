@@ -149,16 +149,14 @@ export class PrismaCategoryRepository implements ICategoryRepository {
         description: root.description,
         order: root.order,
         isActive: root.isActive,
-        children: root.children.map(
-          (child): CategoryLeaf => ({
-            id: child.id,
-            name: child.name,
-            slug: child.slug,
-            description: child.description,
-            order: child.order,
-            isActive: child.isActive,
-          }),
-        ),
+        children: root.children.map((child): CategoryLeaf => ({
+          id: child.id,
+          name: child.name,
+          slug: child.slug,
+          description: child.description,
+          order: child.order,
+          isActive: child.isActive,
+        })),
       }),
     );
 

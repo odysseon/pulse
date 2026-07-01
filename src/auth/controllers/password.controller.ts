@@ -9,7 +9,12 @@ import {
   ApiUnauthorizedResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Public, moduleToken, CurrentIdentity, type RequestIdentity } from '@odysseon/whoami-adapter-nestjs';
+import {
+  Public,
+  moduleToken,
+  CurrentIdentity,
+  type RequestIdentity,
+} from '@odysseon/whoami-adapter-nestjs';
 import type { PasswordMethods } from '@odysseon/whoami-core/password';
 import {
   LoginPasswordDto,
@@ -53,7 +58,7 @@ export class PasswordAuthController {
   @HttpCode(HttpStatus.OK)
   async requestPasswordReset(@Body() dto: RequestPasswordResetDto): Promise<{ message: string }> {
     const result = await this.password.requestPasswordReset({ email: dto.email });
-    
+
     if (result) {
       const frontendUrl = this.configService.get('FRONTEND_URL') as string;
       const resetLink = `${frontendUrl}/auth/reset-password?token=${result.plainTextToken}`;
@@ -81,7 +86,7 @@ export class PasswordAuthController {
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<ReceiptTokenResponse> {
     const { receipt, accountId } = await this.password.verifyPasswordReset({ token: dto.token });
-    
+
     await this.password.addPasswordToAccount({
       accountId,
       password: dto.newPassword,

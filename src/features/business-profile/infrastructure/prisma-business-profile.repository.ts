@@ -10,6 +10,7 @@ import {
   PaginatedBusinessSummaries,
   UpdateBusinessProfileInput,
   BusinessProfileView,
+  BusinessSummary,
 } from '../domain/types/business-profile.types.js';
 import { SetOperatingHoursInput, DayOfWeek } from '../domain/types/operating-hours.types.js';
 
@@ -246,7 +247,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       },
     });
     if (!raw) return null;
-    const hydratedArray = await this.hydrate([raw as any]);
+    const hydratedArray = await this.hydrate([raw]);
     const domain = toDomain(hydratedArray[0]!);
     this.updateCacheAsync(domain);
     return domain;
@@ -267,7 +268,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       },
     });
     if (!raw) return null;
-    const hydratedArray = await this.hydrate([raw as any]);
+    const hydratedArray = await this.hydrate([raw]);
     const domain = toDomain(hydratedArray[0]!);
     this.updateCacheAsync(domain);
     return domain;
@@ -289,7 +290,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
       },
     });
     if (!raw) return null;
-    const hydratedArray = await this.hydrate([raw as any]);
+    const hydratedArray = await this.hydrate([raw]);
     return toDomain(hydratedArray[0]!);
   }
 
@@ -576,7 +577,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
   }
 
   private async enrichWithSavedStatus(
-    items: any[],
+    items: BusinessSummary[],
     total: number,
     page: number,
     limit: number,
@@ -598,7 +599,7 @@ export class PrismaBusinessProfileRepository extends IBusinessProfileRepository 
     const savedSet = new Set(saves.map((s) => s.businessProfileId));
 
     return {
-      items: items.map((i) => ({
+      items: items.map((i: BusinessSummary) => ({
         ...i,
         isSaved: savedSet.has(i.id),
       })),

@@ -111,7 +111,7 @@ export class PrismaSavesRepository implements ISavesRepository {
       this.prisma.savedListing.count({ where: { userId } }),
     ]);
 
-    const items = rows.map((r: any) => ({
+    const items = rows.map((r) => ({
       id: r.id,
       userId: r.userId,
       listingId: r.listingId,
@@ -163,7 +163,7 @@ export class PrismaSavesRepository implements ISavesRepository {
       this.prisma.savedBusiness.count({ where: { userId } }),
     ]);
 
-    const items = rows.map((r: any) => ({
+    const items = rows.map((r) => ({
       id: r.id,
       userId: r.userId,
       businessProfileId: r.businessProfileId,
@@ -179,9 +179,9 @@ export class PrismaSavesRepository implements ISavesRepository {
         businessType: r.businessProfile.businessType,
         createdAt: r.businessProfile.createdAt,
         updatedAt: r.businessProfile.updatedAt,
-        logoUrl: r.businessProfile.media.find((m: any) => m.role === 'LOGO')?.url,
-        bannerUrl: r.businessProfile.media.find((m: any) => m.role === 'BANNER')?.url,
-        tags: r.businessProfile.tags.map((t: any) => t.tag.name),
+        logoUrl: r.businessProfile.media.find((m) => m.role === 'LOGO')?.url,
+        bannerUrl: r.businessProfile.media.find((m) => m.role === 'BANNER')?.url,
+        tags: r.businessProfile.tags.map((t) => t.tag.name),
       },
     }));
 

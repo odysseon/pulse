@@ -6,7 +6,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, VerifyIdTokenOptions } from 'google-auth-library';
 import { moduleToken } from '@odysseon/whoami-adapter-nestjs';
 import type { OAuthMethods } from '@odysseon/whoami-core/oauth';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -36,7 +36,7 @@ export class GoogleAuthUseCase {
   async execute(idToken: string) {
     let payload;
     try {
-      const verifyOptions: any = { idToken };
+      const verifyOptions: VerifyIdTokenOptions = { idToken };
       if (this.clientId) {
         verifyOptions.audience = this.clientId;
       }
@@ -64,14 +64,17 @@ export class GoogleAuthUseCase {
       // 2. If new account, create domain User profile
       if (isNewAccount) {
         // Auto-generate username from email + 2 random bytes
-        const base = (email!.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const base = (email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
         const suffix = randomBytes(2).toString('hex');
         const username = `${base}${suffix}`;
 
         await this.userRepository.create(account.id, username);
       }
     } catch (error) {
-      this.logger.error(`Failed to create domain user for new Google account ${account.email}`, error);
+      this.logger.error(
+        `Failed to create domain user for new Google account ${account.email}`,
+        error,
+      );
 
       // Rollback orphaned account if domain user creation fails
       if (isNewAccount) {
@@ -94,7 +97,7 @@ export class GoogleAuthUseCase {
   async link(idToken: string, accountId: string): Promise<void> {
     let payload;
     try {
-      const verifyOptions: any = { idToken };
+      const verifyOptions: VerifyIdTokenOptions = { idToken };
       if (this.clientId) {
         verifyOptions.audience = this.clientId;
       }

@@ -23,7 +23,7 @@ import {
   WsMessageNewEvent,
   WsReadReceiptEvent,
 } from '../dto/ws-events.dto.js';
-import { MessageView } from '../../domain/types/messaging.types.js';
+import { MessageView, SendMessageInput } from '../../domain/types/messaging.types.js';
 
 @WebSocketGateway({ namespace: '/ws/messaging', cors: { origin: '*', credentials: true } })
 export class MessagingGateway
@@ -41,7 +41,7 @@ export class MessagingGateway
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
-  async handleConnection(client: Socket): Promise<void> {
+  handleConnection(client: Socket): void {
     this.logger.log(`Client connected: ${client.id}`);
   }
 
@@ -86,7 +86,9 @@ export class MessagingGateway
     @MessageBody() payload: WsJoinConversationPayload,
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
-    const identity = client.data.identity as { accountId: string };
+    const data = client.data as { identity?: { accountId: string } };
+    if (!data.identity) throw new WsException('Unauthorized');
+    const identity = data.identity;
     const userId = await this.resolveUserId(identity.accountId);
 
     const isParticipant = await this.conversationRepo.isParticipant(payload.conversationId, userId);
@@ -104,16 +106,18 @@ export class MessagingGateway
     @MessageBody() payload: WsSendMessagePayload,
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
-    const identity = client.data.identity as { accountId: string };
+    const data = client.data as { identity?: { accountId: string } };
+    if (!data.identity) throw new WsException('Unauthorized');
+    const identity = data.identity;
     const senderId = await this.resolveUserId(identity.accountId);
 
-    const input: any = {
+    const input: SendMessageInput = {
       conversationId: payload.conversationId,
       senderId,
       content: payload.content,
+      ...(payload.mediaUrl !== undefined && { mediaUrl: payload.mediaUrl }),
+      ...(payload.mediaType !== undefined && { mediaType: payload.mediaType }),
     };
-    if (payload.mediaUrl !== undefined) input.mediaUrl = payload.mediaUrl;
-    if (payload.mediaType !== undefined) input.mediaType = payload.mediaType;
 
     const message = await this.sendMessageUseCase.execute(input);
     this.broadcastMessage(payload.conversationId, message);
@@ -125,7 +129,9 @@ export class MessagingGateway
     @MessageBody() payload: WsMarkReadPayload,
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
-    const identity = client.data.identity as { accountId: string };
+    const data = client.data as { identity?: { accountId: string } };
+    if (!data.identity) throw new WsException('Unauthorized');
+    const identity = data.identity;
     const userId = await this.resolveUserId(identity.accountId);
 
     await this.markReadUseCase.execute({
