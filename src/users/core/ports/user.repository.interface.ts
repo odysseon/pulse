@@ -7,7 +7,7 @@ export interface IUserRepository {
   /**
    * Creates a new domain user.
    */
-  create(accountId: string, username: string): Promise<UserEntity>;
+  create(accountId: string, username: string, avatarUrl?: string): Promise<UserEntity>;
 
   /**
    * Retrieves a domain user by their associated authentication account ID.

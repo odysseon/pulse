@@ -40,7 +40,7 @@ export class GoogleAuthUseCase {
       throw new UnauthorizedException('Invalid Google ID Token payload or unverified email');
     }
 
-    const { email, sub: googleId } = payload;
+    const { email, sub: googleId, picture } = payload;
 
     // 1. Authenticate or create account via OAuth
     const { account, receipt, isNewAccount } = await this.oauth.authenticateWithOAuth({
@@ -57,7 +57,7 @@ export class GoogleAuthUseCase {
         const suffix = randomBytes(2).toString('hex');
         const username = `${base}${suffix}`;
 
-        await this.userRepository.create(account.id, username);
+        await this.userRepository.create(account.id, username, picture);
       }
     } catch (error) {
       this.logger.error(

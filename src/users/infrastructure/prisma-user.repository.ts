@@ -24,11 +24,12 @@ export class PrismaUserRepository implements IUserRepository {
       .catch(() => {});
   }
 
-  async create(accountId: string, username: string): Promise<UserEntity> {
+  async create(accountId: string, username: string, avatarUrl?: string): Promise<UserEntity> {
     const user = await this.prisma.user.create({
       data: {
         accountId,
         username,
+        avatarUrl: avatarUrl ?? null,
       },
       include: {
         account: {
