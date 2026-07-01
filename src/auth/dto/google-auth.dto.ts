@@ -7,3 +7,12 @@ export class AuthenticateGoogleDto {
   @IsNotEmpty()
   idToken!: string;
 }
+
+export class LinkGoogleDto {
+  /**
+   * The Google ID token.
+   */
+  @IsString()
+  @IsNotEmpty()
+  idToken!: string;
+}

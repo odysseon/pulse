@@ -90,4 +90,29 @@ export class GoogleAuthUseCase {
       expiresAt: receipt.expiresAt,
     };
   }
+
+  async link(idToken: string, accountId: string): Promise<void> {
+    let payload;
+    try {
+      const verifyOptions: any = { idToken };
+      if (this.clientId) {
+        verifyOptions.audience = this.clientId;
+      }
+      const ticket = await this.googleClient.verifyIdToken(verifyOptions);
+      payload = ticket.getPayload();
+    } catch (error) {
+      this.logger.warn(`Failed to verify Google ID token for linking: ${(error as Error).message}`);
+      throw new UnauthorizedException('Invalid Google ID Token');
+    }
+
+    if (!payload || !payload.sub) {
+      throw new UnauthorizedException('Invalid Google ID Token payload');
+    }
+
+    await this.oauth.linkOAuthToAccount({
+      accountId,
+      provider: 'google',
+      providerId: payload.sub,
+    });
+  }
 }
