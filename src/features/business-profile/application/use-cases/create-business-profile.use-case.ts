@@ -1,5 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import slugify from 'slugify';
+import { BusinessProfileCreatedEvent } from '../../../../shared/events/business-profile.events.js';
 import { IBusinessProfileRepository } from '../../domain/ports/business-profile.repository.port.js';
 import {
   CreateBusinessProfileInput,
@@ -8,7 +10,10 @@ import {
 
 @Injectable()
 export class CreateBusinessProfileUseCase {
-  constructor(private readonly repo: IBusinessProfileRepository) {}
+  constructor(
+    private readonly repo: IBusinessProfileRepository,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async execute(input: CreateBusinessProfileInput): Promise<BusinessProfileView> {
     const existing = await this.repo.findByOwner(input.ownerId);
@@ -18,7 +23,14 @@ export class CreateBusinessProfileUseCase {
 
     const slug = await this.deriveUniqueSlug(input.name);
 
-    return this.repo.create(input, slug);
+    const profile = await this.repo.create(input, slug);
+
+    this.eventEmitter.emit(
+      'business.created',
+      new BusinessProfileCreatedEvent(profile.id, profile.ownerId)
+    );
+
+    return profile;
   }
 
   private async deriveUniqueSlug(name: string): Promise<string> {

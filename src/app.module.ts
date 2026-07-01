@@ -23,9 +23,16 @@ import { AnalyticsModule } from './features/analytics/analytics.module.js';
 import { AdminModule } from './features/admin/admin.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { RedisModule } from './shared/redis/redis.module.js';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { DomainEventsModule } from './shared/events/domain-events.module.js';
 
 @Module({
   imports: [
+    DomainEventsModule,
+    EventEmitterModule.forRoot({
+      global: true,
+      wildcard: true,
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '.env.local'],

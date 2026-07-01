@@ -4,7 +4,9 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import slugify from 'slugify';
+import { ListingCreatedEvent } from '../../../../shared/events/listing.events.js';
 import { IListingRepository } from '../../domain/ports/listing.repository.port.js';
 import { CreateListingInput } from '../../domain/types/listing.types.js';
 import { Listing } from '../../domain/types/listing.entity.js';
@@ -19,6 +21,7 @@ export class CreateListingUseCase {
     private readonly categoryRepo: ICategoryRepository,
     private readonly attributeValidator: ValidateListingAttributesService,
     private readonly businessProfileRepo: IBusinessProfileRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(input: CreateListingInput): Promise<Listing> {
@@ -57,7 +60,14 @@ export class CreateListingUseCase {
     }
 
     const slug = await this.deriveUniqueSlug(input.businessProfileId, input.title);
-    return this.repo.create(input, slug);
+    const listing = await this.repo.create(input, slug);
+
+    this.eventEmitter.emit(
+      'listing.created',
+      new ListingCreatedEvent(listing.id, listing.businessProfileId)
+    );
+
+    return listing;
   }
 
   private async deriveUniqueSlug(businessProfileId: string, title: string): Promise<string> {
