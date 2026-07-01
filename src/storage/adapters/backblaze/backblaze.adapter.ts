@@ -1,6 +1,7 @@
 import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { isError } from '../../../shared/utils/error.util.js';
 import {
   StorageProvider,
   UploadParams,
@@ -60,7 +61,7 @@ export class BackblazeStorageProvider implements StorageProvider {
 
       return { success: true };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown storage error';
+      const errorMessage = isError(error) ? error.message : 'Unknown storage error';
 
       this.logger.error('Backblaze Delete Error:', error);
 

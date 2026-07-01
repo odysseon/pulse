@@ -18,8 +18,10 @@ export class WsAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client: Socket = context.switchToWs().getClient<Socket>();
 
+    const authPayload = client.handshake.auth as Record<string, unknown> | undefined;
     const rawToken: string | undefined =
-      client.handshake.auth?.['token'] ?? client.handshake.headers?.authorization;
+      (typeof authPayload?.['token'] === 'string' ? authPayload['token'] : undefined) ??
+      client.handshake.headers?.authorization;
 
     if (!rawToken) {
       throw new WsException('Missing authentication token.');
@@ -30,7 +32,7 @@ export class WsAuthGuard implements CanActivate {
     try {
       const identity = await this.verifier.verify(token);
       // Attach resolved identity for downstream handlers
-      client.data.identity = identity;
+      (client.data as Record<string, unknown>)['identity'] = identity;
       return true;
     } catch (err) {
       this.logger.warn('WebSocket auth failed', err);

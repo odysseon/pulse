@@ -131,9 +131,9 @@ export class PrismaBusinessTourRepository extends IBusinessTourRepository {
   }
 
   async discover(input: DiscoverBusinessToursInput): Promise<PaginatedBusinessTours> {
-    const where: any = {
+    const where: Prisma.BusinessTourWhereInput = {
       ...(input.businessProfileId && { businessProfileId: input.businessProfileId }),
-      ...(input.status && { status: input.status as PrismaBusinessTourStatus }),
+      ...(input.status && { status: input.status }),
     };
 
     const skip = (input.page - 1) * input.limit;
@@ -153,7 +153,7 @@ export class PrismaBusinessTourRepository extends IBusinessTourRepository {
     ]);
 
     return {
-      items: rows.map((r) => toView(r as PrismaBusinessTourWithRelations)),
+      items: rows.map((r) => toView(r)),
       total,
       page: input.page,
       limit: input.limit,
@@ -173,8 +173,21 @@ export class PrismaBusinessTourRepository extends IBusinessTourRepository {
         ? Prisma.sql`AND st.status = ${input.status}::"BusinessTourStatus"`
         : Prisma.empty;
 
+      interface DiscoverTourRawRow {
+        id: string;
+        businessProfileId: string;
+        businessProfileSlug: string;
+        title: string;
+        summary: string | null;
+        visitDate: Date | null;
+        status: PrismaBusinessTourStatus;
+        publishedAt: Date | null;
+        coverUrl: string | null;
+        distanceMeters: number;
+      }
+
       // Note: we fetch the cover media as a subquery or join.
-      const rows = await this.prisma.$queryRaw<any[]>`
+      const rows = await this.prisma.$queryRaw<DiscoverTourRawRow[]>`
         SELECT 
           st.id,
           st."businessProfileId",
@@ -238,8 +251,8 @@ export class PrismaBusinessTourRepository extends IBusinessTourRepository {
     }
 
     // Fallback to standard Prisma query without location
-    const where: any = {
-      ...(input.status && { status: input.status as PrismaBusinessTourStatus }),
+    const where: Prisma.BusinessTourWhereInput = {
+      ...(input.status && { status: input.status }),
       ...(input.search && {
         OR: [
           { title: { contains: input.search, mode: 'insensitive' } },

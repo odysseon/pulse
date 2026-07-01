@@ -1,6 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
+import { isError } from '../shared/utils/error.util.js';
 import { MailService } from './mail.service.js';
 import { SendMailOptions } from './mail.adapter.js';
 
@@ -21,7 +22,7 @@ export class MailProcessor extends WorkerHost {
     } catch (error) {
       this.logger.error(
         `Failed to process mail job ${job.id}`,
-        error instanceof Error ? error.stack : String(error),
+        isError(error) ? error.stack : String(error),
       );
       throw error;
     }

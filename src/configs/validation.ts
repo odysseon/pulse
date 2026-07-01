@@ -12,6 +12,9 @@ export const configSchema = z
     // ── Receipt Secret ────────────────────────────────────────────────────
     RECEIPT_SECRET: z.string().min(32),
 
+    // ── Google Auth ───────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID: z.string().optional(),
+
     // ── Mailer ────────────────────────────────────────────────────────────
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().optional(),
@@ -44,6 +47,10 @@ export const configSchema = z
   .refine((d) => !d.SWAGGER_ENABLED || (!!d.SWAGGER_USER && !!d.SWAGGER_PASS), {
     message: 'SWAGGER_USER and SWAGGER_PASS are required when SWAGGER_ENABLED is true',
     path: ['SWAGGER_ENABLED'],
+  })
+  .refine((d) => d.NODE_ENV !== 'production' || !!d.GOOGLE_CLIENT_ID, {
+    message: 'GOOGLE_CLIENT_ID is required in production',
+    path: ['GOOGLE_CLIENT_ID'],
   });
 
 export type AppConfig = z.infer<typeof configSchema>;

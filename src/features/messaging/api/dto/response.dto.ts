@@ -39,7 +39,7 @@ export class MessageResponseDto {
     dto.mediaUrl = m.mediaUrl;
     dto.mediaType = m.mediaType;
     dto.createdAt = m.createdAt;
-    dto.readReceipts = m.readReceipts.map(MessageReadReceiptResponseDto.from);
+    dto.readReceipts = m.readReceipts.map((r) => MessageReadReceiptResponseDto.from(r));
     return dto;
   }
 }
@@ -65,7 +65,7 @@ export class ConversationResponseDto {
     dto.participantIds = c.participantIds;
     dto.createdAt = c.createdAt;
     dto.updatedAt = c.updatedAt;
-    if (messages) dto.messages = messages.map(MessageResponseDto.from);
+    if (messages) dto.messages = messages.map((m) => MessageResponseDto.from(m));
     return dto;
   }
 }

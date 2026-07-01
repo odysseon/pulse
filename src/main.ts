@@ -33,11 +33,11 @@ async function bootstrap(): Promise<void> {
 
   SwaggerSetup.register(app);
 
-  const allowedOriginsRaw = configService.get('ALLOWED_ORIGINS') as string | undefined;
-  const frontendUrl = configService.get('FRONTEND_URL') as string;
+  const allowedOriginsRaw = configService.get<string>('ALLOWED_ORIGINS');
+  const frontendUrl = configService.get<string>('FRONTEND_URL') as string;
   let origins: string[] = [frontendUrl];
   if (allowedOriginsRaw) {
-    origins = allowedOriginsRaw.split(',').map((o) => o.trim());
+    origins = allowedOriginsRaw.split(',').map((o: string) => o.trim());
   }
 
   app.enableCors({
