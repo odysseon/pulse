@@ -34,21 +34,10 @@ export class GoogleAuthUseCase {
   }
 
   async execute(idToken: string) {
-    let payload;
-    try {
-      const verifyOptions: VerifyIdTokenOptions = { idToken };
-      if (this.clientId) {
-        verifyOptions.audience = this.clientId;
-      }
-      const ticket = await this.googleClient.verifyIdToken(verifyOptions);
-      payload = ticket.getPayload();
-    } catch (error) {
-      this.logger.warn(`Failed to verify Google ID token: ${(error as Error).message}`);
-      throw new UnauthorizedException('Invalid Google ID Token');
-    }
+    const payload = await this.verifyTokenPayload(idToken);
 
-    if (!payload || !payload.sub || !payload.email) {
-      throw new UnauthorizedException('Invalid Google ID Token payload');
+    if (!payload || !payload.sub || !payload.email || !payload.email_verified) {
+      throw new UnauthorizedException('Invalid Google ID Token payload or unverified email');
     }
 
     const { email, sub: googleId } = payload;
@@ -95,18 +84,7 @@ export class GoogleAuthUseCase {
   }
 
   async link(idToken: string, accountId: string): Promise<void> {
-    let payload;
-    try {
-      const verifyOptions: VerifyIdTokenOptions = { idToken };
-      if (this.clientId) {
-        verifyOptions.audience = this.clientId;
-      }
-      const ticket = await this.googleClient.verifyIdToken(verifyOptions);
-      payload = ticket.getPayload();
-    } catch (error) {
-      this.logger.warn(`Failed to verify Google ID token for linking: ${(error as Error).message}`);
-      throw new UnauthorizedException('Invalid Google ID Token');
-    }
+    const payload = await this.verifyTokenPayload(idToken, true);
 
     if (!payload || !payload.sub) {
       throw new UnauthorizedException('Invalid Google ID Token payload');
@@ -117,5 +95,22 @@ export class GoogleAuthUseCase {
       provider: 'google',
       providerId: payload.sub,
     });
+  }
+  private async verifyTokenPayload(idToken: string, isLinking = false) {
+    try {
+      if (!this.clientId) {
+        throw new InternalServerErrorException('Google Auth is not configured');
+      }
+      const verifyOptions: VerifyIdTokenOptions = { 
+        idToken,
+        audience: this.clientId,
+      };
+      const ticket = await this.googleClient.verifyIdToken(verifyOptions);
+      return ticket.getPayload();
+    } catch (error) {
+      if (error instanceof InternalServerErrorException) throw error;
+      this.logger.warn(`Failed to verify Google ID token${isLinking ? ' for linking' : ''}: ${(error as Error).message}`);
+      throw new UnauthorizedException('Invalid Google ID Token');
+    }
   }
 }

@@ -61,7 +61,9 @@ export class PasswordAuthController {
 
     if (result) {
       const frontendUrl = this.configService.get('FRONTEND_URL') as string;
-      const resetLink = `${frontendUrl}/auth/reset-password?token=${result.plainTextToken}`;
+      const url = new URL('/auth/reset-password', frontendUrl);
+      url.searchParams.set('token', result.plainTextToken);
+      const resetLink = url.toString();
 
       await this.mailQueueService.enqueueMail({
         to: dto.email,
