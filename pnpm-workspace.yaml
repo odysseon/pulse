@@ -8,8 +8,8 @@ allowBuilds:
   msgpackr-extract: true
   prisma: true
 minimumReleaseAgeExclude:
-  - '@aws-sdk/client-s3@3.1084.0 || 3.1088.0 || 3.1104.0'
-  - '@aws-sdk/lib-storage@3.1084.0 || 3.1088.0 || 3.1104.0'
+  - '@aws-sdk/client-s3@3.1084.0 || 3.1088.0 || 3.1104.0 || 3.1105.0'
+  - '@aws-sdk/lib-storage@3.1084.0 || 3.1088.0 || 3.1104.0 || 3.1105.0'
   - prettier@3.9.5
   - '@aws-sdk/checksums@3.1000.18'
   - '@aws-sdk/core@3.975.3'
@@ -23,7 +23,7 @@ minimumReleaseAgeExclude:
   - '@aws-sdk/credential-provider-web-identity@3.972.65'
   - '@aws-sdk/middleware-sdk-s3@3.972.64'
   - '@aws-sdk/nested-clients@3.997.33'
-  - '@aws-sdk/s3-request-presigner@3.1088.0 || 3.1104.0'
+  - '@aws-sdk/s3-request-presigner@3.1088.0 || 3.1104.0 || 3.1105.0'
   - '@aws-sdk/signature-v4-multi-region@3.996.41'
   - '@aws-sdk/token-providers@3.1088.0'
   - '@aws-sdk/types@3.974.2'
@@ -35,8 +35,11 @@ minimumReleaseAgeExclude:
   - '@odysseon/whoami-adapter-webcrypto@13.0.0'
   - '@odysseon/whoami-core@13.1.0'
   - '@posthog/core@1.42.1 || 1.46.9'
-  - bullmq@5.80.5 || 5.81.2
+  - bullmq@5.80.5 || 5.81.2 || 6.0.9
   - posthog-node@5.44.0 || 5.48.1
   - eslint@10.8.0
   - '@posthog/types@1.402.2'
-  - tsx@4.23.9
+  - tsx@4.23.9 || 4.23.11
+  - '@nestjs/bull-shared@11.0.5'
+  - '@nestjs/bullmq@11.0.5'
+  - nodemailer@9.0.5
