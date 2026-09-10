@@ -51,7 +51,19 @@ export class ListingPublishedPolicy extends BaseNotificationPolicy<EventType> {
       return [];
     }
 
-    return this.nearbyResolver.resolve(listing.businessProfile.locations[0].locationId, 15);
+    const nearbyUsers = await this.nearbyResolver.resolve(
+      listing.businessProfile.locations[0].locationId,
+      15,
+    );
+
+    const followers = await this.prisma.businessFollow.findMany({
+      where: { businessId: listing.businessProfileId },
+      select: { userId: true },
+    });
+
+    const followerIds = followers.map((f) => f.userId);
+
+    return Array.from(new Set([...nearbyUsers, ...followerIds]));
   }
 
   getUrgency(): NotificationUrgency {
