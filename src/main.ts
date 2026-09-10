@@ -9,7 +9,7 @@ import helmet from 'helmet';
 import * as express from 'express';
 import { PrismaClientExceptionFilter } from './shared/filters/prisma-client-exception.filter.js';
 
-import { AppModule } from './app.module.js';
+import { AppModule, ObserveInstrument } from './app.module.js';
 import { SwaggerSetup } from './configs/swagger.config.js';
 import { PostHogSetup } from './configs/posthog.config.js';
 import { AppConfig } from './configs/validation.js';
@@ -18,6 +18,7 @@ import { RedisService } from './shared/redis/redis.service.js';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     logger: new ConsoleLogger({ json: true, colors: true }),
+    ...(ObserveInstrument ? { instrument: ObserveInstrument } : {}),
   });
 
   const configService = app.get(ConfigService<AppConfig>);

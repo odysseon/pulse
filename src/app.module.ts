@@ -39,6 +39,9 @@ import { SharingModule } from './features/sharing/sharing.module.js';
 import { DiscoveryModule } from './features/discovery/discovery.module.js';
 import { SystemModule } from './features/system/system.module.js';
 import { OrdersModule } from './features/orders/orders.module.js';
+import { createObserveModule } from '@nestjs/observe';
+
+export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 @Module({
   imports: [
@@ -105,6 +108,11 @@ import { OrdersModule } from './features/orders/orders.module.js';
     DiscoveryModule,
     SystemModule,
     OrdersModule,
+    ObserveModule.forRoot({
+      appKey: process.env['OBSERVE_APP_KEY'] as string,
+      appSecret: process.env['OBSERVE_APP_SECRET'] as string,
+      serviceId: 'orita',
+    }),
   ],
   controllers: [HealthController, AppController],
   providers: [
