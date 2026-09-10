@@ -3,7 +3,7 @@ import { INestApplication, Logger, ValidationPipe, ConsoleLogger } from '@nestjs
 import { ConfigService } from '@nestjs/config';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { Server } from 'socket.io';
+import { Server, ServerOptions } from 'socket.io';
 import * as os from 'os';
 import helmet from 'helmet';
 import * as express from 'express';
@@ -79,7 +79,7 @@ async function bootstrap(): Promise<void> {
   const ioAdapter = new IoAdapter(app);
   // Override the createIOServer so we can inject the Redis adapter
   const originalCreate = ioAdapter.createIOServer.bind(ioAdapter);
-  ioAdapter.createIOServer = (port: number, options?: Record<string, unknown>): Server => {
+  ioAdapter.createIOServer = (port: number, options?: ServerOptions): Server => {
     const server = originalCreate(port, options) as Server;
     server.adapter(createAdapter(pubClient, subClient));
     return server;
