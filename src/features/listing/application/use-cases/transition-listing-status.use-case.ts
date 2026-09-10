@@ -10,6 +10,8 @@ import { ListingStatus } from '../../domain/types/listing-status.enum.js';
 import { Listing } from '../../domain/types/listing.entity.js';
 import { ListingPublicationValidator } from '../services/listing-publication-validator.service.js';
 import { ListingPublicationPolicy } from '../../domain/policies/listing-publication.policy.js';
+import { EventBusService } from '../../../../shared/events/event-bus.service.js';
+import { ListingStatusChangedEvent } from '../../../../shared/events/listing.events.js';
 
 /**
  * Valid lifecycle transitions.
@@ -32,6 +34,7 @@ export class TransitionListingStatusUseCase {
     private readonly listingRepo: IListingRepository,
     private readonly businessRepo: IBusinessProfileRepository,
     private readonly publicationValidator: ListingPublicationValidator,
+    private readonly eventBus: EventBusService,
   ) {}
 
   async execute(id: string, requesterId: string, targetStatus: ListingStatus): Promise<Listing> {
@@ -66,7 +69,22 @@ export class TransitionListingStatusUseCase {
       await this.publicationValidator.validate(listing);
     }
 
-    return this.listingRepo.transitionStatus(id, { status: targetStatus });
+    const oldStatus = listing.status;
+
+    const updatedListing = await this.listingRepo.transitionStatus(id, { status: targetStatus });
+
+    await this.eventBus.publish(
+      'listing.status.changed',
+      new ListingStatusChangedEvent(
+        updatedListing.id,
+        updatedListing.businessProfileId,
+        oldStatus,
+        targetStatus,
+      ),
+      requesterId,
+    );
+
+    return updatedListing;
   }
 
   private async assertOwnership(businessProfileId: string, requesterId: string): Promise<void> {
