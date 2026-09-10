@@ -29,10 +29,11 @@ export class FeedConsumer {
     );
   }
 
-  @OnEvent('listing.published')
+  @OnEvent('listing.status.changed')
   async handleListingPublished(
-    payload: EnrichedDomainEvent<{ businessProfileId: string; listingId: string }>,
+    payload: EnrichedDomainEvent<{ businessProfileId: string; listingId: string; newStatus: string }>,
   ) {
+    if (payload.data.newStatus !== 'PUBLISHED') return;
     this.logger.log(`Handling listing.published for ${payload.data.listingId}`);
     await this.upsertDiscoveryItem(
       DiscoveryItemType.LISTING,
