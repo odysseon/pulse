@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OutboxDispatcherService } from './outbox-dispatcher.service.js';
 import { OutboxRepository } from './outbox.repository.js';

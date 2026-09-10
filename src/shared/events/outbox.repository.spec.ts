@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { OutboxRepository } from './outbox.repository.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -51,7 +52,7 @@ describe('OutboxRepository', () => {
 
       // We can inspect the SQL string passed to $queryRaw to ensure it contains our atomic lease logic
       const callArgs = mockPrismaService.$queryRaw.mock.calls[0];
-      const sqlString = callArgs[0].join('?'); // join the template literal strings
+      const sqlString = callArgs![0].join('?'); // join the template literal strings
 
       expect(sqlString).toContain('UPDATE "outbox_events"');
       expect(sqlString).toContain('SET "leasedBy" = ?');
